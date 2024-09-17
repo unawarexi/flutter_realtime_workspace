@@ -1,5 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter_realtime_workspace/core/config/themes/app_theme.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/core/config/themes/app_theme.dart';
+import 'package:flutter_realtime_workspace/features/authentication/presentation/onboarding.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -10,6 +11,7 @@ class App extends StatelessWidget {
       themeMode: ThemeMode.system,
       theme: TAppTheme.lightTheme,
       darkTheme: TAppTheme.darkTheme,
+      home: const Onboarding(),
     );
   }
 }
