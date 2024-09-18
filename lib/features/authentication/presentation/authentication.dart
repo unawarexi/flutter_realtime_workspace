@@ -5,17 +5,17 @@ import 'package:flutter_realtime_workspace/features/authentication/data/onboardi
 import 'package:flutter_realtime_workspace/features/authentication/data/onboarding_github.dart';
 import 'package:flutter_realtime_workspace/features/authentication/data/onboarding_google.dart';
 import 'package:flutter_realtime_workspace/features/authentication/data/onboarding_password.dart';
-import 'package:flutter_realtime_workspace/features/authentication/data/onboarding_welcome.dart';
 import 'package:flutter_realtime_workspace/features/authentication/presentation/signup_screen.dart';
+import 'package:flutter_realtime_workspace/screens/onboarding_welcome.dart';
 
-class Onboarding extends StatefulWidget {
-  const Onboarding({super.key});
+class Authentication extends StatefulWidget {
+  const Authentication({super.key});
 
   @override
-  State<Onboarding> createState() => _OnboardingState();
+  State<Authentication> createState() => _AuthenticationState();
 }
 
-class _OnboardingState extends State<Onboarding> with Func {
+class _AuthenticationState extends State<Authentication> with Func {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

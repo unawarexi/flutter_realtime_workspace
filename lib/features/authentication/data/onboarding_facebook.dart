@@ -4,7 +4,7 @@ import 'package:sign_button/sign_button.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:status_alert/status_alert.dart';
 
-import 'onboarding_welcome.dart';
+import '../../../screens/onboarding_welcome.dart';
 
 class FacebookAuthentication extends StatefulWidget {
   const FacebookAuthentication({super.key});

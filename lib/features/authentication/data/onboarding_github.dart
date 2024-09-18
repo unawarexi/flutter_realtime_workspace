@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
 
 import 'onboarding_functions.dart';
-import 'onboarding_welcome.dart';
+import '../../../screens/onboarding_welcome.dart';
 
 class GithubAuthentication extends StatefulWidget {
   const GithubAuthentication({super.key});

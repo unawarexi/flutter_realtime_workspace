@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'onboarding_functions.dart';
-import 'onboarding_welcome.dart';
+import '../../../screens/onboarding_welcome.dart';
 
 class PasswordAuthentication extends StatefulWidget {
   const PasswordAuthentication({super.key});

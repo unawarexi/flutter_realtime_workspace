@@ -4,7 +4,7 @@ import 'package:sign_button/sign_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:status_alert/status_alert.dart';
-import 'onboarding_welcome.dart';
+import '../../../screens/onboarding_welcome.dart';
 
 class GoogleAuthentication extends StatefulWidget {
   const GoogleAuthentication({super.key});
