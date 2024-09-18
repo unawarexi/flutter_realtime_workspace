@@ -18,6 +18,7 @@ dependencies:
   flutter_facebook_auth: ^6.0.4
   github_sign_in_plus: ^0.0.2
   sign_button: ^2.0.6
+  flutter_riverpod: ^2.5.1
 
   # UTILITIES PACKAGES
   http: ^0.13.5
