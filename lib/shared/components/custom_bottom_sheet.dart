@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/screens/issues.dart';
 import 'package:flutter_realtime_workspace/screens/project.dart';
 
+import '../../screens/home.dart';
+
 class BottomNavigationBarWidget extends StatefulWidget {
   const BottomNavigationBarWidget({Key? key}) : super(key: key);
 
@@ -14,8 +16,12 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
+    Home(),
     ProjectHome(), // Replace with your actual home screen if necessary
     IssuesScreen(),
+    Container(),
+    Container(),
+
     // Add other screens here
   ];
 

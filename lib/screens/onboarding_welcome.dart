@@ -19,11 +19,12 @@ class Welcome extends StatefulWidget {
 }
 
 class _WelcomeState extends State<Welcome> {
+  // List<Widget> screens
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: const Home(),
+      body: Home(),
       bottomNavigationBar: const BottomNavigationBarWidget(),
     );
   }
