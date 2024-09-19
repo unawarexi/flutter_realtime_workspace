@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 
 import '../features/todo_management/common/todoForm.dart';
+import '../features/todo_management/widgets/card_todo_widget.dart';
 
 class TodoList extends StatelessWidget {
   const TodoList({super.key});
@@ -93,35 +94,14 @@ class TodoList extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 20,),
+            const SizedBox(height: 20,),
 
             //Card List Task
 
-            Container(
-              width: double.infinity,
-              height: 130,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    color: Colors.red,
-                    width: 30,
-                  ),
-                  Expanded(
-                      child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(children: const[
-                          ListTile(
-                            title: Text("Learning Web development"),
-                          ),
-                        ],),
-                      ),
-                  ),
-                ],
-              ),
+            ListView.builder(
+              itemCount: 1,
+              shrinkWrap: true,
+              itemBuilder: (context, index) => CardTodoListWidget(),
             ),
           ],),
         ),
@@ -129,3 +109,4 @@ class TodoList extends StatelessWidget {
     );
   }
 }
+
