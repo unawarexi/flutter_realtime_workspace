@@ -21,51 +21,57 @@ class _AuthenticationState extends State<Authentication> with Func {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          // Enables scrollability
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // App name "Zidio Group2" at the top center
-                Center(
+                const Center(
                   child: Text(
                     "Zidio Group2",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 24,
+                      fontSize: 28,
+                      color: Colors.blueAccent,
                     ),
                   ),
                 ),
-                SizedBox(height: 40), // Add space for sleekness
+                const SizedBox(height: 20),
 
                 // Placeholder image before Sign In header
                 Center(
                   child: Image.asset(
                     'assets/images/keys.png',
-                    height: 100,
-                    width: 100,
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.cover,
                   ),
                 ),
-
-                SizedBox(height: 20),
+                const SizedBox(height: 10),
 
                 // Sign In Header
                 const Text(
                   "Login",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 22,
+                    fontSize: 26,
+                    color: Colors.black87,
                   ),
                 ),
-                const Text("Sign in to join the team"),
-
-                SizedBox(height: 30), // Spacing
+                const Text(
+                  "Sign in to join the team",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 20),
 
                 // Password Authentication
                 const PasswordAuthentication(),
-
-                SizedBox(height: 20), // Spacing
+                const SizedBox(height: 20),
 
                 // Divider with image inside the "OR"
                 const CustomDivider(),
@@ -74,66 +80,27 @@ class _AuthenticationState extends State<Authentication> with Func {
                     'assets/images/locks.png',
                     height: 100,
                     width: 100,
+                    fit: BoxFit.cover,
                   ),
                 ),
+                const SizedBox(height: 20),
 
-                SizedBox(height: 20), // Spacing
-
-                // Social Sign-In Buttons (Google, Facebook, GitHub)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                // Social Sign-In Buttons in Column (Google, Facebook, GitHub)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Google Button
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        shape: CircleBorder(),
-                        padding: EdgeInsets.all(16),
-                        backgroundColor: Colors.red,
-                        shadowColor: Colors.redAccent,
-                      ),
-                      onPressed: () {
-                        // Handle Google Sign-In
-                        const GoogleAuthentication();
-                      },
-                      icon: Icon(Icons.g_mobiledata, color: Colors.white),
-                      label: Text(""),
-                    ),
-
-                    // Facebook Button
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        shape: CircleBorder(),
-                        padding: EdgeInsets.all(16),
-                        backgroundColor: Colors.blue,
-                        shadowColor: Colors.blueAccent,
-                      ),
-                      onPressed: () {
-                        // Handle Facebook Sign-In
-                        const FacebookAuthentication();
-                      },
-                      icon: const Icon(Icons.facebook, color: Colors.white),
-                      label: const Text(""),
-                    ),
-
-                    // GitHub Button
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(16),
-                        backgroundColor: Colors.black,
-                        shadowColor: Colors.black45,
-                      ),
-                      onPressed: () {
-                        // Handle GitHub Sign-In
-                        const GithubAuthentication();
-                      },
-                      icon: Icon(Icons.code, color: Colors.white),
-                      label: Text(""),
-                    ),
+                    _socialButton(const GoogleAuthentication(), 'Google'),
+                    const SizedBox(height: 15),
+                    _socialButton(const FacebookAuthentication(), 'Facebook'),
+                    const SizedBox(height: 15),
+                    _socialButton(const GithubAuthentication(), 'GitHub'),
                   ],
                 ),
+                const SizedBox(height: 15),
 
-                SizedBox(height: 30), // Spacing
+                const CustomDivider(),
+
+                const SizedBox(height: 15),
 
                 // Biometric Sign-In Button with Neo-morphism effect
                 Center(
@@ -159,42 +126,41 @@ class _AuthenticationState extends State<Authentication> with Func {
                       }
                     },
                     child: Container(
-                      width: MediaQuery.of(context).size.width * 0.8,
-                      height: 50,
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      height: 55,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            offset: Offset(-3, -3),
+                            color: Colors.grey.shade300,
+                            offset: const Offset(-3, -3),
                             blurRadius: 10,
-                            spreadRadius: 1,
                           ),
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            offset: Offset(3, 3),
+                            color: Colors.grey.shade400,
+                            offset: const Offset(3, 3),
                             blurRadius: 10,
-                            spreadRadius: 1,
                           ),
                         ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Text(
                               "Use Biometric",
                               style: TextStyle(
-                                color: Colors.black,
+                                color: Colors.black87,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             SizedBox(width: 10),
                             Icon(
                               Icons.fingerprint,
-                              color: Colors.red,
+                              color: Colors.redAccent,
+                              size: 24,
                             ),
                           ],
                         ),
@@ -202,14 +168,19 @@ class _AuthenticationState extends State<Authentication> with Func {
                     ),
                   ),
                 ),
+                const SizedBox(height: 30),
 
-                SizedBox(height: 30), // Spacing
-
-                // "Have an account? Login" or "Don't have an account? Sign Up"
+                // "Don't have an account? Sign Up" Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Don't have an account? "),
+                    const Text(
+                      "Don't have an account? ",
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 16,
+                      ),
+                    ),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -218,45 +189,46 @@ class _AuthenticationState extends State<Authentication> with Func {
                               builder: (context) => const SignUp()),
                         );
                       },
-                      child: Text(
+                      child: const Text(
                         "Sign Up",
                         style: TextStyle(
                           color: Colors.blueAccent,
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
                     ),
                   ],
                 ),
-
-                SizedBox(height: 20), // Spacing
-
-                // Sign In Button (Full Width)
-                // SizedBox(
-                //   width: MediaQuery.of(context).size.width * 0.8,
-                //   height: 50,
-                //   child: ElevatedButton(
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: Colors.blueAccent,
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(30),
-                //       ),
-                //     ),
-                //     onPressed: () {
-                //       // Handle Sign In
-                //     },
-                //     child: const Text(
-                //       "Sign In",
-                //       style: TextStyle(
-                //         color: Colors.white,
-                //         fontWeight: FontWeight.bold,
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // Helper widget for social sign-in buttons
+  Widget _socialButton(Widget authWidget, String label) {
+    return Container(
+      height: 55,
+      width: double.infinity, // Full-width buttons for better alignment
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.grey.shade300,
+        //     offset: Offset(2, 2),
+        //     blurRadius: 5,
+        //   ),
+        // ],
+      ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          child: authWidget,
         ),
       ),
     );
