@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_animated_icons/flutter_animated_icons.dart';
-// import 'package:lottie/lottie.dart'; // For animated GIFs or icons
 
 class IssuesScreen extends StatefulWidget {
   const IssuesScreen({super.key});
@@ -9,15 +7,65 @@ class IssuesScreen extends StatefulWidget {
   State<IssuesScreen> createState() => _IssuesScreenState();
 }
 
-class _IssuesScreenState extends State<IssuesScreen> {
+class _IssuesScreenState extends State<IssuesScreen>
+    with SingleTickerProviderStateMixin {
   bool _isDropdownOpen = false;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+  String selectedCategory = 'My Open Issues';
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize the animation controller
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    // Define the animation (0 means collapsed, 1 means expanded)
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the animation controller to prevent memory leaks
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleDropdown() {
+    setState(() {
+      _isDropdownOpen = !_isDropdownOpen;
+      if (_isDropdownOpen) {
+        _animationController.forward(); // Expand dropdown
+      } else {
+        _animationController.reverse(); // Collapse dropdown
+      }
+    });
+  }
+
+  void _navigateToPage(String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlaceholderScreen(
+          category: category,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Issues'),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue.shade700,
         elevation: 0,
         actions: [
           IconButton(
@@ -33,105 +81,148 @@ class _IssuesScreenState extends State<IssuesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Filters and Create buttons
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.open_in_new, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'My Open Issues',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  'Filters',
+                  style: TextStyle(fontSize: 18, color: Colors.blue.shade700),
                 ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(_isDropdownOpen
-                      ? Icons.arrow_drop_up
-                      : Icons.arrow_drop_down),
+                TextButton(
                   onPressed: () {
-                    setState(() {
-                      _isDropdownOpen = !_isDropdownOpen;
-                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const CreateIssueScreen()),
+                    );
                   },
+                  child: const Text(
+                    'Create',
+                    style: TextStyle(fontSize: 18, color: Colors.blue),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            if (_isDropdownOpen) _buildDropdownContent(),
-            if (!_isDropdownOpen) _buildAnimatedContent(),
+            // My Open Issues with dropdown
+            Row(
+              children: [
+                const Icon(Icons.open_in_new, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  selectedCategory,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: Icon(
+                    _isDropdownOpen
+                        ? Icons.arrow_drop_up
+                        : Icons.arrow_drop_down,
+                  ),
+                  onPressed: _toggleDropdown,
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
-            _buildCategorySection('Reported by Me'),
-            _buildCategorySection('Viewed Recently'),
-            _buildCategorySection('All Issues'),
-            _buildCategorySection('Open Issues'),
-            _buildCategorySection('Created Recently'),
-            _buildCategorySection('Resolved Recently'),
-            _buildCategorySection('Updated Recently'),
-            _buildCategorySection('Done Issues'),
+            // The animated dropdown
+            SizeTransition(
+              sizeFactor: _animation,
+              axisAlignment: -1.0, // Align animation to the top
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDropdownOption('Reported by Me'),
+                  _buildDropdownOption('Viewed Recently'),
+                  _buildDropdownOption('All Issues'),
+                  _buildDropdownOption('Open Issues'),
+                  _buildDropdownOption('Created Recently'),
+                  _buildDropdownOption('Resolved Recently'),
+                  _buildDropdownOption('Updated Recently'),
+                  _buildDropdownOption('Done Issues'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Enlarged Animated Content (when dropdown is not open)
+            if (!_isDropdownOpen) _buildAnimatedContent(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDropdownContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+  Widget _buildDropdownOption(String title) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedCategory = title;
+        });
+        _navigateToPage(title);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Filters', style: TextStyle(fontSize: 16)),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CreateIssueScreen()),
-                );
-              },
-              child: const Text('Create',
-                  style: TextStyle(fontSize: 16, color: Colors.blue)),
+            Row(
+              children: [
+                Icon(_getCategoryIcon(title), size: 24),
+                const SizedBox(width: 8),
+                Text(title, style: const TextStyle(fontSize: 16)),
+              ],
             ),
+            const Icon(Icons.arrow_forward_ios, size: 16),
           ],
         ),
-        const SizedBox(height: 16),
-        // Add more dropdown options here if needed
-      ],
+      ),
     );
   }
 
   Widget _buildAnimatedContent() {
     return Expanded(
       child: Center(
-        child: Image.asset(
-          'assets/lotties/projectGif.gif',
-          fit: BoxFit.cover,
-          width: 50,
-          height: 50,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/space.png', // Add your placeholder image here
+              fit: BoxFit.cover,
+              width: 300,
+              height: 300,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'No work assigned... Nice!',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "When you're assigned new issues, they'll appear here",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateIssueScreen(),
+                  ),
+                );
+              },
+              child: const Text(
+                'Create Issues',
+                style: TextStyle(fontSize: 18, color: Colors.blue),
+              ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCategorySection(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(_getCategoryIcon(title), size: 24),
-              const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 16)),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.star_border),
-            onPressed: () {
-              // Star category logic
-            },
-          ),
-        ],
       ),
     );
   }
@@ -160,6 +251,7 @@ class _IssuesScreenState extends State<IssuesScreen> {
   }
 }
 
+// Create Issue Screen
 class CreateIssueScreen extends StatelessWidget {
   const CreateIssueScreen({super.key});
 
@@ -169,8 +261,41 @@ class CreateIssueScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Create New Issue'),
       ),
+      body: const Center(
+        child: Text('Create Issue Form Goes Here'),
+      ),
+    );
+  }
+}
+
+// Placeholder Screen for categories with no data
+class PlaceholderScreen extends StatelessWidget {
+  final String category;
+  const PlaceholderScreen({super.key, required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(category),
+      ),
       body: Center(
-        child: const Text('Create Issue Form Goes Here'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/data.png', // Add your placeholder image here
+              fit: BoxFit.cover,
+              width: 300,
+              height: 300,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'No data found for this category',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
     );
   }
