@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/features/project_management/presentation/screens/create_project_screen.dart';
 
 class ProjectHome extends StatefulWidget {
   const ProjectHome({super.key});
@@ -9,19 +10,20 @@ class ProjectHome extends StatefulWidget {
 
 class _ProjectHomeState extends State<ProjectHome> {
   bool _isSearching = false;
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue[900],
         elevation: 0,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const CircleAvatar(
-              radius: 20,
+              radius: 22,
               backgroundImage: NetworkImage(
                   'https://via.placeholder.com/150'), // Replace with actual user image URL
             ),
@@ -34,13 +36,14 @@ class _ProjectHomeState extends State<ProjectHome> {
                         decoration: InputDecoration(
                           hintText: 'Search Projects',
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(30),
                               borderSide: BorderSide.none),
                           filled: true,
                           fillColor: Colors.grey[200],
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon:
+                              const Icon(Icons.search, color: Colors.grey),
                           suffixIcon: IconButton(
-                            icon: const Icon(Icons.close),
+                            icon: const Icon(Icons.close, color: Colors.grey),
                             onPressed: () {
                               setState(() {
                                 _isSearching = false;
@@ -55,7 +58,7 @@ class _ProjectHomeState extends State<ProjectHome> {
                 : Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.search),
+                        icon: const Icon(Icons.search, color: Colors.white),
                         onPressed: () {
                           setState(() {
                             _isSearching = true;
@@ -63,7 +66,7 @@ class _ProjectHomeState extends State<ProjectHome> {
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(Icons.add, color: Colors.white),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -81,14 +84,16 @@ class _ProjectHomeState extends State<ProjectHome> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ListView(
+          physics: BouncingScrollPhysics(),
           children: [
             const SizedBox(height: 20),
             const Text(
               'Projects',
               style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey,
+              ),
             ),
             const SizedBox(height: 20),
             _buildCategorySection('Recently Viewed'),
@@ -101,15 +106,41 @@ class _ProjectHomeState extends State<ProjectHome> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const CreateProjectScreen()),
+          );
+        },
+        backgroundColor: Colors.blue[700],
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
   Widget _buildCategorySection(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.blueGrey),
+            onPressed: () {
+              // Filter functionality
+            },
+          ),
+        ],
       ),
     );
   }
@@ -125,22 +156,26 @@ class _ProjectHomeState extends State<ProjectHome> {
     return Column(
       children: projects.map((project) {
         return Card(
-          elevation: 2,
+          elevation: 4,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: ListTile(
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             leading: const CircleAvatar(
+              radius: 30,
               backgroundImage: NetworkImage('https://via.placeholder.com/50'),
             ),
             title: Text(
               project['name']!,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-            subtitle: Text('Last modified: ${project['date']}'),
+            subtitle: Text(
+              'Last modified: ${project['date']}',
+              style: TextStyle(color: Colors.blueGrey[300]),
+            ),
             trailing: IconButton(
-              icon: const Icon(Icons.star_border),
+              icon: const Icon(Icons.star_border, color: Colors.blueGrey),
               onPressed: () {
                 // Star project logic
               },
@@ -151,22 +186,6 @@ class _ProjectHomeState extends State<ProjectHome> {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class CreateProjectScreen extends StatelessWidget {
-  const CreateProjectScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Project'),
-      ),
-      body: const Center(
-        child: Text('Create Project Form Goes Here'),
-      ),
     );
   }
 }

@@ -59,60 +59,30 @@ class _WelcomeState extends State<Welcome> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      body: SlideTransition(
-        position: _slideAnimation, // Use slide animation here
-        child: _buildWelcomeContent(),
+      body: SingleChildScrollView(
+        child: SlideTransition(
+          position: _slideAnimation, // Use slide animation here
+          child: _buildWelcomeContent(),
+        ),
       ),
       bottomNavigationBar: const BottomNavigationBarWidget(),
     );
   }
 
-  // AppBar with user's avatar and '+' action button
+  // AppBar with '+' action button
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      title: Text(
+        'Welcome',
+        style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: Colors.white,
       elevation: 0,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Stack(
-            alignment: Alignment.topRight,
-            children: [
-              CircleAvatar(
-                backgroundImage: (widget.photoURL.isNotEmpty)
-                    ? NetworkImage(widget.photoURL)
-                    : const AssetImage('assets/default_profile.png')
-                        as ImageProvider,
-                radius: 25,
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    // Handle '+' action
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.blue[600], // Modern blue color
-                    ),
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      iconTheme: IconThemeData(color: Colors.blue[700]),
     );
   }
 
-  // Welcome content with user info
+  // Welcome content with user info and profile picture on the left
   Widget _buildWelcomeContent() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -120,23 +90,49 @@ class _WelcomeState extends State<Welcome> with SingleTickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          Text(
-            'Welcome, ${widget.displayName}!',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[700], // Professional blue shade
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            widget.email,
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.grey,
-            ),
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundImage: (widget.photoURL.isNotEmpty)
+                    ? NetworkImage(widget.photoURL)
+                    : const AssetImage('assets/default_profile.png')
+                        as ImageProvider,
+                radius: 40,
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.displayName,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[700],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.email,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 40),
+          Text(
+            'Get started with your workspace!',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue[700],
+            ),
+          ),
+          const SizedBox(height: 20),
           Center(
             child: ElevatedButton(
               onPressed: () {
@@ -162,6 +158,8 @@ class _WelcomeState extends State<Welcome> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
+          const SizedBox(height: 40),
+          // More content can be added here
         ],
       ),
     );
