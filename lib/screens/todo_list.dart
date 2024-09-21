@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
 import '../features/todo_management/common/todoForm.dart';
 import '../features/todo_management/widgets/card_todo_widget.dart';
 
-class TodoList extends StatelessWidget {
-  const TodoList({super.key});
+class TodoList extends ConsumerWidget {
+  TodoList({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // final todoData = ref.watch(fetchDataProvider);
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       appBar: AppBar(
@@ -86,7 +88,7 @@ class TodoList extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     context: context,
-                    builder: (context) => const AddNewTask(),
+                    builder: (context) => AddNewTask(),
                   ),
                   child: const Text(
                     "+ New Task",
@@ -99,9 +101,9 @@ class TodoList extends StatelessWidget {
             //Card List Task
 
             ListView.builder(
-              itemCount: 1,
+              // itemCount: todoData.value!.length,
               shrinkWrap: true,
-              itemBuilder: (context, index) => CardTodoListWidget(),
+              itemBuilder: (context, index) => CardTodoListWidget(getIndex: index,),
             ),
           ],),
         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/features/todo_management/model/todo_model.dart';
 import 'package:flutter_realtime_workspace/features/todo_management/provider/date_time_provider.dart';
+import 'package:flutter_realtime_workspace/features/todo_management/provider/service_provider.dart';
 import 'package:intl/intl.dart';
 import '../constants/appStyle.dart';
 import '../provider/radioProvider.dart';
@@ -10,9 +12,12 @@ import '../widgets/radioWidget.dart';
 import '../widgets/textFieldWidget.dart';
 
 class AddNewTask extends ConsumerWidget {
-  const AddNewTask({
+    AddNewTask({
     super.key,
   });
+
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,9 +54,10 @@ class AddNewTask extends ConsumerWidget {
             style: AppStyle.headingOne,
           ),
           const SizedBox(height: 6,),
-          const TextFieldWidget(
+           TextFieldWidget(
               hintText: "Add Task Name",
               maxLine: 1,
+             txtController: titleController,
           ),
           const SizedBox(height: 12,),
           const Text(
@@ -59,9 +65,10 @@ class AddNewTask extends ConsumerWidget {
             style: AppStyle.headingOne,
           ),
           const SizedBox(height: 6,),
-          const TextFieldWidget(
+          TextFieldWidget(
             hintText: "Add Description",
             maxLine: 4,
+            txtController: descriptionController,
           ),
           const SizedBox(height: 12,),
 
@@ -182,7 +189,39 @@ class AddNewTask extends ConsumerWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    final getRadioValue = ref.read(radioProvider);
+                    String category = "";
+
+                    switch (getRadioValue) {
+                      case 1:
+                        category = "Learning";
+                        break;
+                      case 2:
+                        category = "Working";
+                        break;
+                      case 3:
+                        category = "General";
+                        break;
+                    }
+
+                    ref.read(serviceProvider).addNewTask(
+                      TodoModel(
+                          titleTask: titleController.text,
+                          description: descriptionController.text,
+                          category: category,
+                          dateTask: ref.read(dateProvider),
+                          timeTask: ref.read(timeProvider),
+                          isDone: false,
+                      ),
+                    );
+                    print("Data is saving");
+                    
+                    titleController.clear();
+                    descriptionController.clear();
+                    ref.read(radioProvider.notifier).update((state) => 0);
+                    Navigator.pop(context);
+                  },
                   child: const Text("Create"),
                 ) ,
               ),

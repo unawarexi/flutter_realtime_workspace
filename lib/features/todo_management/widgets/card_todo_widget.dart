@@ -1,77 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/features/todo_management/provider/service_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CardTodoListWidget extends StatelessWidget {
+class CardTodoListWidget extends ConsumerWidget {
   const CardTodoListWidget({
     super.key,
+    required this.getIndex,
   });
 
+  final int getIndex;
+
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
-            ),
-            width: 20,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todoData = ref.watch(fetchStreamProvider);
+    return todoData.when(
+        data: (todoData) => Container(
+          width: double.infinity,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text("Learning Web development"),
-                    subtitle: Text("Learning topic HTML and CSS"),
-                    trailing: Transform.scale(
-                      scale: 1.5,
-                      child: Checkbox(
-                        activeColor: Colors.blue.shade800,
-                        shape: const CircleBorder(),
-                        value: false,
-                        onChanged: (value) => print (value),
-                      ),
-                    ),
+          child: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
                   ),
-                  Transform.translate(
-                    offset: const Offset(0, -12),
-                    child: Container(
-                      child: Column(
-                        children: [
-                          Divider(
-                            thickness: 1.5,
-                            color: Colors.grey.shade200,
+                ),
+                width: 20,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(todoData[getIndex].titleTask),
+                        subtitle: Text(todoData[getIndex].description),
+                        trailing: Transform.scale(
+                          scale: 1.5,
+                          child: Checkbox(
+                            activeColor: Colors.blue.shade800,
+                            shape: const CircleBorder(),
+                            value: todoData[getIndex].isDone,
+                            onChanged: (value) => print (value),
                           ),
-                          Row(
-                            children: const [
-                              Text("Today"),
-                              SizedBox(width: 12,),
-                              Text("09:15PM - 11:45PM"),
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, -12),
+                        child: Container(
+                          child: Column(
+                            children: [
+                              Divider(
+                                thickness: 1.5,
+                                color: Colors.grey.shade200,
+                              ),
+                              Row(
+                                children: [
+                                  Text("Today"),
+                                  SizedBox(width: 12,),
+                                  Text(todoData[getIndex].timeTask),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+        error: (error, stackTrace) => Center(
+          child: Text(stackTrace.toString()),
+        ),
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
     );
   }
 }
+
