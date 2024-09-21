@@ -28,7 +28,7 @@ class NotificationScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Container(
+                    child: SizedBox(
                       height: 50,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
@@ -90,8 +90,8 @@ class NotificationScreen extends StatelessWidget {
         onPressed: () {
           _showSnoozeOptions(context);
         },
-        child: const Icon(Icons.notifications),
         backgroundColor: Colors.blue[400],
+        child: const Icon(Icons.notifications),
       ),
     );
   }
@@ -180,7 +180,7 @@ class NotificationScreen extends StatelessWidget {
                     Navigator.pop(context);
                   },
                 );
-              }).toList(),
+              }),
             ],
           ),
         );

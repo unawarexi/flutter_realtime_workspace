@@ -46,7 +46,8 @@ class _PasswordAuthenticationState extends State<PasswordAuthentication>
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                borderSide:
+                    const BorderSide(color: Colors.blueAccent, width: 2),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -69,7 +70,8 @@ class _PasswordAuthenticationState extends State<PasswordAuthentication>
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                borderSide:
+                    const BorderSide(color: Colors.blueAccent, width: 2),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),

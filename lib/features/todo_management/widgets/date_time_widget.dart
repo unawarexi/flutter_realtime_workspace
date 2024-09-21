@@ -28,7 +28,9 @@ class DateTimeWidget extends ConsumerWidget {
             titleText,
             style: AppStyle.headingOne,
           ),
-          SizedBox(height: 6,),
+          const SizedBox(
+            height: 6,
+          ),
           Material(
             child: Ink(
               decoration: BoxDecoration(
@@ -39,7 +41,7 @@ class DateTimeWidget extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10),
                 onTap: () => onTap,
                 child: Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 12,
                   ),
@@ -50,7 +52,9 @@ class DateTimeWidget extends ConsumerWidget {
                   child: Row(
                     children: [
                       Icon(iconSection),
-                      SizedBox(height: 6,),
+                      const SizedBox(
+                        height: 6,
+                      ),
                       Text(valueText),
                     ],
                   ),
@@ -58,7 +62,8 @@ class DateTimeWidget extends ConsumerWidget {
               ),
             ),
           ),
-        ],),
+        ],
+      ),
     );
   }
 }

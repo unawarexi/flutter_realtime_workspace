@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/features/project_management/presentation/screens/create_project_screen.dart';
+import 'package:flutter_realtime_workspace/features/project_management/presentation/screens/project_timeline_screen.dart';
 
 class ProjectHome extends StatefulWidget {
   const ProjectHome({super.key});
@@ -84,7 +85,7 @@ class _ProjectHomeState extends State<ProjectHome> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ListView(
-          physics: BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
           children: [
             const SizedBox(height: 20),
             const Text(
@@ -98,11 +99,12 @@ class _ProjectHomeState extends State<ProjectHome> {
             const SizedBox(height: 20),
             _buildCategorySection('Recently Viewed'),
             const SizedBox(height: 10),
-            _buildProjectList(),
+            _buildProjectList(
+                context), // Updated project list to make it clickable
             const SizedBox(height: 30),
             _buildCategorySection('All Projects'),
             const SizedBox(height: 10),
-            _buildProjectList(),
+            _buildProjectList(context),
           ],
         ),
       ),
@@ -145,8 +147,7 @@ class _ProjectHomeState extends State<ProjectHome> {
     );
   }
 
-  Widget _buildProjectList() {
-    // Example static project items for demonstration.
+  Widget _buildProjectList(BuildContext context) {
     List<Map<String, String>> projects = [
       {'name': 'Project Alpha', 'date': '14 Sep 2024'},
       {'name': 'Project Beta', 'date': '12 Sep 2024'},
@@ -156,7 +157,7 @@ class _ProjectHomeState extends State<ProjectHome> {
     return Column(
       children: projects.map((project) {
         return Card(
-          elevation: 4,
+          elevation: 6,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: ListTile(
@@ -181,7 +182,13 @@ class _ProjectHomeState extends State<ProjectHome> {
               },
             ),
             onTap: () {
-              // Open project details
+              // Navigate to the project timeline screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        ProjectTimelineScreen(projectName: project['name']!)),
+              );
             },
           ),
         );

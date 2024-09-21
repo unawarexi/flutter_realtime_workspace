@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-
-import '../features/todo_management/common/todoForm.dart';
+import '../features/todo_management/common/todo_form.dart';
 import '../features/todo_management/widgets/card_todo_widget.dart';
 
 class TodoList extends StatelessWidget {
@@ -23,7 +22,7 @@ class TodoList extends StatelessWidget {
             child: Image.asset("assets/avatar.png"),
           ),
           title: Text(
-            "Hello I\'m",
+            "Hello I'm",
             style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
           ),
           subtitle: const Text(
@@ -32,81 +31,90 @@ class TodoList extends StatelessWidget {
           ),
         ),
         actions: [
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Row(children: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(CupertinoIcons.calendar),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(CupertinoIcons.bell),
-              ),
-            ],),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(CupertinoIcons.calendar),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(CupertinoIcons.bell),
+                ),
+              ],
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(children: [
-            const SizedBox(height: 20,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Today\'s Task",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 20,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Today's Task",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      Text(
+                        ""
+                        "Tuesday, 03 September",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD5E8FA),
+                      foregroundColor: Colors.blue.shade800,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    Text(""
-                        "Tuesday, 03 September",
-                      style: TextStyle(color: Colors.grey),
+                    onPressed: () => showModalBottomSheet(
+                      isScrollControlled: true,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      context: context,
+                      builder: (context) => const AddNewTask(),
                     ),
-                  ],
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD5E8FA),
-                    foregroundColor: Colors.blue.shade800,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    child: const Text(
+                      "+ New Task",
                     ),
                   ),
-                  onPressed: () => showModalBottomSheet(
-                    isScrollControlled: true,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    context: context,
-                    builder: (context) => const AddNewTask(),
-                  ),
-                  child: const Text(
-                    "+ New Task",
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20,),
+                ],
+              ),
+              const SizedBox(
+                height: 20,
+              ),
 
-            //Card List Task
+              //Card List Task
 
-            ListView.builder(
-              itemCount: 1,
-              shrinkWrap: true,
-              itemBuilder: (context, index) => CardTodoListWidget(),
-            ),
-          ],),
+              ListView.builder(
+                itemCount: 1,
+                shrinkWrap: true,
+                itemBuilder: (context, index) => const CardTodoListWidget(),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-

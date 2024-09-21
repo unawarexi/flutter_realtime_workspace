@@ -17,7 +17,7 @@ class CardTodoListWidget extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12),
                 bottomLeft: Radius.circular(12),
@@ -34,15 +34,15 @@ class CardTodoListWidget extends StatelessWidget {
                 children: [
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text("Learning Web development"),
-                    subtitle: Text("Learning topic HTML and CSS"),
+                    title: const Text("Learning Web development"),
+                    subtitle: const Text("Learning topic HTML and CSS"),
                     trailing: Transform.scale(
                       scale: 1.5,
                       child: Checkbox(
                         activeColor: Colors.blue.shade800,
                         shape: const CircleBorder(),
                         value: false,
-                        onChanged: (value) => print (value),
+                        onChanged: (value) => print(value),
                       ),
                     ),
                   ),
@@ -55,10 +55,12 @@ class CardTodoListWidget extends StatelessWidget {
                             thickness: 1.5,
                             color: Colors.grey.shade200,
                           ),
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Text("Today"),
-                              SizedBox(width: 12,),
+                              SizedBox(
+                                width: 12,
+                              ),
                               Text("09:15PM - 11:45PM"),
                             ],
                           ),

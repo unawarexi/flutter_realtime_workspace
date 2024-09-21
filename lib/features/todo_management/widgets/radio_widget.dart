@@ -27,9 +27,9 @@ class RadioWidget extends ConsumerWidget {
           activeColor: categColor,
           contentPadding: EdgeInsets.zero,
           title: Transform.translate(
-            offset: Offset(-22, 0),
+            offset: const Offset(-22, 0),
             child: Text(
-                titleRadio,
+              titleRadio,
               style: TextStyle(
                 color: categColor,
                 fontWeight: FontWeight.w700,
