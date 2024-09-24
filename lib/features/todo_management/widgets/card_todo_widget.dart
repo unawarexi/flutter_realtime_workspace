@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/features/todo_management/provider/service_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,9 +13,31 @@ class CardTodoListWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+
+
     final todoData = ref.watch(fetchStreamProvider);
     return todoData.when(
-        data: (todoData) => Container(
+        data: (todoData) {
+          Color categoryColor = Colors.white;
+
+          final getCategory = todoData[getIndex].category;
+
+          switch(getCategory) {
+            case "Learning" :
+              categoryColor = Colors.green;
+            break;
+
+            case "Working" :
+              categoryColor = Colors.blue.shade700;
+              break;
+
+            case "General" :
+              categoryColor = Colors.amber.shade700;
+              break;
+          }
+
+          return Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
           width: double.infinity,
           height: 120,
           decoration: BoxDecoration(
@@ -25,6 +48,7 @@ class CardTodoListWidget extends ConsumerWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
+                  color: categoryColor,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
@@ -41,15 +65,39 @@ class CardTodoListWidget extends ConsumerWidget {
                     children: [
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(todoData[getIndex].titleTask),
-                        subtitle: Text(todoData[getIndex].description),
+                        leading: IconButton(
+                            onPressed: () => ref.read(serviceProvider).deleteTask
+                              (todoData[getIndex].docID),
+                            icon: Icon(CupertinoIcons.delete),
+                        ),
+                        title: Text(
+                          todoData[getIndex].titleTask,
+                          maxLines: 1,
+                          style: TextStyle(
+                            decoration: todoData[getIndex].isDone? TextDecoration.lineThrough : null
+                          ),
+                        ),
+                        subtitle: Text(
+                          todoData[getIndex].description,
+                          maxLines: 1,
+                          style: TextStyle(
+                              decoration: todoData[getIndex].isDone
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                          ),
+                        ),
                         trailing: Transform.scale(
                           scale: 1.5,
                           child: Checkbox(
                             activeColor: Colors.blue.shade800,
                             shape: const CircleBorder(),
                             value: todoData[getIndex].isDone,
-                            onChanged: (value) => print (value),
+                            onChanged: (value) => ref
+                                .read(serviceProvider)
+                                .updateTask(todoData[getIndex]
+                                .docID,
+                                value,
+                            ),
                           ),
                         ),
                       ),
@@ -79,7 +127,8 @@ class CardTodoListWidget extends ConsumerWidget {
               ),
             ],
           ),
-        ),
+        );
+        },
         error: (error, stackTrace) => Center(
           child: Text(stackTrace.toString()),
         ),

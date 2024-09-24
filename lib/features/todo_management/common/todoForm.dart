@@ -6,10 +6,10 @@ import 'package:flutter_realtime_workspace/features/todo_management/provider/ser
 import 'package:intl/intl.dart';
 import '../constants/appStyle.dart';
 import '../provider/radioProvider.dart';
-import '../widgets/dateTimeWidget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/radioWidget.dart';
-import '../widgets/textFieldWidget.dart';
+import '../widgets/date_time_widget.dart';
+import '../widgets/radio_widget.dart';
+import '../widgets/text_field_widget.dart';
 
 class AddNewTask extends ConsumerWidget {
     AddNewTask({

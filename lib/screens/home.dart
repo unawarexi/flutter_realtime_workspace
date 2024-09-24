@@ -160,7 +160,7 @@ class Home extends StatelessWidget {
         const SizedBox(width: 20),
 
         // Personalized Text
-        Container(
+        SizedBox(
           width: screenWidth * 0.4,
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +194,7 @@ class Home extends StatelessWidget {
       leading: Icon(icon, color: Colors.blue),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: Icon(Icons.more_vert),
+      trailing: const Icon(Icons.more_vert),
     );
   }
 

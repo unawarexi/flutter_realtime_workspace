@@ -20,7 +20,7 @@ class OnboardingBiometric {
         return true;
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Biometric authentication failed.')),
+          const SnackBar(content: Text('Biometric authentication failed.')),
         );
         return false;
       }

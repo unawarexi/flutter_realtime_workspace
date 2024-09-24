@@ -6,7 +6,7 @@ import 'package:flutter_realtime_workspace/screens/project.dart';
 import '../../screens/home.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
-  const BottomNavigationBarWidget({Key? key}) : super(key: key);
+  const BottomNavigationBarWidget({super.key});
 
   @override
   _BottomNavigationBarWidgetState createState() =>

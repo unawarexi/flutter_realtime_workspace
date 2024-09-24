@@ -11,7 +11,7 @@ class TodoList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // final todoData = ref.watch(fetchDataProvider);
+    final todoData = ref.watch(fetchDataProvider);
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       appBar: AppBar(
@@ -101,9 +101,10 @@ class TodoList extends ConsumerWidget {
             //Card List Task
 
             ListView.builder(
-              // itemCount: todoData.value!.length,
+              itemCount: todoData.value!.length ?? 0,
               shrinkWrap: true,
-              itemBuilder: (context, index) => CardTodoListWidget(getIndex: index,),
+              itemBuilder: (context, index) =>
+                  CardTodoListWidget(getIndex: index,),
             ),
           ],),
         ),
