@@ -41,6 +41,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  carousel_slider:
+    dependency: "direct main"
+    description:
+      name: carousel_slider
+      sha256: "7b006ec356205054af5beaef62e2221160ea36b90fb70a35e4deacd49d0349ae"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.0"
   characters:
     dependency: transitive
     description:
@@ -246,6 +254,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  flutter_neumorphic_plus:
+    dependency: "direct main"
+    description:
+      name: flutter_neumorphic_plus
+      sha256: "8fa0a1ff1c025e2d61850798d244e61c37cd4717bd340eadf4c9baa00b24353f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.4.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -280,6 +296,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  gantt_chart:
+    dependency: "direct main"
+    description:
+      name: gantt_chart
+      sha256: "23a53b671688f1359ddd9700bd6652c776b795cd6c9fdd0eddefe6535b362c8d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.0"
   geolocator:
     dependency: "direct main"
     description:
@@ -853,6 +877,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  syncfusion_flutter_charts:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_charts
+      sha256: cdc207291ad0caf34cb9e20caa8938ff65f67a413b3a86a14d3a7b341a772100
+      url: "https://pub.dev"
+    source: hosted
+    version: "27.1.48"
+  syncfusion_flutter_core:
+    dependency: transitive
+    description:
+      name: syncfusion_flutter_core
+      sha256: "4347f4d2f5d89461df2c53e6fbf53aef38c7f05ed79b0760d935fb1ec836213b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "27.1.48"
   term_glyph:
     dependency: transitive
     description:
@@ -1005,6 +1045,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.15.0"
+  week_of_year:
+    dependency: transitive
+    description:
+      name: week_of_year
+      sha256: "578d2a9c7d93264b363ff3b1789e1acbae42295e803e70d362cfa07fcb73d3d1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   xdg_directories:
     dependency: transitive
     description:

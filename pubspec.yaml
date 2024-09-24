@@ -34,6 +34,10 @@ dependencies:
   geolocator: ^13.0.1
   shared_preferences: ^2.3.2
   local_auth: ^2.3.0
+  flutter_neumorphic_plus: ^3.4.0
+  carousel_slider: ^5.0.0
+  syncfusion_flutter_charts: ^27.1.48
+  gantt_chart: ^0.3.0
   # lottie: ^3.1.2
 
   # ICONS

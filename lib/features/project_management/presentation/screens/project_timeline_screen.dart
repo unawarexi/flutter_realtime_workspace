@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/features/todo_management/common/todo_form.dart';
 import 'package:flutter_realtime_workspace/screens/todo_list.dart';
 
 class ProjectTimelineScreen extends StatefulWidget {
@@ -12,7 +13,7 @@ class ProjectTimelineScreen extends StatefulWidget {
 
 class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
   bool _showFilters = false;
-  int _activeTabIndex = 1; // Default tab to be Timeline
+  int _activeTabIndex = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -34,19 +35,14 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // Handle more options
-            },
+            onPressed: () {},
           ),
         ],
       ),
       body: Column(
         children: [
-          // Filter Section
           if (_showFilters) _buildFilterSection(),
-          // Tabs
           _buildTabs(),
-          // Content Section Based on Active Tab
           Expanded(
             child: _buildTabContent(),
           ),
@@ -55,7 +51,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
     );
   }
 
-  // Tab Section
   Widget _buildTabs() {
     return Padding(
       padding: const EdgeInsets.all(10.0),
@@ -70,7 +65,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
     );
   }
 
-  // Method to Build Individual Tabs
   Widget _buildTabOption(String title, int index) {
     bool isActive = _activeTabIndex == index;
     return GestureDetector(
@@ -101,21 +95,19 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
     );
   }
 
-  // Display Content Based on the Active Tab
   Widget _buildTabContent() {
     switch (_activeTabIndex) {
       case 0:
-        return _buildBoardContent(); // Board Screen
+        return _buildBoardContent();
       case 1:
-        return _buildTimelineContent(); // Timeline Screen
+        return _buildTimelineContent();
       case 2:
-        return _buildSettingsContent(); // Settings Screen
+        return _buildSettingsContent();
       default:
         return Container();
     }
   }
 
-  // Board Screen Content with Sliding To Do, In Progress, Done
   Widget _buildBoardContent() {
     return PageView(
       children: [
@@ -133,7 +125,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title and Options
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
@@ -148,7 +139,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
             ],
           ),
         ),
-        // Placeholder Image and Text
         Expanded(
           child: Center(
             child: Column(
@@ -172,7 +162,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
             ),
           ),
         ),
-        // Create and Attachment Options
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
@@ -183,24 +172,24 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
                 onPressed: _showAttachmentOptions,
               ),
               ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const TodoList()),
-                  );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text("Create"),
+                onPressed: () => showModalBottomSheet(
+                  isScrollControlled: true,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  context: context,
+                  builder: (context) => const AddNewTask(),
+                ),
+                label: const Text("+ New Task"),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               ),
             ],
           ),
-        ),
+        )
       ],
     );
   }
 
-  // Function to Show Attachment Options Pop-Up
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
@@ -221,19 +210,16 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
     );
   }
 
-  // Single Option for Attachments
   Widget _buildAttachmentOption(IconData icon, String label) {
     return ListTile(
       leading: Icon(icon, color: Colors.blue),
       title: Text(label),
       onTap: () {
-        // Handle Attachment Option
         Navigator.pop(context);
       },
     );
   }
 
-  // Timeline Screen Content
   Widget _buildTimelineContent() {
     return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -253,7 +239,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
     );
   }
 
-  // Settings Screen Content
   Widget _buildSettingsContent() {
     return const Center(
       child: Text(
@@ -263,7 +248,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
     );
   }
 
-  // Filter Section
   Widget _buildFilterSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
@@ -295,9 +279,7 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen> {
       children: options.map((option) {
         return ListTile(
           title: Text(option),
-          onTap: () {
-            // Handle filter option selection
-          },
+          onTap: () {},
         );
       }).toList(),
     );

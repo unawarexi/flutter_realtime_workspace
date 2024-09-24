@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+import 'package:flutter_realtime_workspace/features/dashboard_management/default_dashboard.dart';
+import 'package:flutter_realtime_workspace/features/dashboard_management/financial_overview_dashboard.dart';
+import 'package:flutter_realtime_workspace/features/dashboard_management/gnatt_charts_dasboard.dart';
+import 'package:flutter_realtime_workspace/features/dashboard_management/milestone_dashboard.dart';
+import 'package:flutter_realtime_workspace/features/dashboard_management/starred_dashboards.dart';
+import 'package:flutter_realtime_workspace/features/dashboard_management/team_performance_dashboard.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -8,19 +15,23 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  bool _isDropdownExpanded = false; // For toggling dropdown
-  String _selectedDashboard = "Default Dashboard"; // Default dashboard
+  bool _isDropdownExpanded = false;
+  String _selectedDashboard = "Default Dashboard";
 
-  // Dashboard options
-  final List<String> dashboardOptions = [
-    "Starred Dashboards",
-    "Default Dashboard",
-    "Active Projects Dashboards",
-    "Gantt Timeline Charts Dashboard",
-    "Team Performance Dashboard",
-    "Milestones Dashboard",
-    "Financial Overview Dashboard",
-  ];
+  final Map<String, Widget> dashboardOptions = {
+    "Starred Dashboards": const StarredDashboard(title: "Starred Dashboards"),
+    "Default Dashboard":
+        const DefaultDashboard("Some option", title: "Default Dashboard"),
+    "Active Projects Dashboards": Container(),
+    "Gantt Timeline Charts Dashboard":
+        const GanttTimelineDashboard(title: "Gantt Timeline Charts"),
+    "Team Performance Dashboard":
+        const TeamPerformanceDashboard(title: "Team Performance"),
+    "Milestones Dashboard":
+        const MilestonesDashboard(title: "Milestones Dashboard"),
+    "Financial Overview Dashboard":
+        const FinancialOverviewDashboard(title: "Financial Overview"),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Dashboards'),
         centerTitle: true,
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.white,
         elevation: 0,
       ),
       body: SafeArea(
@@ -36,22 +47,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(16.0),
           child: ListView(
             children: [
-              // Dropdown Section
               _buildDashboardDropdown(),
-
               const SizedBox(height: 20),
-
-              // Assigned to me Section
+              if (_selectedDashboard == "Default Dashboard")
+                _buildDefaultDashboard(),
+              const SizedBox(height: 20),
               _buildAssignedToMeSection(),
-
               const SizedBox(height: 20),
-
-              // Activity Streams Section
               _buildActivityStreamSection(),
-
               const SizedBox(height: 30),
-
-              // Missing Features Section
               _buildMissingFeaturesSection(),
             ],
           ),
@@ -60,28 +64,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Dashboard Dropdown
   Widget _buildDashboardDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.blueAccent.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+    return Neumorphic(
+      style: const NeumorphicStyle(
+        depth: 8,
+        intensity: 0.5,
+        color: Colors.white,
       ),
       child: ExpansionTile(
         title: Text(
           _selectedDashboard,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueAccent),
         ),
-        trailing: const Icon(Icons.arrow_drop_down),
+        trailing: const Icon(Icons.arrow_drop_down, color: Colors.blueAccent),
         initiallyExpanded: _isDropdownExpanded,
         onExpansionChanged: (expanded) {
           setState(() {
             _isDropdownExpanded = expanded;
           });
         },
-        children: dashboardOptions.map((option) {
+        children: dashboardOptions.keys.map((option) {
           return ListTile(
-            title: Text(option),
+            title: Text(option, style: const TextStyle(color: Colors.black)),
             onTap: () {
               setState(() {
                 _selectedDashboard = option;
@@ -90,7 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PlaceholderScreen(title: option),
+                  builder: (context) => dashboardOptions[option]!,
                 ),
               );
             },
@@ -100,7 +107,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Assigned to Me Section
+  Widget _buildDefaultDashboard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        // color: Colors.blueAccent.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/manage.png',
+              width: 200,
+              height: 200,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "Click to explore charts and performance",
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAssignedToMeSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +154,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Activity Streams Section
   Widget _buildActivityStreamSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,9 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Icons.autorenew,
                 color: Colors.blueAccent,
               ),
-              onPressed: () {
-                // Handle refresh action
-              },
+              onPressed: () {},
             ),
           ],
         ),
@@ -169,7 +199,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Missing Features Section
   Widget _buildMissingFeaturesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,9 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 10),
         TextButton(
-          onPressed: () {
-            // Handle feedback action
-          },
+          onPressed: () {},
           child: const Text(
             "Send Feedback",
             style: TextStyle(
@@ -207,42 +234,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Reusable card item for 'Assigned to Me' section
   Widget _buildCardItem(String title, String subtitle) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Neumorphic(
+      style: const NeumorphicStyle(
+        depth: 4,
+        intensity: 0.4,
+        color: Colors.white,
       ),
       child: ListTile(
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),
-        onTap: () {
-          // Handle navigation to the specific project/issue screen
-        },
-      ),
-    );
-  }
-}
-
-// Placeholder screen for dashboard options
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-
-  const PlaceholderScreen({required this.title, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: Colors.blueAccent,
-      ),
-      body: Center(
-        child: Text(
-          "Screen for $title",
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        onTap: () {},
       ),
     );
   }

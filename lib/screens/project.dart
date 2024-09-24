@@ -131,7 +131,7 @@ class _ProjectHomeState extends State<ProjectHome> {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.blueGrey,
             ),
@@ -169,7 +169,7 @@ class _ProjectHomeState extends State<ProjectHome> {
             ),
             title: Text(
               project['name']!,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             subtitle: Text(
               'Last modified: ${project['date']}',
