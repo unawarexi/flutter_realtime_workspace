@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/core/services/apis/create_project_services.dart';
 import 'package:flutter_realtime_workspace/features/project_management/presentation/screens/create_project_screen.dart';
-import 'package:flutter_realtime_workspace/features/project_management/presentation/screens/project_timeline_screen.dart';
+import 'package:flutter_realtime_workspace/features/project_management/presentation/screens/project_timeline_screen.dart';      
+import 'package:flutter_realtime_workspace/features/project_management/domain/models/create_project_model.dart';
 
 class ProjectHome extends StatefulWidget {
   const ProjectHome({super.key});
@@ -12,6 +14,21 @@ class ProjectHome extends StatefulWidget {
 class _ProjectHomeState extends State<ProjectHome> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  final ProjectService _projectService = ProjectService();
+  List<Project> _projects = []; // List to store fetched projects
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProjects(); // Fetch projects when the widget is initialized
+  }
+
+  Future<void> _fetchProjects() async {
+    List<Project> projects = await _projectService.getProjects();
+    setState(() {
+      _projects = projects; // Update the state with fetched projects
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,12 +116,11 @@ class _ProjectHomeState extends State<ProjectHome> {
             const SizedBox(height: 20),
             _buildCategorySection('Recently Viewed'),
             const SizedBox(height: 10),
-            _buildProjectList(
-                context), // Updated project list to make it clickable
+            _buildProjectList(context, 'Recently Viewed', _projects),
             const SizedBox(height: 30),
             _buildCategorySection('All Projects'),
             const SizedBox(height: 10),
-            _buildProjectList(context),
+            _buildProjectList(context, 'All Projects', _projects),
           ],
         ),
       ),
@@ -147,13 +163,8 @@ class _ProjectHomeState extends State<ProjectHome> {
     );
   }
 
-  Widget _buildProjectList(BuildContext context) {
-    List<Map<String, String>> projects = [
-      {'name': 'Project Alpha', 'date': '14 Sep 2024'},
-      {'name': 'Project Beta', 'date': '12 Sep 2024'},
-      {'name': 'Project Gamma', 'date': '10 Sep 2024'},
-    ];
-
+  Widget _buildProjectList(
+      BuildContext context, String title, List<Project> projects) {
     return Column(
       children: projects.map((project) {
         return Card(
@@ -168,11 +179,11 @@ class _ProjectHomeState extends State<ProjectHome> {
               backgroundImage: NetworkImage('https://via.placeholder.com/50'),
             ),
             title: Text(
-              project['name']!,
+              project.name, // Use project.name instead of project['name']
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             subtitle: Text(
-              'Last modified: ${project['date']}',
+              'Last modified: ${project.date}', // Use project.date instead of project['date']
               style: TextStyle(color: Colors.blueGrey[300]),
             ),
             trailing: IconButton(
@@ -186,8 +197,9 @@ class _ProjectHomeState extends State<ProjectHome> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) =>
-                        ProjectTimelineScreen(projectName: project['name']!)),
+                    builder: (context) => ProjectTimelineScreen(
+                        projectName: project
+                            .name)), // Use project.name instead of project['name']
               );
             },
           ),

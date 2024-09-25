@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/core/errors/project_error.dart';
+import 'package:flutter_realtime_workspace/core/services/apis/create_project_services.dart';
+import 'package:flutter_realtime_workspace/core/utils/file_exception.dart';
+import 'package:flutter_realtime_workspace/features/project_management/domain/models/create_project_model.dart';
+import 'package:flutter_realtime_workspace/features/project_management/presentation/widgets/project_templates.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -11,8 +16,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _projectDescriptionController =
       TextEditingController();
-  String? _selectedTemplate;
-  bool _isDropdownOpen = false;
 
   final List<Map<String, String>> _projectTemplates = [
     {
@@ -46,10 +49,56 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     },
   ];
 
-  void _toggleDropdown() {
+  String? selectedTemplate;
+  final ProjectService _projectService = ProjectService();
+  bool _isLoading = false; // State variable for loading
+
+  void _handleTemplateSelected(String? template) {
     setState(() {
-      _isDropdownOpen = !_isDropdownOpen;
+      selectedTemplate = template;
     });
+  }
+
+  Future<void> _createProject() async {
+    setState(() {
+      _isLoading = true; // Show loading spinner
+    });
+
+    try {
+      // Generate a unique project ID
+      String generatedId = FileException.generateUniqueId();
+
+      // Upload file and get its URL
+      String? fileUrl = await FileException.uploadFile();
+
+      // Create the project
+      final newProject = Project(
+        id: generatedId,
+        name: _projectNameController.text,
+        description: _projectDescriptionController.text,
+        template: selectedTemplate ??
+            '', // Default to an empty string if no template is selected
+        projectKey: '', // Populate as necessary
+        fileUrl: fileUrl ?? '', // Use the file URL
+        date: DateTime.now(),
+      );
+
+      // Call the service to create the project
+      bool isSuccess = await _projectService.createProject(newProject);
+
+      if (isSuccess) {
+        ProjectError.showSuccessToast('Project created successfully!');
+      } else {
+        ProjectError.showErrorToast(
+            'Project creation failed. Please try again.');
+      }
+    } catch (e) {
+      ProjectError.showErrorToast('An error occurred: $e');
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loading spinner
+      });
+    }
   }
 
   @override
@@ -71,7 +120,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             children: [
               Center(
                 child: Image.asset(
-                  'assets/images/design.png', // Replace with actual asset image
+                  'assets/images/design.png',
                   height: 200,
                   width: 200,
                 ),
@@ -109,7 +158,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               ),
               const SizedBox(height: 20),
               // Project Template Dropdown
-              _buildTemplateSection(),
+              ProjectTemplateDropdown(
+                projectTemplates: _projectTemplates,
+                onTemplateSelected: _handleTemplateSelected,
+              ),
               const SizedBox(height: 20),
               // Project Key
               TextFormField(
@@ -130,9 +182,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               const SizedBox(height: 30),
               // Create Project Button
               ElevatedButton(
-                onPressed: () {
-                  // Create project logic
-                },
+                onPressed: _isLoading ? null : _createProject,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue[700],
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -140,137 +190,20 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     borderRadius: BorderRadius.circular(15),
                   ),
                 ),
-                child: const Center(
-                  child: Text(
-                    'Create Project',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    : const Center(
+                        child: Text(
+                          'Create Project',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTemplateSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Project Template',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 10),
-        InkWell(
-          onTap: _toggleDropdown,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _selectedTemplate ?? 'Choose a Template',
-                  style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
-                ),
-                const Icon(Icons.arrow_drop_down, color: Colors.blueGrey),
-              ],
-            ),
-          ),
-        ),
-        if (_isDropdownOpen) _buildTemplateDropdown(),
-      ],
-    );
-  }
-
-  Widget _buildTemplateDropdown() {
-    return Container(
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: _projectTemplates.map((template) {
-          return ListTile(
-            contentPadding: EdgeInsets.zero, // Remove default padding
-            title: Row(
-              children: [
-                // Image on the left, taking 30% of the width
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.2,
-                  child: Image.asset(
-                    template['icon']!, // Your icon assets
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(
-                    width: 24), // Space between image and text (3rem)
-                // Text on the right, taking 70% of the width
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        template['name']!,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(
-                          height: 5), // Space between name and description
-                      Text(
-                        template['description']!,
-                        style: const TextStyle(
-                          fontSize: 12.0,
-                        ),
-                      ),
-                      const SizedBox(height: 10), // Space before 'Learn More'
-                      // 'Learn More' text at the bottom
-                      const Text(
-                        'Learn More',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            onTap: () {
-              setState(() {
-                _selectedTemplate = template['name'];
-                _isDropdownOpen = false;
-              });
-            },
-          );
-        }).toList(),
       ),
     );
   }
@@ -289,13 +222,12 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             // File upload logic
           },
           icon: const Icon(Icons.upload_file, color: Colors.white),
-          label: const Text('Choose File'),
+          label: const Text(
+            'Upload File',
+            style: TextStyle(color: Colors.white),
+          ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueGrey[700],
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
+            backgroundColor: Colors.blue[600],
           ),
         ),
       ],
