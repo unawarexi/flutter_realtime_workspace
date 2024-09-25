@@ -139,8 +139,8 @@ class DefaultDashboard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(
-          children: const [
+        child: const Column(
+          children: [
             Text(
               'Animated Card',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
