@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "869338390823",
+    "project_id": "flutter-realtime-workspace",
+    "storage_bucket": "flutter-realtime-workspace.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869338390823:android:4bcfe3e94225b7a4244902",
+        "android_client_info": {
+          "package_name": "com.example.flutterRealtimeWorkspace"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "869338390823-tujtuhsp1lcr3ufp21o2ltul56lcuuuv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.flutterRealtimeWorkspace",
+            "certificate_hash": "6583962bd5cf6c39452c9024550b403c70e1a360"
+          }
+        },
+        {
+          "client_id": "869338390823-0lkvjpd8ld9410s5phlgjpdkpthcvpvd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqWuVkYZt5RVyNOggzI-s1E9w7HJ7oheE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "869338390823-0lkvjpd8ld9410s5phlgjpdkpthcvpvd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "869338390823-qdpldi5i8m6m9n20024dmrg36p5a6rat.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.flutterRealtimeWorkspace"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

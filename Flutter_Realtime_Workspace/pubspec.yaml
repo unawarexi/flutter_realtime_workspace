@@ -1,0 +1,161 @@
+name: flutter_realtime_workspace
+description: "Teamspot — Real-time collaborative workspace platform."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- AUTHENTICATION ---
+  firebase_auth: ^5.2.0
+  google_sign_in: ^6.2.1
+  github_sign_in_plus: ^0.0.2
+  msal_auth: ^3.1.4
+  pin_code_fields: ^8.0.1
+  local_auth: ^2.3.0
+
+  # --- FIREBASE / STORAGE ---
+  firebase_core: ^3.4.0
+  firebase_storage: ^12.3.1
+  firebase_app_check: ^0.3.2+9
+  firebase_messaging: ^15.2.6
+  cloud_firestore: ^5.6.8
+
+  # --- LOCAL STORAGE / CACHE ---
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  flutter_secure_storage: ^9.2.4
+  get_storage: ^2.1.1
+  shared_preferences: ^2.3.2
+
+  # --- NETWORKING ---
+  dio: ^5.8.0+1
+  dio_smart_retry: ^7.0.1
+  connectivity_plus: ^6.0.5
+  http: ^1.2.0
+
+  # --- NAVIGATION ---
+  go_router: ^16.1.0
+
+  # --- STATE MANAGEMENT ---
+  flutter_riverpod: ^2.5.1
+
+  # --- REAL-TIME ---
+  socket_io_client: ^3.1.2
+
+  # --- FILES / MEDIA ---
+  image_picker: ^1.1.2
+  file_picker: ^10.2.0
+  cached_network_image: ^3.2.1
+
+  # --- MAPS / LOCATION ---
+  google_maps_flutter: ^2.9.0
+  geolocator: ^13.0.1
+
+  # --- UI / DESIGN ---
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.2
+  shimmer: ^3.0.0
+  iconsax: ^0.0.8
+  cupertino_icons: ^1.0.8
+  carousel_slider: ^5.0.0
+  smooth_page_indicator: ^1.2.0+3
+  percent_indicator: ^4.2.5
+  fl_chart: ^1.0.0
+  syncfusion_flutter_charts: ^29.2.5
+  gantt_chart: ^0.3.0
+  sign_button: ^2.0.6
+  page_transition: ^2.2.1
+
+  # --- NOTIFICATIONS ---
+  flutter_local_notifications: ^18.0.0
+
+  # --- UTILITIES ---
+  flutter_dotenv: ^5.2.1
+  intl: ^0.20.2
+  logger: ^2.4.0
+  url_launcher: ^6.3.0
+  pull_to_refresh: ^2.0.0
+  status_alert: ^1.0.1
+  table_calendar: ^3.2.0
+  form_validator: ^2.1.1
+  uuid: ^4.5.0
+  wakelock_plus: ^1.3.2
+  permission_handler: ^12.0.0+1
+  timezone: ^0.9.4
+  fluttertoast: ^8.2.12
+  flutter_spinkit: ^5.2.1
+  flutter_neumorphic_plus: ^3.4.0
+
+  # --- SERIALISATION ---
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.14
+  freezed: ^2.5.8
+  json_serializable: ^6.8.0
+  flutter_launcher_icons: ^0.14.4
+
+# use 3 rows from every corner for equal shaped icon
+flutter_launcher_icons:
+  android: true
+  image_path_android: assets/icons/icon6.png
+  android_adaptive_icon_background: "#F7FAFC"
+  android_adaptive_icon_foreground: assets/icons/icon6.png
+  adaptive_icon_background: "#F7FAFC"
+  # For iOS, we use a different image and background color
+  ios: true
+  image_path_ios: assets/icons/icon6.png
+  background_color_ios : "#F7FAFC"
+  remove_alpha_ios: true
+
+# flutter_slidable:
+#     git:
+#       url: https://github.com/letsar/flutter_slidable.git
+#       ref: master
+
+dependency_overrides: 
+  flare_flutter: ^3.0.2
+  http: ^1.2.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/logo/
+    # - assets/icons/
+    - assets/images/
+    - assets/lotties/projectGIF.gif
+    - assets/icons/
+   
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Light.otf
+          weight: 300
+        - asset: assets/fonts/Poppins-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Poppins-Italic.otf
+          style: italic
+        - asset: assets/fonts/Poppins-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Poppins-MediumItalic.otf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/Poppins-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.otf
+          weight: 800
+
+
