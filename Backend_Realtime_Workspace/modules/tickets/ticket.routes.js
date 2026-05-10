@@ -2,22 +2,56 @@
 // TeamSpot — Ticket Routes
 // ============================================================================
 
-import express from "express";
-import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
-import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
+import express from 'express';
+import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { tenantMiddleware } from '../../core/auth/tenant.middleware.js';
 import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { upload, multerErrorHandler } from '../../infrastructure/storage/cloudinary.service.js';
+
+import { ticketController } from "./ticket.controller.js";
+import { 
+  createTicketSchema, 
+  updateTicketSchema
+} from "./ticket.validation.js";
 
 const router = express.Router();
+
 router.use(firebaseAuthMiddleware);
 router.use(tenantMiddleware);
 
-router.post("/", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Ticket module ready"); }));
-router.get("/", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, [], "Tickets listed"); }));
-router.get("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Ticket details"); }));
-router.put("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Ticket updated"); }));
-router.patch("/:id/assign", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Ticket assigned"); }));
-router.patch("/:id/status", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Ticket status updated"); }));
-router.post("/:id/comments", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Comment added"); }));
-router.patch("/:id/escalate", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Ticket escalated"); }));
+// Ticket CRUD
+router.post(
+  '/', 
+  upload.array('attachments', 5), 
+  multerErrorHandler, 
+  validate(createTicketSchema),
+  asyncHandler(ticketController.createTicket)
+);
+
+router.get('/', asyncHandler(ticketController.getTickets));
+router.get('/:id', asyncHandler(ticketController.getTicketById));
+
+router.put(
+  '/:id', 
+  validate(updateTicketSchema),
+  asyncHandler(ticketController.updateTicket)
+);
+
+router.delete('/:id', asyncHandler(ticketController.deleteTicket));
+
+// Features
+router.post(
+  '/:id/comments', 
+  asyncHandler(ticketController.addComment)
+);
+
+// Attachments
+router.post(
+  '/:id/attachments', 
+  upload.single('attachment'), 
+  multerErrorHandler, 
+  asyncHandler(ticketController.uploadAttachment)
+);
 
 export default router;

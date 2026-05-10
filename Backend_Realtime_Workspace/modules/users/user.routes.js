@@ -1,36 +1,39 @@
+// ============================================================================
+// TeamSpot — User Routes
+// ============================================================================
+
 import express from 'express';
-import { getMyUserInfo, createOrUpdateMyUserInfo, updateMyUserInfo,deleteMyUserInfo, getAllUserInfos, getUserInfoById,
-  uploadProfilePicture, revokeUserReferralCode, regenerateMyInviteCode, updateInvitePermissions, getMyReferralStats, // <-- add import
-  getReferralChain, getUserByInviteCodeOrEmail, 
-} from './user.controller.js';
-import { firebaseAuthMiddleware } from '../middlewares/firebaseAuthMiddleware.js';
-import { upload } from '../services/cloudinary.js';
+import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { upload } from '../../infrastructure/storage/cloudinary.service.js';
+
+import { userController } from "./user.controller.js";
+import { updateUserSchema } from "./user.validation.js";
 
 const router = express.Router();
 
-// Routes with image upload capability
-router.get('/me', firebaseAuthMiddleware, getMyUserInfo);
-router.post('/me', firebaseAuthMiddleware, upload.single('profilePicture'), createOrUpdateMyUserInfo);
-router.put('/me', firebaseAuthMiddleware, upload.single('profilePicture'), updateMyUserInfo);
-router.delete('/me', firebaseAuthMiddleware, deleteMyUserInfo);
+// Require auth for all user routes
+router.use(firebaseAuthMiddleware);
 
-// Regenerate invite code manually before expiration
-router.post('/me/regenerate-invite', firebaseAuthMiddleware, regenerateMyInviteCode);
+router.get('/me', asyncHandler(userController.getMyProfile));
 
-// Separate endpoint for profile picture upload only
-router.post('/me/upload-picture', firebaseAuthMiddleware, upload.single('profilePicture'), uploadProfilePicture);
+router.put(
+  '/me', 
+  validate(updateUserSchema),
+  asyncHandler(userController.updateMyProfile)
+);
 
-// === Add missing referral routes from reference example ===
-router.get('/me/my-referral-stats', firebaseAuthMiddleware, getMyReferralStats);
-router.get('/me/referral-chain', firebaseAuthMiddleware, getReferralChain);
+router.delete('/me', asyncHandler(userController.deleteMyProfile));
 
-// Fetch user by invite code or email
-router.get('/find', firebaseAuthMiddleware, getUserByInviteCodeOrEmail);
+router.post(
+  '/me/upload-picture', 
+  upload.single('profilePicture'), 
+  asyncHandler(userController.uploadProfilePicture)
+);
 
-// Admin/utility routes (optional, restrict in production)
-router.get('/', firebaseAuthMiddleware, getAllUserInfos);
-router.get('/:id', firebaseAuthMiddleware, getUserInfoById);
-router.post('/:id/revoke-referral', firebaseAuthMiddleware, revokeUserReferralCode);
-router.patch('/:id/invite-permissions', firebaseAuthMiddleware, updateInvitePermissions); // new route
+// Admin / Internal use
+router.get('/', asyncHandler(userController.getAllUsers));
+router.get('/:id', asyncHandler(userController.getUserById));
 
 export default router;

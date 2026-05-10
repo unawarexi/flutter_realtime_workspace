@@ -1,44 +1,73 @@
+// ============================================================================
+// TeamSpot — Project Routes
+// ============================================================================
+
 import express from 'express';
-import {createProject, getProjects, getProjectById, updateProject, deleteProject, uploadAttachment, deleteAttachment,
-  getProjectAttachments, toggleProjectStar, toggleProjectArchive, updateProjectProgress, updateProjectCollaborators,
-  addTimelineEvent, getProjectTimeline, getProjectStats, duplicateProject, getNewProjectKey,getNewTeamId,
-} from './project.controller.js';
-import { upload, multerErrorHandler } from '../services/cloudinary.js';
-import { firebaseAuthMiddleware } from '../middlewares/firebaseAuthMiddleware.js';
+import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { tenantMiddleware } from '../../core/auth/tenant.middleware.js';
+import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { upload, multerErrorHandler } from '../../infrastructure/storage/cloudinary.service.js';
+
+import { projectController } from "./project.controller.js";
+import { 
+  createProjectSchema, 
+  updateProjectSchema, 
+  updateCollaboratorsSchema,
+  timelineEventSchema
+} from "./project.validation.js";
 
 const router = express.Router();
 
-// Apply firebaseAuthMiddleware to all routes
 router.use(firebaseAuthMiddleware);
+router.use(tenantMiddleware);
 
-// Project CRUD Operations
-router.post('/', upload.array('attachments', 10), multerErrorHandler, createProject);
-router.get('/', getProjects);
-router.get('/stats', getProjectStats);
-router.get('/:id', getProjectById);
-router.put('/:id', updateProject);
-router.delete('/:id', deleteProject);
+// Project CRUD
+router.post(
+  '/', 
+  upload.array('attachments', 10), 
+  multerErrorHandler, 
+  validate(createProjectSchema),
+  asyncHandler(projectController.createProject)
+);
 
-// Project Actions
-router.patch('/:id/star', toggleProjectStar);
-router.patch('/:id/archive', toggleProjectArchive);
-router.patch('/:id/progress', updateProjectProgress);
-router.post('/:id/duplicate', duplicateProject);
+router.get('/', asyncHandler(projectController.getProjects));
+router.get('/:id', asyncHandler(projectController.getProjectById));
 
-// Collaborators Management
-router.patch('/:id/collaborators', updateProjectCollaborators);
+router.put(
+  '/:id', 
+  validate(updateProjectSchema),
+  asyncHandler(projectController.updateProject)
+);
 
-// Attachments Management
-router.post('/:id/attachments', upload.single('attachment'), multerErrorHandler, uploadAttachment);
-router.get('/:id/attachments', getProjectAttachments);
-router.delete('/:id/attachments/:attachmentId', deleteAttachment);
+router.delete('/:id', asyncHandler(projectController.deleteProject));
 
-// Timeline Management
-router.post('/:id/timeline', addTimelineEvent);
-router.get('/:id/timeline', getProjectTimeline);
+// Actions
+router.patch('/:id/star', asyncHandler(projectController.toggleProjectStar));
+router.patch('/:id/archive', asyncHandler(projectController.toggleProjectArchive));
 
-// Add endpoints for generating keys
-router.get('/generate/project-key', getNewProjectKey);
-router.get('/generate/team-id', getNewTeamId);
+// Collaborators
+router.patch(
+  '/:id/collaborators', 
+  validate(updateCollaboratorsSchema),
+  asyncHandler(projectController.updateProjectCollaborators)
+);
+
+// Timeline
+router.post(
+  '/:id/timeline', 
+  validate(timelineEventSchema),
+  asyncHandler(projectController.addTimelineEvent)
+);
+
+// Attachments
+router.post(
+  '/:id/attachments', 
+  upload.single('attachment'), 
+  multerErrorHandler, 
+  asyncHandler(projectController.uploadAttachment)
+);
+
+router.delete('/:id/attachments/:attachmentId', asyncHandler(projectController.deleteAttachment));
 
 export default router;

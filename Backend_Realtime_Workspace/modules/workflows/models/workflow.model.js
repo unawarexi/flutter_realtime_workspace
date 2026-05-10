@@ -12,7 +12,7 @@ const workflowSchema = new mongoose.Schema(
     tenantId: { type: String, required: true, index: true },
     orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
     workspaceId: { type: mongoose.Schema.Types.ObjectId, ref: "Workspace" },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
     // Trigger
     trigger: {

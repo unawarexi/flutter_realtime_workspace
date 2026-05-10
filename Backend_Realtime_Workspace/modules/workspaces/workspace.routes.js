@@ -6,45 +6,62 @@ import express from "express";
 import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
 import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
 import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+
+import { workspaceController } from "./workspace.controller.js";
+import { 
+  createWorkspaceSchema, 
+  updateWorkspaceSchema, 
+  addWorkspaceMemberSchema 
+} from "./workspace.validation.js";
 
 const router = express.Router();
 
 router.use(firebaseAuthMiddleware);
-router.use(tenantMiddleware);
+router.use(tenantMiddleware); // Needs tenant context
 
-router.post("/", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Workspace module ready");
-}));
+router.post(
+  "/",
+  validate(createWorkspaceSchema),
+  asyncHandler(workspaceController.createWorkspace)
+);
 
-router.get("/", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, [], "Workspaces listed");
-}));
+router.get(
+  "/",
+  asyncHandler(workspaceController.getWorkspaces)
+);
 
-router.get("/:id", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Workspace details");
-}));
+router.get(
+  "/:id",
+  asyncHandler(workspaceController.getWorkspaceById)
+);
 
-router.put("/:id", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Workspace updated");
-}));
+router.put(
+  "/:id",
+  validate(updateWorkspaceSchema),
+  asyncHandler(workspaceController.updateWorkspace)
+);
 
-router.delete("/:id", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Workspace deleted");
-}));
+router.delete(
+  "/:id",
+  asyncHandler(workspaceController.deleteWorkspace)
+);
 
-router.post("/:id/members", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Member added");
-}));
+// Members
+router.post(
+  "/:id/members",
+  validate(addWorkspaceMemberSchema),
+  asyncHandler(workspaceController.addMember)
+);
 
-router.get("/:id/members", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, [], "Members listed");
-}));
+router.get(
+  "/:id/members",
+  asyncHandler(workspaceController.getMembers)
+);
+
+router.delete(
+  "/:id/members/:userId",
+  asyncHandler(workspaceController.removeMember)
+);
 
 export default router;

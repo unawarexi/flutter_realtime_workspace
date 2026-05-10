@@ -20,7 +20,7 @@ const channelSchema = new mongoose.Schema(
 
     // Members
     members: [{
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true },
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
       role: { type: String, enum: ["admin", "moderator", "member"], default: "member" },
       joinedAt: { type: Date, default: Date.now },
       lastRead: { type: Date },
@@ -28,7 +28,7 @@ const channelSchema = new mongoose.Schema(
       notificationPreference: { type: String, enum: ["all", "mentions", "none"], default: "all" },
     }],
 
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
     // Pins & bookmarks
     pinnedMessages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
@@ -75,7 +75,7 @@ const messageSchema = new mongoose.Schema(
   {
     channelId: { type: mongoose.Schema.Types.ObjectId, ref: "Channel", required: true, index: true },
     tenantId: { type: String, required: true, index: true },
-    senderId: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true },
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
     // Content
     content: { type: String },
@@ -98,13 +98,13 @@ const messageSchema = new mongoose.Schema(
     threadLastReplyAt: { type: Date },
 
     // Mentions
-    mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" }],
+    mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     mentionsEveryone: { type: Boolean, default: false },
 
     // Reactions
     reactions: [{
       emoji: { type: String, required: true },
-      users: [{ type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" }],
+      users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
       count: { type: Number, default: 0 },
     }],
 
@@ -121,7 +121,7 @@ const messageSchema = new mongoose.Schema(
     deletedAt: { type: Date },
     pinned: { type: Boolean, default: false },
     pinnedAt: { type: Date },
-    pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" },
+    pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,

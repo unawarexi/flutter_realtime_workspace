@@ -7,59 +7,79 @@ import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware
 import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
 import { requireRole } from "../../core/auth/permission.middleware.js";
 import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
 import { Roles } from "../../config/constants.js";
+
+import { organizationController } from "./organization.controller.js";
+import { 
+  createOrganizationSchema, 
+  updateOrganizationSchema, 
+  updateSettingsSchema, 
+  inviteMemberSchema 
+} from "./organization.validation.js";
 
 const router = express.Router();
 
 router.use(firebaseAuthMiddleware);
+
+// Organizations create doesn't need tenantMiddleware because it creates the tenant
+router.post(
+  "/",
+  validate(createOrganizationSchema),
+  asyncHandler(organizationController.createOrganization)
+);
+
+// All subsequent routes require the user to be within a tenant context (or we pass ID)
 router.use(tenantMiddleware);
 
-// CRUD
-router.post("/", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, { message: "Organization module ready" }, "Not yet implemented");
-}));
+router.get(
+  "/",
+  asyncHandler(organizationController.getOrganizations)
+);
 
-router.get("/", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, [], "Organizations listed");
-}));
+router.get(
+  "/:id",
+  asyncHandler(organizationController.getOrganizationById)
+);
 
-router.get("/:id", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Organization details");
-}));
-
-router.put("/:id", requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN), asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Organization updated");
-}));
+router.put(
+  "/:id",
+  validate(updateOrganizationSchema),
+  requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN),
+  asyncHandler(organizationController.updateOrganization)
+);
 
 // Members
-router.post("/:id/invite", requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN), asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Member invited");
-}));
+router.post(
+  "/:id/invite",
+  validate(inviteMemberSchema),
+  requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN),
+  asyncHandler(organizationController.inviteMember)
+);
 
-router.get("/:id/members", asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, [], "Members listed");
-}));
+router.get(
+  "/:id/members",
+  asyncHandler(organizationController.getMembers)
+);
 
-router.delete("/:id/members/:memberId", requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN), asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Member removed");
-}));
+router.delete(
+  "/:id/members/:memberId",
+  requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN),
+  asyncHandler(organizationController.removeMember)
+);
 
 // Settings
-router.get("/:id/settings", requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN), asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Organization settings");
-}));
+router.get(
+  "/:id/settings",
+  requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN),
+  asyncHandler(organizationController.getOrganizationById) // settings are embedded in org doc
+);
 
-router.put("/:id/settings", requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN), asyncHandler(async (req, res) => {
-  const { success } = await import("../../core/utils/api-response.js");
-  success(res, null, "Settings updated");
-}));
+router.put(
+  "/:id/settings",
+  validate(updateSettingsSchema),
+  requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN),
+  asyncHandler(organizationController.updateSettings)
+);
 
 export default router;
