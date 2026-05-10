@@ -1,0 +1,11 @@
+# ============================================================================
+# TeamSpot — Kubernetes Namespace
+# ============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: teamspot
+  labels:
+    app: teamspot-api
+    project: teamspot-decentralized-vote
+    environment: production
