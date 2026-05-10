@@ -1,183 +1,129 @@
+
 // ============================================================================
 // TeamSpot — Auth Controller
 // ============================================================================
 
 import { asyncHandler } from "../../core/base/base.controller.js";
 import { success, created } from "../../core/utils/api-response.js";
-import { validationResult } from "express-validator";
-import { badRequest } from "../../core/errors/app-error.js";
-import AuthService from "./auth.service.js";
+import authService from "./auth.service.js";
 
-function validate(req) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) throw badRequest("Validation failed", errors.array());
-}
-
-function deviceInfo(req) {
-  return {
-    ip: req.ip || req.headers["x-forwarded-for"] || "",
-    userAgent: req.headers["user-agent"] || "",
-    deviceName: req.headers["x-device-name"] || "Unknown Device",
-  };
-}
-
-// ── Registration & Email Verification ────────────────────────────────────────
+const ctx = (req) => ({
+  ip: req.ip,
+  userAgent: req.get("user-agent"),
+  userId: req.user?._id?.toString() || req.user?.id || null,
+  sessionId: req.user?.sessionId || null,
+});
 
 export const register = asyncHandler(async (req, res) => {
-  validate(req);
-  const { email, password, fullName, inviteCode } = req.body;
-  const result = await AuthService.register({ email, password, fullName, inviteCode, deviceInfo: deviceInfo(req) });
-  created(res, result, result.message);
+  const result = await authService.register({ ...req.body, ip: req.ip });
+  created(res, result, "Registration successful. Verify your email.");
 });
 
 export const verifyEmail = asyncHandler(async (req, res) => {
-  validate(req);
-  const { email, otp } = req.body;
-  const result = await AuthService.verifyEmail({ email, otp, deviceInfo: deviceInfo(req) });
-  success(res, result, "Email verified. Welcome to TeamSpot!");
+  const result = await authService.verifyEmail(req.body);
+  success(res, result, "Email verified");
 });
 
 export const resendVerification = asyncHandler(async (req, res) => {
-  validate(req);
-  const { email } = req.body;
-  const result = await AuthService.resendVerification({ email });
-  success(res, null, result.message);
+  const result = await authService.resendVerification({ ...req.body, ip: req.ip });
+  success(res, result);
 });
 
-// ── Login ─────────────────────────────────────────────────────────────────────
-
 export const loginPassword = asyncHandler(async (req, res) => {
-  validate(req);
-  const { email, password } = req.body;
-  const result = await AuthService.loginWithPassword({ email, password, deviceInfo: deviceInfo(req) });
-  success(res, result, result.requires2FA ? "2FA required." : "Login successful.");
+  const result = await authService.loginPassword({ ...req.body, ip: req.ip });
+  success(res, result, result.requires2FA ? "2FA required" : "Login successful");
 });
 
 export const loginSocial = asyncHandler(async (req, res) => {
-  validate(req);
-  const { idToken, inviteCode } = req.body;
-  const result = await AuthService.loginWithSocial({ idToken, inviteCode, deviceInfo: deviceInfo(req) });
-  success(res, result, "Login successful.");
+  const result = await authService.loginSocial(req.body);
+  success(res, result, "Login successful");
 });
 
-// ── Token Management ──────────────────────────────────────────────────────────
-
 export const refreshToken = asyncHandler(async (req, res) => {
-  validate(req);
-  const { refreshToken: rt } = req.body;
-  const result = await AuthService.refreshToken({ refreshToken: rt, deviceInfo: deviceInfo(req) });
-  success(res, result, "Token refreshed.");
+  const result = await authService.refreshToken(req.body);
+  success(res, result, "Token refreshed");
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  validate(req);
-  const { refreshToken: rt } = req.body;
-  const result = await AuthService.logout({ refreshToken: rt });
-  success(res, null, result.message);
+  const result = await authService.logout({
+    userId: ctx(req).userId,
+    refreshToken: req.body.refreshToken,
+    sessionId: ctx(req).sessionId,
+  });
+  success(res, result, "Logged out");
 });
 
 export const logoutAll = asyncHandler(async (req, res) => {
-  const result = await AuthService.logoutAll({ userId: req.user._id.toString() });
-  success(res, null, result.message);
+  const result = await authService.logoutAll({ userId: ctx(req).userId });
+  success(res, result, "Logged out from all devices");
 });
 
-// ── Session Management ────────────────────────────────────────────────────────
-
 export const getSessions = asyncHandler(async (req, res) => {
-  const sessions = await AuthService.getSessions({ userId: req.user._id.toString() });
-  success(res, { sessions });
+  const result = await authService.getSessions({ userId: ctx(req).userId });
+  success(res, result, "Active sessions");
 });
 
 export const revokeSession = asyncHandler(async (req, res) => {
-  const { sessionId } = req.params;
-  const result = await AuthService.revokeSession({ userId: req.user._id.toString(), sessionId });
-  success(res, null, result.message);
+  const result = await authService.revokeSession({ userId: ctx(req).userId, sessionId: req.params.sessionId });
+  success(res, result);
 });
 
-// ── Password Management ───────────────────────────────────────────────────────
-
 export const forgotPassword = asyncHandler(async (req, res) => {
-  validate(req);
-  const { email } = req.body;
-  const result = await AuthService.forgotPassword({ email });
-  success(res, null, result.message);
+  const result = await authService.forgotPassword({ email: req.body.email, ip: req.ip });
+  success(res, result);
 });
 
 export const resetPassword = asyncHandler(async (req, res) => {
-  validate(req);
-  const { email, otp, newPassword } = req.body;
-  const result = await AuthService.resetPassword({ email, otp, newPassword });
-  success(res, null, result.message);
+  const result = await authService.resetPassword(req.body);
+  success(res, result, "Password reset successful");
 });
 
 export const changePassword = asyncHandler(async (req, res) => {
-  validate(req);
-  const { currentPassword, newPassword } = req.body;
-  const result = await AuthService.changePassword({
-    userId: req.user._id.toString(),
-    currentPassword,
-    newPassword,
-  });
-  success(res, null, result.message);
+  const result = await authService.changePassword({ userId: ctx(req).userId, ...req.body });
+  success(res, result, "Password changed");
 });
 
-// ── TOTP 2FA ──────────────────────────────────────────────────────────────────
-
 export const setupTotp = asyncHandler(async (req, res) => {
-  const result = await AuthService.setupTotp({ userId: req.user._id.toString() });
-  success(res, result, "Scan the QR code with your authenticator app, then confirm.");
+  const result = await authService.setupTotp({ userId: ctx(req).userId });
+  success(res, result, "TOTP setup initiated");
 });
 
 export const confirmTotp = asyncHandler(async (req, res) => {
-  validate(req);
-  const { token } = req.body;
-  const result = await AuthService.confirmTotp({ userId: req.user._id.toString(), token });
-  success(res, result, result.message);
+  const result = await authService.confirmTotp({ userId: ctx(req).userId, token: req.body.token });
+  success(res, result, "TOTP enabled");
 });
 
 export const verifyTotp = asyncHandler(async (req, res) => {
-  validate(req);
-  const { challengeToken, token } = req.body;
-  const result = await AuthService.verifyTotp({ challengeToken, token, deviceInfo: deviceInfo(req) });
-  success(res, result, "2FA verified. Login successful.");
+  const result = await authService.verifyTotp({ tempToken: req.body.tempToken, token: req.body.token });
+  success(res, result, "2FA verified");
 });
 
 export const disableTotp = asyncHandler(async (req, res) => {
-  validate(req);
-  const { token } = req.body;
-  const result = await AuthService.disableTotp({ userId: req.user._id.toString(), token });
-  success(res, null, result.message);
+  const result = await authService.disableTotp({ userId: ctx(req).userId, token: req.body.token });
+  success(res, result, "TOTP disabled");
 });
 
-// ── Email & SMS 2FA OTP ───────────────────────────────────────────────────────
-
 export const sendEmail2FA = asyncHandler(async (req, res) => {
-  const result = await AuthService.sendEmail2FA({ userId: req.user._id.toString() });
-  success(res, null, result.message);
+  const result = await authService.sendEmail2FA({ userId: ctx(req).userId });
+  success(res, result);
 });
 
 export const verifyEmail2FA = asyncHandler(async (req, res) => {
-  validate(req);
-  const { otp } = req.body;
-  const result = await AuthService.verifyEmail2FA({ userId: req.user._id.toString(), otp });
-  success(res, result, result.message);
+  const result = await authService.verifyEmail2FA({ userId: ctx(req).userId, otp: req.body.otp, tempToken: req.body.tempToken });
+  success(res, result, "2FA verified");
 });
 
 export const sendSms2FA = asyncHandler(async (req, res) => {
-  validate(req);
-  const { phoneNumber } = req.body;
-  const result = await AuthService.sendSms2FA({ userId: req.user._id.toString(), phoneNumber });
-  success(res, null, result.message);
+  const result = await authService.sendSms2FA({ userId: ctx(req).userId, phoneNumber: req.body.phoneNumber });
+  success(res, result);
 });
 
 export const verifySms2FA = asyncHandler(async (req, res) => {
-  validate(req);
-  const { otp } = req.body;
-  const result = await AuthService.verifySms2FA({ userId: req.user._id.toString(), otp });
-  success(res, result, result.message);
+  const result = await authService.verifySms2FA({ userId: ctx(req).userId, otp: req.body.otp, tempToken: req.body.tempToken });
+  success(res, result, "2FA verified");
 });
 
 export const get2FAStatus = asyncHandler(async (req, res) => {
-  const result = await AuthService.get2FAStatus({ userId: req.user._id.toString() });
-  success(res, result);
+  const result = await authService.get2FAStatus({ userId: ctx(req).userId });
+  success(res, result, "2FA status");
 });

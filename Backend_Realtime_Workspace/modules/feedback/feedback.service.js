@@ -1,14 +1,20 @@
+// ============================================================================
+// TeamSpot — Feedback Service (user feedback + in-app responses + NPS)
+// ============================================================================
+
 import BaseService from "../../core/base/base.service.js";
 import BaseRepository from "../../core/base/base.repository.js";
 import Feedback from "./models/feedback.model.js";
-import { AppError } from "../../core/errors/app-error.js";
-import { HttpStatus } from "../../config/constants.js";
+import { notFound } from "../../core/errors/app-error.js";
+import { KafkaTopics, RabbitQueues, CacheTTL } from "../../config/constants.js";
+import { publishEvent } from "../../infrastructure/kafka/kafka.service.js";
+import { publishToQueue } from "../../infrastructure/rabbitmq/rabbitmq.service.js";
+import { emitToUser } from "../../infrastructure/websocket/websocket.service.js";
 import { uploadBuffer } from "../../infrastructure/storage/cloudinary.service.js";
+import { SocketEvents } from "../../config/constants.js";
 
 class FeedbackRepository extends BaseRepository {
-  constructor() {
-    super(Feedback, { tenantScoped: true });
-  }
+  constructor() { super(Feedback, { tenantScoped: true }); }
 }
 
 class FeedbackService extends BaseService {
@@ -16,61 +22,80 @@ class FeedbackService extends BaseService {
     super(new FeedbackRepository(), {
       name: "FeedbackService",
       cachePrefix: "feedback",
-      cacheTTL: 1800,
+      cacheTTL: CacheTTL.PROJECT || 60,
     });
   }
 
-  async createFeedback(data, tenantId, userId, files = []) {
-    const feedbackData = {
-      ...data,
-      tenantId,
-      userId,
-      attachments: []
-    };
-
-    if (files && files.length > 0) {
-      for (const file of files) {
-        const uploadResult = await uploadBuffer(file.buffer, {
-          folder: `teamspot/feedback/${tenantId}`,
-          resourceType: "auto"
-        });
-        feedbackData.attachments.push({
-          url: uploadResult.url,
-          filename: file.originalname
-        });
-      }
+  // ── Create ───────────────────────────────────────────────────────────────────
+  async createFeedback({ tenantId, userId, type, category, subject, body, rating, files = [] }) {
+    const attachments = [];
+    for (const file of files) {
+      const result = await uploadBuffer(file.buffer, {
+        folder: `teamspot/${tenantId}/feedback`, resource_type: "auto",
+      });
+      attachments.push({ url: result.secure_url, filename: file.originalname });
     }
 
-    const newFeedback = await this.repository.create(feedbackData, { tenantId });
-    this.emit("feedback.created", { feedbackId: newFeedback._id, tenantId });
-    return newFeedback;
-  }
+    const feedback = await this.repository.create({
+      tenantId, userId, type, category, subject, body, rating,
+      attachments, status: "new",
+    }, { tenantId });
 
-  async getFeedbackById(id, tenantId) {
-    const feedback = await this.cachedFindById(id, { tenantId });
-    if (!feedback) throw new AppError(HttpStatus.NOT_FOUND, "Feedback not found", "E3015");
+    // Queue analytics
+    await publishEvent(KafkaTopics.ANALYTICS_EVENTS, tenantId, {
+      type: "feedback.submitted", feedbackId: feedback._id, category, rating, tenantId,
+    });
+
+    // Notify admins via RabbitMQ notification queue
+    await publishToQueue(RabbitQueues.NOTIFICATION, {
+      channel: "admin_notification", tenantId,
+      templateName: "newFeedback",
+      templateData: { subject, category, type },
+    });
+
     return feedback;
   }
 
-  async updateFeedback(id, updates, tenantId) {
-    const updated = await this.updateById(id, updates, { tenantId });
-    this.emit("feedback.updated", { feedbackId: id, tenantId });
-    return updated;
+  // ── List ─────────────────────────────────────────────────────────────────────
+  async listFeedback({ tenantId, type, category, status, page = 1, limit = 20 }) {
+    const filter = {};
+    if (type)     filter.type     = type;
+    if (category) filter.category = category;
+    if (status)   filter.status   = status;
+    return this.repository.paginate({ filter, page: +page, limit: +limit, sort: { createdAt: -1 } }, { tenantId });
   }
 
-  async respondToFeedback(id, content, tenantId, responderId) {
-    const feedback = await this.getFeedbackById(id, tenantId);
-    
+  // ── Get ──────────────────────────────────────────────────────────────────────
+  async getFeedbackById(id, tenantId) {
+    const fb = await this.cachedFindById(id, { tenantId });
+    if (!fb) throw notFound("Feedback");
+    return fb;
+  }
+
+  // ── Update Status ─────────────────────────────────────────────────────────────
+  async updateStatus({ id, status, tenantId }) {
+    return this.updateById(id, { status }, { tenantId });
+  }
+
+  // ── Respond ───────────────────────────────────────────────────────────────────
+  async respondToFeedback({ id, content, tenantId, responderId }) {
+    const fb = await this.getFeedbackById(id, tenantId);
     const updated = await this.updateById(id, {
-      response: {
-        content,
-        respondedBy: responderId,
-        respondedAt: new Date()
-      },
-      status: "acknowledged" // auto-update status when responded
+      response: { content, respondedBy: responderId, respondedAt: new Date() },
+      status: "acknowledged",
     }, { tenantId });
 
-    this.emit("feedback.responded", { feedbackId: id, tenantId, responderId });
+    // Notify submitter
+    emitToUser(String(fb.userId), SocketEvents.NOTIFICATION, { type: "feedback.responded", feedbackId: id });
+    await publishToQueue(RabbitQueues.EMAIL, {
+      channel: "email", _meta: { userId: String(fb.userId) },
+      templateName: "feedbackResponse",
+      templateData: { subject: fb.subject, response: content },
+    });
+
+    await publishEvent(KafkaTopics.ANALYTICS_EVENTS, tenantId, {
+      type: "feedback.responded", feedbackId: id, responderId, tenantId,
+    });
     return updated;
   }
 }

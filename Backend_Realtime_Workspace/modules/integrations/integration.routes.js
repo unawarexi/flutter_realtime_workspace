@@ -1,19 +1,39 @@
+// ============================================================================
 // TeamSpot — Integration Routes
+// ============================================================================
+
 import express from "express";
-import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
-import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import {
+  validateCreateIntegration,
+  validateUpdateIntegration,
+  validateListIntegrations,
+} from "./integration.validation.js";
+import {
+  createIntegration,
+  listIntegrations,
+  getIntegration,
+  updateIntegration,
+  deleteIntegration,
+  testIntegration,
+  receiveWebhook,
+} from "./integration.controller.js";
 
 const router = express.Router();
-router.use(firebaseAuthMiddleware);
+
+// Inbound webhook — must come before auth middleware
+router.post("/webhooks/:integrationId", receiveWebhook);
+
+router.use(authenticate);
 router.use(tenantMiddleware);
 
-router.post("/", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Integration module ready"); }));
-router.get("/", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, [], "Integrations listed"); }));
-router.get("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Integration details"); }));
-router.put("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Integration updated"); }));
-router.delete("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Integration deleted"); }));
-router.post("/:id/test", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Integration tested"); }));
-router.post("/webhooks/:integrationId", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Webhook received"); }));
+router.post("/",    validate(validateCreateIntegration), createIntegration);
+router.get("/",     validate(validateListIntegrations),  listIntegrations);
+router.get("/:id",  getIntegration);
+router.put("/:id",  validate(validateUpdateIntegration), updateIntegration);
+router.delete("/:id", deleteIntegration);
+router.post("/:id/test", testIntegration);
 
 export default router;

@@ -1,104 +1,155 @@
+// ============================================================================
+// TeamSpot — Ticket Service (support tickets, SLA, assignments, responses)
+// ============================================================================
+
 import BaseService from "../../core/base/base.service.js";
 import BaseRepository from "../../core/base/base.repository.js";
 import Ticket from "./models/ticket.model.js";
-import { AppError } from "../../core/errors/app-error.js";
-import { HttpStatus } from "../../config/constants.js";
-import { uploadBuffer, deleteFile } from "../../infrastructure/storage/cloudinary.service.js";
+import { notFound, badRequest } from "../../core/errors/app-error.js";
+import { KafkaTopics, RabbitQueues, SocketEvents, CacheTTL } from "../../config/constants.js";
+import { publishEvent } from "../../infrastructure/kafka/kafka.service.js";
+import { publishToQueue } from "../../infrastructure/rabbitmq/rabbitmq.service.js";
+import { emitToUser } from "../../infrastructure/websocket/websocket.service.js";
+import { uploadBuffer } from "../../infrastructure/storage/cloudinary.service.js";
 
 class TicketRepository extends BaseRepository {
-  constructor() {
-    super(Ticket, { tenantScoped: true });
-  }
+  constructor() { super(Ticket, { tenantScoped: true }); }
 }
+
+const SLA_RULES = {
+  critical: { responseHours: 1,  resolutionHours: 24 },
+  high:     { responseHours: 4,  resolutionHours: 48 },
+  medium:   { responseHours: 24, resolutionHours: 168 }, // 7 days
+  low:      { responseHours: 48, resolutionHours: 336 }, // 14 days
+};
 
 class TicketService extends BaseService {
   constructor() {
     super(new TicketRepository(), {
       name: "TicketService",
       cachePrefix: "ticket",
-      cacheTTL: 1800,
+      cacheTTL: CacheTTL.TASK_LIST || 30,
     });
   }
 
-  async createTicket(data, tenantId, orgId, userId, files = []) {
+  // ── Create ───────────────────────────────────────────────────────────────────
+  async createTicket({ tenantId, orgId, userId, subject, description, priority = "medium",
+    category, channel = "web", tags, files = [],
+  }) {
     const count = await this.repository.count({ orgId }, { tenantId });
-    const ticketNumber = `TKT-${String(count + 1).padStart(5, '0')}`;
+    const ticketNumber = `TKT-${String(count + 1).padStart(5, "0")}`;
 
-    const newTicket = await this.repository.create({
-      ...data,
-      ticketNumber,
-      tenantId,
-      orgId,
-      reporter: userId,
-      // SLA logic simplified
+    const slaRule = SLA_RULES[priority] || SLA_RULES.medium;
+    const now = Date.now();
+
+    const ticket = await this.repository.create({
+      tenantId, orgId, ticketNumber, subject, description,
+      priority, category, channel, tags,
+      reporter: userId, status: "open",
       sla: {
-        responseDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        resolutionDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-      }
+        responseDeadline:   new Date(now + slaRule.responseHours   * 3_600_000),
+        resolutionDeadline: new Date(now + slaRule.resolutionHours * 3_600_000),
+      },
     }, { tenantId });
 
-    if (files.length > 0) {
-      for (const file of files) {
-        await this.addAttachment(newTicket._id, file, tenantId);
-      }
-    }
+    // Notify reporter via email
+    await publishToQueue(RabbitQueues.EMAIL, {
+      channel: "email", _meta: { userId },
+      templateName: "ticketCreated",
+      templateData: { ticketNumber, subject, priority },
+    });
 
-    this.emit("ticket.created", { ticketId: newTicket._id, tenantId, orgId, reporter: userId });
-    return newTicket;
-  }
+    await publishEvent(KafkaTopics.ANALYTICS_EVENTS, tenantId, {
+      type: "ticket.created", ticketId: ticket._id, priority, category, tenantId,
+    });
 
-  async getTicketById(id, tenantId) {
-    const ticket = await this.cachedFindById(id, { tenantId });
-    if (!ticket) throw new AppError(HttpStatus.NOT_FOUND, "Ticket not found", "E3010");
+    await publishToQueue(RabbitQueues.AUDIT, {
+      action: "ticket.created", resourceType: "ticket",
+      resourceId: ticket._id, actor: { id: userId }, tenantId,
+    });
+
     return ticket;
   }
 
-  async updateTicket(id, updates, tenantId, userId) {
+  // ── List ─────────────────────────────────────────────────────────────────────
+  async listTickets({ tenantId, orgId, status, priority, assignedTo, userId, page = 1, limit = 20 }) {
+    const filter = {};
+    if (orgId)      filter.orgId      = orgId;
+    if (status)     filter.status     = status;
+    if (priority)   filter.priority   = priority;
+    if (assignedTo) filter.assignedTo = assignedTo === "me" ? userId : assignedTo;
+    return this.repository.paginate({ filter, page: +page, limit: +limit, sort: { createdAt: -1 } }, { tenantId });
+  }
+
+  // ── Get ──────────────────────────────────────────────────────────────────────
+  async getTicketById(id, tenantId) {
+    const ticket = await this.cachedFindById(id, { tenantId });
+    if (!ticket) throw notFound("Ticket");
+    return ticket;
+  }
+
+  // ── Update ───────────────────────────────────────────────────────────────────
+  async updateTicket({ id, updates, tenantId, userId }) {
     const ticket = await this.getTicketById(id, tenantId);
-    
     if (updates.status && updates.status !== ticket.status) {
-      if (updates.status === 'resolved') updates.resolvedAt = new Date();
-      if (updates.status === 'closed') updates.closedAt = new Date();
-      this.emit("ticket.status_changed", { ticketId: id, tenantId, oldStatus: ticket.status, newStatus: updates.status, userId });
+      if (updates.status === "resolved") updates.resolvedAt = new Date();
+      if (updates.status === "closed")   updates.closedAt   = new Date();
     }
 
     const updated = await this.updateById(id, updates, { tenantId });
-    this.emit("ticket.updated", { ticketId: id, tenantId, updates, userId });
+    await publishEvent(KafkaTopics.ANALYTICS_EVENTS, tenantId, {
+      type: "ticket.updated", ticketId: id, userId, tenantId,
+      ...(updates.status ? { statusChange: { from: ticket.status, to: updates.status } } : {}),
+    });
     return updated;
   }
 
-  async addComment(id, content, internal, tenantId, userId) {
-    const ticket = await this.getTicketById(id, tenantId);
-    const isFirstResponse = !ticket.firstResponseAt && userId.toString() !== ticket.reporter.toString();
+  // ── Assign ───────────────────────────────────────────────────────────────────
+  async assignTicket({ id, assignedTo, tenantId, assignedBy }) {
+    const updated = await this.updateById(id, { assignedTo, status: "in_progress" }, { tenantId });
 
-    const updates = {
-      $push: { comments: { userId, content, internal, createdAt: new Date() } }
-    };
+    emitToUser(String(assignedTo), SocketEvents.NOTIFICATION, {
+      type: "ticket.assigned", ticketId: id,
+    });
+    await publishToQueue(RabbitQueues.EMAIL, {
+      channel: "email", _meta: { userId: String(assignedTo) },
+      templateName: "ticketAssigned",
+      templateData: { ticketId: id },
+    });
+    return updated;
+  }
+
+  // ── Comment ──────────────────────────────────────────────────────────────────
+  async addComment({ id, content, internal = false, tenantId, userId }) {
+    if (!content?.trim()) throw badRequest("Comment is required");
+
+    const ticket = await this.getTicketById(id, tenantId);
+    const isFirstResponse = !ticket.firstResponseAt && String(userId) !== String(ticket.reporter);
+
+    const updates = { $push: { comments: { userId, content: content.trim(), internal, createdAt: new Date() } } };
     if (isFirstResponse) updates.firstResponseAt = new Date();
 
     const updated = await this.updateById(id, updates, { tenantId });
-    this.emit("ticket.comment_added", { ticketId: id, tenantId, userId, internal });
+
+    // Notify reporter (unless internal note)
+    if (!internal) {
+      emitToUser(String(ticket.reporter), SocketEvents.NOTIFICATION, { type: "ticket.reply", ticketId: id });
+      await publishToQueue(RabbitQueues.EMAIL, {
+        channel: "email", _meta: { userId: String(ticket.reporter) },
+        templateName: "ticketReply",
+        templateData: { ticketNumber: ticket.ticketNumber, subject: ticket.subject, reply: content.trim() },
+      });
+    }
     return updated;
   }
 
-  async addAttachment(id, file, tenantId) {
-    const uploadResult = await uploadBuffer(file.buffer, {
-      folder: `teamspot/tickets/${id}`,
-      resourceType: "auto"
+  // ── Attachment ───────────────────────────────────────────────────────────────
+  async addAttachment({ id, file, tenantId }) {
+    const result = await uploadBuffer(file.buffer, {
+      folder: `teamspot/${tenantId}/tickets/${id}`, resource_type: "auto",
     });
-
-    const attachment = {
-      url: uploadResult.url,
-      publicId: uploadResult.publicId,
-      filename: file.originalname,
-      mimeType: file.mimetype,
-      bytes: uploadResult.bytes
-    };
-
-    const updated = await this.updateById(id, {
-      $push: { attachments: attachment }
-    }, { tenantId });
-
+    const attachment = { url: result.secure_url, publicId: result.public_id, filename: file.originalname, mimeType: file.mimetype, bytes: result.bytes };
+    await this.updateById(id, { $push: { attachments: attachment } }, { tenantId });
     return attachment;
   }
 }

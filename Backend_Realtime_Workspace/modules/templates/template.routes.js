@@ -1,18 +1,35 @@
+// ============================================================================
 // TeamSpot — Template Routes
+// ============================================================================
+
 import express from "express";
-import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
-import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import {
+  validateCreateTemplate,
+  validateUpdateTemplate,
+  validateListTemplates,
+} from "./template.validation.js";
+import {
+  createTemplate,
+  listTemplates,
+  getTemplate,
+  updateTemplate,
+  deleteTemplate,
+  previewTemplate,
+} from "./template.controller.js";
 
 const router = express.Router();
-router.use(firebaseAuthMiddleware);
+
+router.use(authenticate);
 router.use(tenantMiddleware);
 
-router.post("/", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Template module ready"); }));
-router.get("/", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, [], "Templates listed"); }));
-router.get("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Template details"); }));
-router.put("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Template updated"); }));
-router.delete("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Template deleted"); }));
-router.post("/:id/preview", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Template preview"); }));
+router.post("/",            validate(validateCreateTemplate), createTemplate);
+router.get("/",             validate(validateListTemplates),  listTemplates);
+router.get("/:id",          getTemplate);
+router.put("/:id",          validate(validateUpdateTemplate), updateTemplate);
+router.delete("/:id",       deleteTemplate);
+router.post("/:id/preview", previewTemplate);
 
 export default router;

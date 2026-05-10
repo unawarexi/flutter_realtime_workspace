@@ -1,17 +1,19 @@
+// ============================================================================
+// TeamSpot — Audit Service (append-only audit log with export + query)
+// Consumed by: RabbitMQ AUDIT queue consumer (workers/audit.worker.js)
+// ============================================================================
+
 import BaseService from "../../core/base/base.service.js";
 import BaseRepository from "../../core/base/base.repository.js";
 import AuditLog from "./models/audit-log.model.js";
-import { AppError } from "../../core/errors/app-error.js";
-import { HttpStatus } from "../../config/constants.js";
+import { forbidden, badRequest } from "../../core/errors/app-error.js";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const { Parser } = require("json2csv");
 
 class AuditRepository extends BaseRepository {
-  constructor() {
-    super(AuditLog, { tenantScoped: true });
-  }
+  constructor() { super(AuditLog, { tenantScoped: true }); }
 }
 
 class AuditService extends BaseService {
@@ -19,57 +21,75 @@ class AuditService extends BaseService {
     super(new AuditRepository(), {
       name: "AuditService",
       cachePrefix: "audit",
-      cacheTTL: 0, // No caching for audit logs to ensure truthfulness
+      cacheTTL: 0, // Audit logs are never cached
     });
   }
 
-  // Custom create wrapper to enforce immutability pattern
+  // ── Write (called by audit.worker.js via RabbitMQ AUDIT queue) ──────────────
   async logAction(data, tenantId, reqContext = {}) {
-    // We intentionally bypass BaseRepository's standard emit to avoid noise,
-    // and just write directly to the DB.
-    const newLog = new this.repository.model({
+    const doc = new this.repository.model({
       ...data,
       tenantId,
       actor: {
-        userId: reqContext.userId || "system",
-        email: reqContext.email,
-        role: reqContext.role,
-        ip: reqContext.ip,
+        userId: reqContext.userId || data.actor?.id || "system",
+        email:  reqContext.email  || data.actor?.email,
+        role:   reqContext.role   || data.actor?.role,
+        ip:     reqContext.ip,
         userAgent: reqContext.userAgent,
       },
-      requestId: reqContext.requestId
+      requestId: reqContext.requestId,
+      timestamp: new Date(),
     });
-    return newLog.save();
+    return doc.save();
   }
 
-  // Prevent updates and deletes at the service level
-  async updateById() {
-    throw new AppError(HttpStatus.FORBIDDEN, "Audit logs are append-only and cannot be updated", "E4030");
+  // ── Immutability guards ───────────────────────────────────────────────────────
+  async updateById() { throw forbidden("Audit logs are append-only"); }
+  async deleteById() { throw forbidden("Audit logs are append-only"); }
+
+  // ── Query ─────────────────────────────────────────────────────────────────────
+  async queryLogs({ tenantId, action, category, actorId, resourceType, from, to, severity, page = 1, limit = 50 }) {
+    const filter = {};
+    if (action)       filter.action       = new RegExp(action, "i");
+    if (category)     filter.category     = category;
+    if (resourceType) filter.resourceType = resourceType;
+    if (severity)     filter.severity     = severity;
+    if (actorId)      filter["actor.userId"] = actorId;
+    if (from || to) {
+      filter.timestamp = {};
+      if (from) filter.timestamp.$gte = new Date(from);
+      if (to)   filter.timestamp.$lte = new Date(to);
+    }
+    return this.repository.paginate({ filter, page: +page, limit: +limit, sort: { timestamp: -1 } }, { tenantId });
   }
 
-  async deleteById() {
-    throw new AppError(HttpStatus.FORBIDDEN, "Audit logs are append-only and cannot be deleted", "E4031");
-  }
+  // ── Export to CSV ─────────────────────────────────────────────────────────────
+  async exportLogs({ tenantId, from, to, category }) {
+    const filter = { tenantId };
+    if (category) filter.category = category;
+    if (from || to) {
+      filter.timestamp = {};
+      if (from) filter.timestamp.$gte = new Date(from);
+      if (to)   filter.timestamp.$lte = new Date(to);
+    }
 
-  async exportLogs(filter, tenantId) {
-    const logs = await this.repository.model.find({ tenantId, ...filter }).sort({ createdAt: -1 }).lean();
-    
-    // Flatten for CSV
-    const flatLogs = logs.map(log => ({
-      date: log.createdAt,
-      action: log.action,
-      category: log.category,
-      actorId: log.actor?.userId,
-      actorEmail: log.actor?.email,
-      targetType: log.target?.type,
-      targetId: log.target?.id,
-      status: log.status,
-      errorMessage: log.errorMessage || ''
+    const logs = await this.repository.model.find(filter).sort({ timestamp: -1 }).limit(10000).lean();
+    const flat = logs.map(l => ({
+      date:        l.timestamp || l.createdAt,
+      action:      l.action,
+      category:    l.category,
+      severity:    l.severity || "info",
+      actorId:     l.actor?.userId,
+      actorEmail:  l.actor?.email,
+      actorRole:   l.actor?.role,
+      resourceType: l.resourceType,
+      resourceId:  l.resourceId,
+      status:      l.status,
+      ip:          l.actor?.ip,
     }));
 
     const parser = new Parser();
-    const csv = parser.parse(flatLogs);
-    return csv;
+    return parser.parse(flat);
   }
 }
 

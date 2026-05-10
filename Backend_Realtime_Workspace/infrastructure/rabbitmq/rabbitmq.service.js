@@ -5,7 +5,7 @@
 
 import amqplib from "amqplib";
 import { env } from "../../config/env.config.js";
-import { QueueNames } from "../../config/constants.js";
+import { RabbitQueues as QueueNames } from "../../config/constants.js";
 import { createLogger } from "../../observability/logger.js";
 
 const log = createLogger("RabbitMQ");

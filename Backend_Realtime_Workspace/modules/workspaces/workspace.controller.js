@@ -1,68 +1,83 @@
-import BaseController from "../../core/base/base.controller.js";
+// ============================================================================
+// TeamSpot — Workspace Controller
+// ============================================================================
+
+import { asyncHandler } from "../../core/base/base.controller.js";
+import { success, created, noContent } from "../../core/utils/api-response.js";
 import { workspaceService } from "./workspace.service.js";
 
-class WorkspaceController extends BaseController {
-  
-  createWorkspace = async (req, res) => {
-    const { tenantId, orgId, userId } = BaseController.getContext(req);
-    const workspace = await workspaceService.createWorkspace(req.body, tenantId, orgId, userId);
-    return BaseController.sendCreated(res, workspace, "Workspace created successfully");
-  };
+const ctx = (req) => ({
+  tenantId: req.tenant?.id || req.user?.tenantId,
+  userId:   req.user?._id?.toString() || req.user?.id,
+  orgId:    req.user?.orgId || req.body?.orgId || req.query?.orgId || null,
+});
 
-  getWorkspaces = async (req, res) => {
-    const { tenantId, orgId, userId } = BaseController.getContext(req);
-    
-    // Only return workspaces the user is a member of (or all if org admin - simplified for now)
-    const filter = { orgId, "members.userId": userId }; 
-    const pagination = BaseController.getPagination(req);
-    
-    const result = await workspaceService.paginate(filter, { 
-      tenantId,
-      page: pagination.page, 
-      limit: pagination.limit, 
-      sort: BaseController.parseSort(pagination.sort) 
-    });
+export const createWorkspace = asyncHandler(async (req, res) => {
+  const { tenantId, userId, orgId } = ctx(req);
+  const result = await workspaceService.createWorkspace({ ...req.body, tenantId, orgId, userId });
+  created(res, result, "Workspace created");
+});
 
-    return BaseController.sendPaginated(res, result, "Workspaces retrieved");
-  };
+export const getWorkspaces = asyncHandler(async (req, res) => {
+  const { tenantId, userId, orgId } = ctx(req);
+  const { page, limit } = req.query;
+  const result = await workspaceService.listWorkspaces({ tenantId, orgId, userId, page: +page || 1, limit: +limit || 20 });
+  success(res, result, "Workspaces retrieved");
+});
 
-  getWorkspaceById = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const workspace = await workspaceService.getWorkspaceById(req.params.id, tenantId);
-    return BaseController.sendSuccess(res, workspace, "Workspace retrieved");
-  };
+export const getWorkspaceById = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const result = await workspaceService.getWorkspaceById(req.params.id, tenantId);
+  success(res, result, "Workspace retrieved");
+});
 
-  updateWorkspace = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    // Needs permissions check inside service or middleware
-    const workspace = await workspaceService.updateWorkspace(req.params.id, req.body, tenantId);
-    return BaseController.sendSuccess(res, workspace, "Workspace updated successfully");
-  };
+export const updateWorkspace = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await workspaceService.updateWorkspace({ id: req.params.id, updates: req.body, tenantId, userId });
+  success(res, result, "Workspace updated");
+});
 
-  deleteWorkspace = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    await workspaceService.deleteById(req.params.id, { tenantId });
-    return BaseController.sendSuccess(res, null, "Workspace deleted successfully");
-  };
+export const archiveWorkspace = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await workspaceService.archiveWorkspace({ id: req.params.id, tenantId, userId });
+  success(res, result, "Workspace archived");
+});
 
-  addMember = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const { userId, role } = req.body;
-    const workspace = await workspaceService.addMember(req.params.id, userId, role, tenantId);
-    return BaseController.sendSuccess(res, workspace, "Member added successfully");
-  };
+export const deleteWorkspace = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  await workspaceService.deleteById(req.params.id, { tenantId });
+  noContent(res);
+});
 
-  getMembers = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const workspace = await workspaceService.getWorkspaceById(req.params.id, tenantId);
-    return BaseController.sendSuccess(res, workspace.members, "Workspace members retrieved");
-  };
+export const addMember = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const { userId: targetUserId, role } = req.body;
+  const result = await workspaceService.addMember({ id: req.params.id, targetUserId, role, tenantId, actorId: userId });
+  success(res, result, "Member added");
+});
 
-  removeMember = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const workspace = await workspaceService.removeMember(req.params.id, req.params.userId, tenantId);
-    return BaseController.sendSuccess(res, workspace, "Member removed successfully");
-  };
-}
+export const removeMember = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await workspaceService.removeMember({ id: req.params.id, targetUserId: req.params.userId, tenantId, actorId: userId });
+  success(res, result, "Member removed");
+});
 
-export const workspaceController = new WorkspaceController();
+export const updateMemberRole = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const result = await workspaceService.updateMemberRole({ id: req.params.id, targetUserId: req.params.userId, role: req.body.role, tenantId });
+  success(res, result, "Member role updated");
+});
+
+export const getMembers = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const { page, limit } = req.query;
+  const result = await workspaceService.getMembers({ id: req.params.id, tenantId, page: +page || 1, limit: +limit || 50 });
+  success(res, result, "Members retrieved");
+});
+
+// Legacy compat for routes using workspaceController.method
+export const workspaceController = {
+  createWorkspace, getWorkspaces, getWorkspaceById,
+  updateWorkspace, deleteWorkspace, addMember,
+  removeMember, getMembers, updateMemberRole, archiveWorkspace,
+};

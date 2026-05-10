@@ -1,95 +1,127 @@
-import BaseController from "../../core/base/base.controller.js";
+// ============================================================================
+// TeamSpot — Channel Controller
+// ============================================================================
+
+import { asyncHandler } from "../../core/base/base.controller.js";
+import { success, created, noContent } from "../../core/utils/api-response.js";
 import { channelService } from "./channel.service.js";
 
-class ChannelController extends BaseController {
-  
-  createChannel = async (req, res) => {
-    const { tenantId, orgId, userId } = BaseController.getContext(req);
-    const channel = await channelService.createChannel(req.body, tenantId, orgId, userId);
-    return BaseController.sendCreated(res, channel, "Channel created successfully");
-  };
+const ctx = (req) => ({
+  tenantId: req.tenant?.id || req.user?.tenantId,
+  userId:   req.user?._id?.toString() || req.user?.id,
+  orgId:    req.user?.orgId || null,
+});
 
-  getChannels = async (req, res) => {
-    const { tenantId, orgId, userId } = BaseController.getContext(req);
-    const { workspaceId, type } = req.query;
-    
-    // For now: find channels the user is a member of, or public channels in the workspace
-    const filter = { orgId };
-    if (workspaceId) filter.workspaceId = workspaceId;
-    if (type) filter.type = type;
-    
-    const pagination = BaseController.getPagination(req);
-    const result = await channelService.paginate(filter, {
-      tenantId,
-      page: pagination.page,
-      limit: pagination.limit,
-      sort: BaseController.parseSort(pagination.sort)
-    });
+export const createChannel = asyncHandler(async (req, res) => {
+  const { tenantId, userId, orgId } = ctx(req);
+  const result = await channelService.createChannel({ ...req.body, tenantId, orgId, userId });
+  created(res, result, "Channel created");
+});
 
-    return BaseController.sendPaginated(res, result, "Channels retrieved");
-  };
+export const getChannels = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const { workspaceId, type, page, limit } = req.query;
+  const result = await channelService.listChannels({ workspaceId, tenantId, userId, type, page: +page || 1, limit: +limit || 50 });
+  success(res, result, "Channels retrieved");
+});
 
-  getChannelById = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const channel = await channelService.getChannelById(req.params.id, tenantId);
-    return BaseController.sendSuccess(res, channel, "Channel retrieved");
-  };
+export const getChannelById = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const result = await channelService.getChannelById(req.params.id, tenantId);
+  success(res, result, "Channel retrieved");
+});
 
-  updateChannel = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const channel = await channelService.updateChannel(req.params.id, req.body, tenantId);
-    return BaseController.sendSuccess(res, channel, "Channel updated");
-  };
+export const updateChannel = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await channelService.updateChannel({ id: req.params.id, updates: req.body, tenantId, userId });
+  success(res, result, "Channel updated");
+});
 
-  deleteChannel = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    await channelService.deleteById(req.params.id, { tenantId });
-    return BaseController.sendSuccess(res, null, "Channel deleted");
-  };
+export const archiveChannel = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const result = await channelService.archiveChannel({ id: req.params.id, tenantId });
+  success(res, result, "Channel archived");
+});
 
-  addMember = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const { userId, role } = req.body;
-    const channel = await channelService.addMember(req.params.id, userId, role, tenantId);
-    return BaseController.sendSuccess(res, channel, "Member added");
-  };
+export const deleteChannel = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  await channelService.deleteById(req.params.id, { tenantId });
+  noContent(res);
+});
 
-  removeMember = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const { memberId } = req.params;
-    const channel = await channelService.removeMember(req.params.id, memberId, tenantId);
-    return BaseController.sendSuccess(res, channel, "Member removed");
-  };
+export const joinChannel = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await channelService.joinChannel({ id: req.params.id, userId, tenantId });
+  success(res, result, "Joined channel");
+});
 
-  // --- Messages ---
-  getMessages = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const { threadId } = req.query;
-    const filter = { deleted: false };
-    if (threadId) {
-        filter.threadId = threadId;
-    } else {
-        filter.threadId = { $exists: false }; // Main channel messages
-    }
+export const addMember = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const { userId: targetUserId, role } = req.body;
+  const result = await channelService.addMember({ id: req.params.id, targetUserId, role, tenantId });
+  success(res, result, "Member added");
+});
 
-    const pagination = BaseController.getPagination(req);
-    const result = await channelService.getMessages(req.params.id, filter, pagination, tenantId);
-    return BaseController.sendPaginated(res, result, "Messages retrieved");
-  };
+export const removeMember = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const result = await channelService.removeMember({ id: req.params.id, targetUserId: req.params.userId, tenantId });
+  success(res, result, "Member removed");
+});
 
-  sendMessage = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    const files = req.files || [];
-    const message = await channelService.sendMessage(
-      req.params.id, 
-      userId, 
-      req.body.content, 
-      req.body.threadId, 
-      tenantId, 
-      files
-    );
-    return BaseController.sendCreated(res, message, "Message sent");
-  };
-}
+export const getMessages = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const { threadId, before, after, page, limit } = req.query;
+  const result = await channelService.getMessages({ channelId: req.params.id, tenantId, threadId, before, after, page: +page || 1, limit: +limit || 50 });
+  success(res, result, "Messages retrieved");
+});
 
-export const channelController = new ChannelController();
+export const sendMessage = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const { content, threadId, mentions } = req.body;
+  const result = await channelService.sendMessage({
+    channelId: req.params.id,
+    senderId: userId,
+    content, threadId, tenantId,
+    files: req.files || [],
+    mentions: mentions || [],
+  });
+  created(res, result, "Message sent");
+});
+
+export const editMessage = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await channelService.editMessage({ messageId: req.params.messageId, channelId: req.params.id, senderId: userId, content: req.body.content, tenantId });
+  success(res, result, "Message edited");
+});
+
+export const deleteMessage = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await channelService.deleteMessage({ messageId: req.params.messageId, channelId: req.params.id, userId, tenantId });
+  success(res, result);
+});
+
+export const addReaction = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await channelService.addReaction({ messageId: req.params.messageId, channelId: req.params.id, userId, emoji: req.body.emoji, tenantId });
+  success(res, result, "Reaction added");
+});
+
+export const setTyping = asyncHandler(async (req, res) => {
+  const { userId } = ctx(req);
+  const result = await channelService.setTyping({ channelId: req.params.id, userId, isTyping: req.body.isTyping });
+  success(res, result);
+});
+
+export const markRead = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await channelService.markRead({ channelId: req.params.id, userId, tenantId });
+  success(res, result, "Marked as read");
+});
+
+export const channelController = {
+  createChannel, getChannels, getChannelById, updateChannel,
+  archiveChannel, deleteChannel, joinChannel,
+  addMember, removeMember,
+  getMessages, sendMessage, editMessage, deleteMessage,
+  addReaction, setTyping, markRead,
+};

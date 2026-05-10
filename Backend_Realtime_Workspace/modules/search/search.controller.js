@@ -1,26 +1,36 @@
-import BaseController from "../../core/base/base.controller.js";
-import { searchService } from "./search.service.js";
+import { asyncHandler } from "../../core/base/base.controller.js";
+import { searchModuleService } from "./search.service.js";
+import { success } from "../../core/utils/api-response.js";
 
-class SearchController extends BaseController {
-  
-  globalSearch = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const { q } = req.query;
-    const pagination = BaseController.getPagination(req);
-    
-    const result = await searchService.globalSearch(q, tenantId, pagination);
-    return BaseController.sendSuccess(res, result, "Global search completed");
-  };
+const ctx = (req) => ({
+  tenantId: req.tenant?.id || req.user?.tenantId,
+  userId:   req.user?._id?.toString() || req.user?.id,
+});
 
-  resourceSearch = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const { q } = req.query;
-    const { resource } = req.params;
-    const pagination = BaseController.getPagination(req);
-    
-    const result = await searchService.resourceSearch(resource, q, tenantId, pagination);
-    return BaseController.sendSuccess(res, result, "Resource search completed");
-  };
-}
+export const globalSearch = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await searchModuleService.globalSearch({ ...req.query, query: req.query.q, tenantId, userId });
+  return success(res, result, "Search completed");
+});
 
-export const searchController = new SearchController();
+export const resourceSearch = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await searchModuleService.resourceSearch({
+    resource: req.params.resource, query: req.query.q, tenantId, userId, ...req.query,
+  });
+  return success(res, result, "Resource search completed");
+});
+
+export const getSuggestions = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const suggestions = await searchModuleService.getSuggestions({ query: req.query.q, tenantId });
+  return success(res, suggestions, "Suggestions retrieved");
+});
+
+export const getRecentSearches = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const recent = await searchModuleService.getRecentSearches({ tenantId, userId });
+  return success(res, recent, "Recent searches retrieved");
+});
+
+export const searchController = { globalSearch, resourceSearch, getSuggestions, getRecentSearches };

@@ -1,75 +1,64 @@
-import BaseController from "../../core/base/base.controller.js";
+import { asyncHandler } from "../../core/base/base.controller.js";
 import { meetingService } from "./meeting.service.js";
+import { created, success, paginated, noContent } from "../../core/utils/api-response.js";
 
-class MeetingController extends BaseController {
-  
-  createMeeting = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    // User info is loaded via auth middleware into req.user
-    const meeting = await meetingService.createMeeting(req.body, tenantId, req.user);
-    return BaseController.sendCreated(res, meeting, "Meeting scheduled successfully");
-  };
+const ctx = (req) => ({
+  tenantId: req.tenant?.id || req.user?.tenantId,
+  userId:   req.user?._id?.toString() || req.user?.id,
+  userContext: req.user,
+});
 
-  getMeetings = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    const { status, date } = req.query;
-    
-    const filter = {
-      $or: [
-        { "organizer.userId": userId },
-        { "participants.userId": userId }
-      ]
-    };
+export const createMeeting = asyncHandler(async (req, res) => {
+  const { tenantId, userContext } = ctx(req);
+  const meeting = await meetingService.createMeeting({ ...req.body, tenantId, userContext });
+  return created(res, meeting, "Meeting scheduled");
+});
 
-    if (status) filter.status = status;
-    if (date) {
-        const start = new Date(date);
-        start.setHours(0,0,0,0);
-        const end = new Date(date);
-        end.setHours(23,59,59,999);
-        filter.meetingDate = { $gte: start, $lte: end };
-    }
-    
-    const pagination = BaseController.getPagination(req);
-    const result = await meetingService.paginate(filter, {
-      tenantId,
-      page: pagination.page,
-      limit: pagination.limit,
-      sort: BaseController.parseSort(pagination.sort || { meetingDate: 1 })
-    });
+export const listMeetings = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const { workspaceId, status, from, to, page, limit } = req.query;
+  const result = await meetingService.listMeetings({ tenantId, userId, workspaceId, status, from, to, page, limit });
+  return paginated(res, result, "Meetings retrieved");
+});
 
-    return BaseController.sendPaginated(res, result, "Meetings retrieved");
-  };
+export const getMeeting = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const meeting = await meetingService.getMeetingById(req.params.id, tenantId);
+  return success(res, meeting, "Meeting retrieved");
+});
 
-  getMeetingById = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const meeting = await meetingService.getMeetingById(req.params.id, tenantId);
-    return BaseController.sendSuccess(res, meeting, "Meeting retrieved");
-  };
+export const updateMeeting = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const meeting = await meetingService.updateMeeting({ id: req.params.id, updates: req.body, tenantId, userId });
+  return success(res, meeting, "Meeting updated");
+});
 
-  updateMeeting = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const meeting = await meetingService.updateMeeting(req.params.id, req.body, tenantId);
-    return BaseController.sendSuccess(res, meeting, "Meeting updated");
-  };
+export const cancelMeeting = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const meeting = await meetingService.cancelMeeting({ id: req.params.id, tenantId, userId, reason: req.body.reason });
+  return success(res, meeting, "Meeting cancelled");
+});
 
-  deleteMeeting = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    await meetingService.deleteById(req.params.id, { tenantId });
-    return BaseController.sendSuccess(res, null, "Meeting deleted");
-  };
+export const rsvp = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const meeting = await meetingService.rsvp({ id: req.params.id, userId, status: req.body.status, tenantId });
+  return success(res, meeting, "RSVP recorded");
+});
 
-  rsvp = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    const meeting = await meetingService.rsvp(req.params.id, userId, req.body.status, tenantId);
-    return BaseController.sendSuccess(res, meeting, "RSVP updated");
-  };
+export const joinMeeting = asyncHandler(async (req, res) => {
+  const { tenantId, userContext } = ctx(req);
+  const result = await meetingService.joinMeeting({ id: req.params.id, tenantId, userContext });
+  return success(res, result, "Joined meeting");
+});
 
-  joinMeeting = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const result = await meetingService.joinMeeting(req.params.id, req.user, tenantId);
-    return BaseController.sendSuccess(res, result, "Joined meeting");
-  };
-}
+export const endMeeting = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const meeting = await meetingService.endMeeting({ id: req.params.id, tenantId, userId });
+  return success(res, meeting, "Meeting ended");
+});
 
-export const meetingController = new MeetingController();
+// Compat export
+export const meetingController = {
+  createMeeting, listMeetings, getMeeting, updateMeeting,
+  cancelMeeting, rsvp, joinMeeting, endMeeting,
+};

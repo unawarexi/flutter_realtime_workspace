@@ -1,73 +1,65 @@
-import BaseController from "../../core/base/base.controller.js";
+import { asyncHandler } from "../../core/base/base.controller.js";
 import { issueService } from "./issue.service.js";
+import { created, success, paginated, noContent } from "../../core/utils/api-response.js";
 
-class IssueController extends BaseController {
-  
-  createIssue = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    const files = req.files || [];
-    const issue = await issueService.createIssue(req.body, tenantId, userId, files);
-    return BaseController.sendCreated(res, issue, "Issue created successfully");
-  };
+const ctx = (req) => ({
+  tenantId: req.tenant?.id || req.user?.tenantId,
+  userId:   req.user?._id?.toString() || req.user?.id,
+});
 
-  getIssues = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    const { projectId, status, assignedTo, type } = req.query;
-    
-    const filter = {};
-    if (projectId) filter.projectId = projectId;
-    if (status) filter.status = status;
-    if (type) filter.type = type;
-    if (assignedTo) filter.assignedTo = assignedTo === 'me' ? userId : assignedTo;
-    
-    const pagination = BaseController.getPagination(req);
-    const result = await issueService.paginate(filter, {
-      tenantId,
-      page: pagination.page,
-      limit: pagination.limit,
-      sort: BaseController.parseSort(pagination.sort)
-    });
+export const createIssue = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const issue = await issueService.createIssue({ ...req.body, tenantId, userId });
+  return created(res, issue, "Issue created");
+});
 
-    return BaseController.sendPaginated(res, result, "Issues retrieved");
-  };
+export const listIssues = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await issueService.listIssues({ ...req.query, tenantId, userId });
+  return paginated(res, result, "Issues retrieved");
+});
 
-  getIssueById = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const issue = await issueService.getIssueById(req.params.id, tenantId);
-    return BaseController.sendSuccess(res, issue, "Issue retrieved");
-  };
+export const getIssue = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const issue = await issueService.getIssueById(req.params.id, tenantId);
+  return success(res, issue, "Issue retrieved");
+});
 
-  updateIssue = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    const issue = await issueService.updateIssue(req.params.id, req.body, tenantId, userId);
-    return BaseController.sendSuccess(res, issue, "Issue updated");
-  };
+export const updateIssue = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const issue = await issueService.updateIssue({ id: req.params.id, updates: req.body, tenantId, userId });
+  return success(res, issue, "Issue updated");
+});
 
-  deleteIssue = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    await issueService.deleteById(req.params.id, { tenantId });
-    return BaseController.sendSuccess(res, null, "Issue deleted");
-  };
+export const deleteIssue = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  await issueService.deleteIssue({ id: req.params.id, tenantId, userId });
+  return noContent(res);
+});
 
-  addComment = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    const issue = await issueService.addComment(req.params.id, req.body.content, tenantId, userId);
-    return BaseController.sendSuccess(res, issue, "Comment added");
-  };
+export const addComment = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const issue = await issueService.addComment({ id: req.params.id, content: req.body.content, tenantId, userId });
+  return success(res, issue, "Comment added");
+});
 
-  linkIssue = async (req, res) => {
-    const { tenantId } = BaseController.getContext(req);
-    const { targetIssueId, relation } = req.body;
-    const issue = await issueService.linkIssue(req.params.id, targetIssueId, relation, tenantId);
-    return BaseController.sendSuccess(res, issue, "Issue linked");
-  };
+export const linkIssue = asyncHandler(async (req, res) => {
+  const { tenantId } = ctx(req);
+  const issue = await issueService.linkIssue({
+    id: req.params.id, targetIssueId: req.body.targetIssueId,
+    relation: req.body.relation, tenantId,
+  });
+  return success(res, issue, "Issue linked");
+});
 
-  uploadAttachment = async (req, res) => {
-    const { tenantId, userId } = BaseController.getContext(req);
-    if (!req.file) return BaseController.sendSuccess(res, null, "No file provided");
-    const attachment = await issueService.addAttachment(req.params.id, req.file, tenantId, userId);
-    return BaseController.sendCreated(res, attachment, "Attachment uploaded");
-  };
-}
+export const uploadAttachment = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  if (!req.file) return success(res, null, "No file provided");
+  const attachment = await issueService.addAttachment({ id: req.params.id, file: req.file, tenantId, userId });
+  return created(res, attachment, "Attachment uploaded");
+});
 
-export const issueController = new IssueController();
+export const issueController = {
+  createIssue, listIssues, getIssue, updateIssue, deleteIssue,
+  addComment, linkIssue, uploadAttachment,
+};

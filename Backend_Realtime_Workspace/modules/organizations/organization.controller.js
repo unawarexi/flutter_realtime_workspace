@@ -1,69 +1,65 @@
-import BaseController from "../../core/base/base.controller.js";
+import { asyncHandler } from "../../core/base/base.controller.js";
 import { organizationService } from "./organization.service.js";
-import { AppError } from "../../core/errors/app-error.js";
-import { HttpStatus } from "../../config/constants.js";
+import { created, success, paginated, noContent } from "../../core/utils/api-response.js";
 
-class OrganizationController extends BaseController {
-  
-  createOrganization = async (req, res) => {
-    const { userId } = BaseController.getContext(req);
-    if (!userId) {
-        throw new AppError(HttpStatus.UNAUTHORIZED, "User context not found", "E1001");
-    }
+const ctx = (req) => ({
+  tenantId: req.tenant?.id || req.user?.tenantId,
+  userId:   req.user?._id?.toString() || req.user?.id,
+});
 
-    const org = await organizationService.createOrganization(req.body, userId);
-    return BaseController.sendCreated(res, org, "Organization created successfully");
-  };
+export const createOrganization = asyncHandler(async (req, res) => {
+  const { userId } = ctx(req);
+  const org = await organizationService.createOrganization(req.body, userId);
+  return created(res, org, "Organization created");
+});
 
-  getOrganizations = async (req, res) => {
-    // In a real app, you only return orgs the user is part of.
-    const { userId } = BaseController.getContext(req);
-    // for now, we just list all orgs where user is owner.
-    // when member system is fully implemented, this will query tenant memberships.
-    const filter = { owner: userId }; 
-    const pagination = BaseController.getPagination(req);
-    
-    const result = await organizationService.paginate(filter, { 
-      page: pagination.page, 
-      limit: pagination.limit, 
-      sort: BaseController.parseSort(pagination.sort) 
-    });
+export const listOrganizations = asyncHandler(async (req, res) => {
+  const { userId } = ctx(req);
+  const { page = 1, limit = 20 } = req.query;
+  const result = await organizationService.repository.paginate(
+    { filter: { owner: userId }, page: +page, limit: +limit, sort: { createdAt: -1 } }, {}
+  );
+  return paginated(res, result, "Organizations retrieved");
+});
 
-    return BaseController.sendPaginated(res, result, "Organizations retrieved");
-  };
+export const getOrganization = asyncHandler(async (req, res) => {
+  const org = await organizationService.getOrganizationById(req.params.id);
+  return success(res, org, "Organization retrieved");
+});
 
-  getOrganizationById = async (req, res) => {
-    const org = await organizationService.getOrganizationById(req.params.id);
-    return BaseController.sendSuccess(res, org, "Organization retrieved");
-  };
+export const updateOrganization = asyncHandler(async (req, res) => {
+  const { userId } = ctx(req);
+  const org = await organizationService.updateOrganization(req.params.id, req.body, userId);
+  return success(res, org, "Organization updated");
+});
 
-  updateOrganization = async (req, res) => {
-    const { userId } = BaseController.getContext(req);
-    const org = await organizationService.updateOrganization(req.params.id, req.body, userId);
-    return BaseController.sendSuccess(res, org, "Organization updated successfully");
-  };
+export const updateSettings = asyncHandler(async (req, res) => {
+  const { userId } = ctx(req);
+  const org = await organizationService.updateSettings(req.params.id, req.body, userId);
+  return success(res, org, "Settings updated");
+});
 
-  updateSettings = async (req, res) => {
-    const { userId } = BaseController.getContext(req);
-    const org = await organizationService.updateSettings(req.params.id, req.body, userId);
-    return BaseController.sendSuccess(res, org, "Organization settings updated successfully");
-  };
+export const updateSSO = asyncHandler(async (req, res) => {
+  const { userId } = ctx(req);
+  const org = await organizationService.updateSSO(req.params.id, req.body, userId);
+  return success(res, org, "SSO configuration updated");
+});
 
-  // Stubs for members
-  inviteMember = async (req, res) => {
-    // To be implemented fully with Notification service and Identity service
-    return BaseController.sendSuccess(res, null, "Member invited (stub)");
-  };
+export const inviteMember = asyncHandler(async (req, res) => {
+  const { tenantId, userId } = ctx(req);
+  const result = await organizationService.inviteMember({
+    orgId: req.params.id, tenantId, invitedBy: userId, ...req.body,
+  });
+  return success(res, result, "Invitation sent");
+});
 
-  getMembers = async (req, res) => {
-    // To be implemented
-    return BaseController.sendSuccess(res, [], "Members retrieved (stub)");
-  };
+export const acceptInvite = asyncHandler(async (req, res) => {
+  const { userId } = ctx(req);
+  const result = await organizationService.acceptInvite(req.params.token, userId, req.user.email);
+  return success(res, result, "Invite accepted");
+});
 
-  removeMember = async (req, res) => {
-    // To be implemented
-    return BaseController.sendSuccess(res, null, "Member removed (stub)");
-  };
-}
-
-export const organizationController = new OrganizationController();
+export const organizationController = {
+  createOrganization, listOrganizations, getOrganization, updateOrganization,
+  updateSettings, updateSSO, inviteMember, acceptInvite,
+};
