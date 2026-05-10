@@ -18,7 +18,7 @@ const templateSchema = new mongoose.Schema({
   isDefault: { type: Boolean, default: false },
   version: { type: Number, default: 1 },
   status: { type: String, enum: ["active", "draft", "archived"], default: "active" },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });
 
 templateSchema.index({ tenantId: 1, type: 1, slug: 1 }, { unique: true });

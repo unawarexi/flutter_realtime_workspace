@@ -6,8 +6,8 @@ import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema({
   tenantId: { type: String, required: true, index: true },
-  recipientId: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true, index: true },
-  senderId: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" },
+  recipientId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   type: { type: String, required: true, enum: [
     "mention", "assignment", "comment", "invite", "meeting", "task_update",
     "project_update", "ticket_update", "system", "ai_result", "workflow",
@@ -31,7 +31,7 @@ export const Notification = mongoose.model("Notification", notificationSchema);
 
 // Notification preferences per user
 const notifPrefSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true, unique: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
   tenantId: { type: String, required: true },
   channels: {
     email: { type: Boolean, default: true },

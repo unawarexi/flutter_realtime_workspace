@@ -26,7 +26,7 @@ const integrationSchema = new mongoose.Schema({
   lastSyncAt: { type: Date },
   lastError: { type: String },
   status: { type: String, enum: ["active", "error", "disabled"], default: "active" },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });
 
 integrationSchema.index({ tenantId: 1, type: 1 });
