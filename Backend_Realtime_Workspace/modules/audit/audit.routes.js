@@ -2,20 +2,38 @@
 // TeamSpot — Audit Routes
 // ============================================================================
 
-import express from "express";
-import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
-import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
+import express from 'express';
+import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { tenantMiddleware } from '../../core/auth/tenant.middleware.js';
 import { requireRole } from "../../core/auth/permission.middleware.js";
 import { asyncHandler } from "../../core/base/base.controller.js";
+import { validate } from "../../middlewares/validate.middleware.js";
 import { Roles } from "../../config/constants.js";
 
+import { auditController } from "./audit.controller.js";
+import { getAuditLogsSchema } from "./audit.validation.js";
+
 const router = express.Router();
+
 router.use(firebaseAuthMiddleware);
 router.use(tenantMiddleware);
 router.use(requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN, Roles.SUPER_ADMIN));
 
-router.get("/", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, [], "Audit logs listed"); }));
-router.get("/export", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Audit export ready"); }));
-router.get("/:id", asyncHandler(async (req, res) => { const { success } = await import("../../core/utils/api-response.js"); success(res, null, "Audit log details"); }));
+router.get(
+  '/', 
+  validate(getAuditLogsSchema),
+  asyncHandler(auditController.getAuditLogs)
+);
+
+router.get(
+  '/export', 
+  validate(getAuditLogsSchema),
+  asyncHandler(auditController.exportAuditLogs)
+);
+
+router.get(
+  '/:id', 
+  asyncHandler(auditController.getAuditLogById)
+);
 
 export default router;

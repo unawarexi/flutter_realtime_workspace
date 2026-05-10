@@ -1,5 +1,5 @@
 // ============================================================================
-// TeamSpot — Billing Routes
+// TeamSpot — Analytics Routes
 // ============================================================================
 
 import express from "express";
@@ -10,29 +10,25 @@ import { asyncHandler } from "../../core/base/base.controller.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { Roles } from "../../config/constants.js";
 
-import { billingController } from "./billing.controller.js";
-import { updateSubscriptionSchema } from "./billing.validation.js";
+import { analyticsController } from "./analytics.controller.js";
+import { getAnalyticsSchema, generateReportSchema } from "./analytics.validation.js";
 
 const router = express.Router();
 
 router.use(firebaseAuthMiddleware);
 router.use(tenantMiddleware);
+router.use(requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN, Roles.MANAGER));
 
-// Subscription
-router.get("/subscription", asyncHandler(billingController.getSubscription));
-
-router.put(
-  "/subscription", 
-  requireRole(Roles.ORG_OWNER), 
-  validate(updateSubscriptionSchema),
-  asyncHandler(billingController.updateSubscription)
+router.get(
+  "/dashboard", 
+  validate(getAnalyticsSchema),
+  asyncHandler(analyticsController.getDashboardStats)
 );
 
-// Invoices
-router.get("/invoices", asyncHandler(billingController.getInvoices));
-router.get("/invoices/:id", asyncHandler(billingController.getInvoiceById));
-
-// Usage
-router.get("/usage", asyncHandler(billingController.getUsageStats));
+router.get(
+  "/reports/generate", 
+  validate(generateReportSchema),
+  asyncHandler(analyticsController.generateReport)
+);
 
 export default router;
