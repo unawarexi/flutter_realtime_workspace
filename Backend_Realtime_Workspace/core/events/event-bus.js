@@ -6,6 +6,7 @@
 import { EventEmitter } from "events";
 import { createLogger } from "../../observability/logger.js";
 import { randomUUID } from "crypto";
+import { publishEvent } from "../../infrastructure/kafka/kafka.service.js";
 
 const log = createLogger("EventBus");
 
@@ -24,8 +25,13 @@ class DomainEventBus extends EventEmitter {
       timestamp: Date.now(),
       ...payload,
     };
-    log.debug(`Event published: ${eventName}`, { eventId: event.eventId });
+    log.debug(`Event published locally: ${eventName}`, { eventId: event.eventId });
     this.emit(eventName, event);
+
+    // Broadcast to Kafka (fire and forget to not block local execution)
+    publishEvent("domain.events", event.eventId, event, { eventName })
+      .catch(err => log.error(`Failed to publish event to Kafka: ${eventName}`, { error: err.message, eventId: event.eventId }));
+
     return event;
   }
 

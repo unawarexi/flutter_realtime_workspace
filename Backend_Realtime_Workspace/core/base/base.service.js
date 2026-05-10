@@ -6,6 +6,7 @@
 import { createLogger } from "../../observability/logger.js";
 import { eventBus } from "../events/event-bus.js";
 import { getCache, setCache, deleteCache } from "../../infrastructure/redis/redis.service.js";
+import { publishToQueue, publishDelayed } from "../../infrastructure/rabbitmq/rabbitmq.service.js";
 
 export class BaseService {
   /**
@@ -56,11 +57,30 @@ export class BaseService {
   // ──────────────────────────────────────────────────────────────────────────
 
   emit(eventName, payload) {
-    eventBus.emit(eventName, {
+    eventBus.publish(eventName, {
       ...payload,
       source: this.name,
       timestamp: Date.now(),
     });
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TASK QUEUE (RABBITMQ)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  async enqueueJob(queueName, payload, options = {}) {
+    const { delayMs, ...publishOpts } = options;
+    try {
+      if (delayMs) {
+        await publishDelayed(queueName, payload, delayMs);
+      } else {
+        await publishToQueue(queueName, payload, publishOpts);
+      }
+      this.log.debug(`Enqueued job to ${queueName}`);
+    } catch (error) {
+      this.log.error(`Failed to enqueue job to ${queueName}`, { error: error.message });
+      throw error;
+    }
   }
 
   // ──────────────────────────────────────────────────────────────────────────

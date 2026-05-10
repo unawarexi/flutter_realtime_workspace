@@ -6,8 +6,11 @@
 import { sendEmail } from "../infrastructure/mailer/mailer.service.js";
 import { sendPushNotification, sendMulticast } from "../infrastructure/push/fcm.service.js";
 import { createLogger } from "../observability/logger.js";
+import EmailContentGenerator from "../infrastructure/mailer/mail-content.js";
+import { render } from "../infrastructure/mailer/mail-render.js";
 
 const log = createLogger("NotificationWorker");
+const emailGenerator = new EmailContentGenerator();
 
 export async function processNotification(job) {
   const { data } = job;
@@ -15,13 +18,23 @@ export async function processNotification(job) {
   try {
     switch (data.channel) {
       case "email":
+        let html = data.html;
+        let subject = data.subject;
+        
+        // If templateName is provided, generate HTML using our centralized templates
+        if (data.templateName && typeof emailGenerator[data.templateName] === "function") {
+          const templateData = emailGenerator[data.templateName](data.templateData || {});
+          subject = templateData.EMAIL_TITLE || data.subject;
+          html = render(templateData);
+        }
+
         await sendEmail({
           to: data.to,
-          subject: data.subject,
-          html: data.html,
+          subject: subject,
+          html: html,
           text: data.text,
         });
-        log.info("Email sent", { to: data.to, subject: data.subject });
+        log.info("Email sent via RabbitMQ job", { to: data.to, subject: subject });
         break;
 
       case "push":
