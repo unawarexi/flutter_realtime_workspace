@@ -1,0 +1,173 @@
+# ============================================================================
+# TeamSpot — Docker Compose
+# Development environment: MongoDB, Redis, Kafka, RabbitMQ, LiveKit
+# ============================================================================
+
+services:
+  # ── MongoDB (Primary database) ──────────────────────────────────────────
+  mongodb:
+    image: mongo:7.0
+    container_name: teamspot-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: teamspot
+      MONGO_INITDB_ROOT_PASSWORD: teamspot_dev_password
+      MONGO_INITDB_DATABASE: teamspot_dev
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - teamspot-network
+
+  # ── Redis (Cache, pub/sub, sessions) ─────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: teamspot-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - teamspot-network
+
+  # ── Zookeeper (Kafka dependency) ─────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: teamspot-zookeeper
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    networks:
+      - teamspot-network
+
+  # ── Kafka (Event streaming) ─────────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: teamspot-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    depends_on:
+      - zookeeper
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - teamspot-network
+
+  # ── RabbitMQ (Task queues) ──────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: teamspot-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: teamspot
+      RABBITMQ_DEFAULT_PASS: teamspot_dev_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - teamspot-network
+
+  # ── LiveKit (Video/Voice) ───────────────────────────────────────────────
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: teamspot-livekit
+    restart: unless-stopped
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    command: --dev --bind 0.0.0.0
+    networks:
+      - teamspot-network
+
+  # ── Kafka UI (Development only) ─────────────────────────────────────────
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: teamspot-kafka-ui
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: teamspot-dev
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    depends_on:
+      - kafka
+    networks:
+      - teamspot-network
+    profiles:
+      - dev-tools
+
+  # ── Mongo Express (Development only) ────────────────────────────────────
+  mongo-express:
+    image: mongo-express:latest
+    container_name: teamspot-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: teamspot
+      ME_CONFIG_MONGODB_ADMINPASSWORD: teamspot_dev_password
+      ME_CONFIG_MONGODB_URL: mongodb://teamspot:teamspot_dev_password@mongodb:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      - mongodb
+    networks:
+      - teamspot-network
+    profiles:
+      - dev-tools
+
+# ── Volumes ─────────────────────────────────────────────────────────────────
+volumes:
+  mongodb_data:
+  mongodb_config:
+  redis_data:
+  zookeeper_data:
+  kafka_data:
+  rabbitmq_data:
+
+# ── Networks ────────────────────────────────────────────────────────────────
+networks:
+  teamspot-network:
+    driver: bridge
