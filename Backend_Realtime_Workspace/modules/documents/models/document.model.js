@@ -11,7 +11,7 @@ const documentSchema = new mongoose.Schema(
     orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
     workspaceId: { type: mongoose.Schema.Types.ObjectId, ref: "Workspace" },
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
-    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true },
+    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     type: { type: String, enum: ["pdf", "docx", "xlsx", "pptx", "image", "video", "audio", "markdown", "text", "csv", "other"], required: true },
     file: {
       url: { type: String, required: true },
@@ -31,10 +31,10 @@ const documentSchema = new mongoose.Schema(
     chunkCount: { type: Number, default: 0 },
     // Access control
     visibility: { type: String, enum: ["private", "workspace", "organization", "public"], default: "workspace" },
-    sharedWith: [{ userId: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" }, permission: { type: String, enum: ["view", "edit"], default: "view" } }],
+    sharedWith: [{ userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, permission: { type: String, enum: ["view", "edit"], default: "view" } }],
     // Versioning
     version: { type: Number, default: 1 },
-    versions: [{ version: { type: Number }, url: { type: String }, uploadedAt: { type: Date, default: Date.now }, uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserInfo" } }],
+    versions: [{ version: { type: Number }, url: { type: String }, uploadedAt: { type: Date, default: Date.now }, uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" } }],
     tags: [{ type: String }],
     status: { type: String, enum: ["active", "archived", "deleted"], default: "active" },
     deletedAt: { type: Date },
