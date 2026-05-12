@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/shared/styles/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 
 
 /// Responsive breakpoints and helpers for cross-platform layout.
@@ -178,7 +178,7 @@ class ResponsiveScaffold extends StatelessWidget {
         (title != null
             ? AppBar(
                 title: Text(title!),
-                backgroundColor: isDark ? TColors.darkBg : TColors.lightBg,
+                backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,
                 surfaceTintColor: Colors.transparent,
               )
             : null);
@@ -204,7 +204,7 @@ class ResponsiveScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: backgroundColor ??
-          (isDark ? TColors.darkBg : TColors.lightBg),
+          (isDark ? TColors.backgroundDark : TColors.backgroundLight),
       appBar: effectiveAppBar,
       floatingActionButton: floatingActionButton,
       body: Center(
