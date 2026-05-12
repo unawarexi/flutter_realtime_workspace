@@ -7,7 +7,7 @@ class UserRepository {
   final _api = ApiClient.instance;
 
   Future<UserModel> getProfile() async {
-    final res = await _api.get(ApiEndpoints.userProfile);
+    final res = await _api.get(ApiEndpoints.me);
     return UserModel.fromJson(res.data['data']);
   }
 
@@ -15,40 +15,42 @@ class UserRepository {
     String? fullName,
     String? bio,
   }) async {
-    final res = await _api.put(ApiEndpoints.userProfile, data: {
-      'fullName': ?fullName,
-      'bio': ?bio,
+    final res = await _api.put(ApiEndpoints.me, data: {
+      if (fullName != null) 'fullName': fullName,
+      if (bio != null) 'bio': bio,
     });
     return UserModel.fromJson(res.data['data']);
   }
 
   Future<UserModel> updateAvatar(String filePath) async {
     final formData = FormData.fromMap({
-      'avatar': await MultipartFile.fromFile(filePath),
+      'profilePicture': await MultipartFile.fromFile(filePath),
     });
-    final res = await _api.upload(ApiEndpoints.userAvatar, formData: formData);
+    final res = await _api.upload(ApiEndpoints.userUploadPicture, formData: formData);
     return UserModel.fromJson(res.data['data']);
   }
 
-  Future<List<DeviceModel>> getDevices() async {
-    final res = await _api.get(ApiEndpoints.userDevices);
-    final list = res.data['data'] as List;
-    return list.map((e) => DeviceModel.fromJson(e)).toList();
-  }
-
+  /// Register FCM device token for push notifications.
   Future<void> registerDevice({
     required String fcmToken,
     required String platform,
   }) async {
-    await _api.post(ApiEndpoints.userDevices, data: {
-      'fcmToken': fcmToken,
+    await _api.post(ApiEndpoints.notificationSubscribe, data: {
+      'token': fcmToken,
       'platform': platform,
     });
   }
 
-  Future<void> removeDevice(String deviceId) =>
-      _api.delete(ApiEndpoints.userDevice(deviceId));
+  Future<List<UserModel>> getUsers({String? query}) async {
+    final res = await _api.get(ApiEndpoints.users, queryParameters: {
+      if (query != null && query.isNotEmpty) 'q': query,
+    });
+    final list = res.data['data'] as List? ?? [];
+    return list.map((e) => UserModel.fromJson(e)).toList();
+  }
 
-  Future<void> updateOnlineStatus(bool isOnline) =>
-      _api.put(ApiEndpoints.userOnlineStatus, data: {'isOnline': isOnline});
+  Future<Map<String, dynamic>> getUserById(String userId) async {
+    final res = await _api.get(ApiEndpoints.userById(userId));
+    return res.data['data'] as Map<String, dynamic>;
+  }
 }

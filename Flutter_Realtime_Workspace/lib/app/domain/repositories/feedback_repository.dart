@@ -26,7 +26,20 @@ class FeedbackRepository {
     return data.map((e) => FeedbackModel.fromJson(e)).toList();
   }
 
+  Future<FeedbackModel> getFeedback(String id) async {
+    final res = await _api.get(ApiEndpoints.feedback(id));
+    return FeedbackModel.fromJson(res.data['data']);
+  }
+
   Future<void> updateFeedbackStatus(String id, String status) async {
-    await _api.patch(ApiEndpoints.feedback(id), data: {'status': status});
+    await _api.put(ApiEndpoints.feedback(id), data: {'status': status});
+  }
+
+  Future<void> deleteFeedback(String id) async {
+    await _api.delete(ApiEndpoints.feedback(id));
+  }
+
+  Future<void> respondToFeedback(String id, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.feedbackRespond(id), data: body);
   }
 }

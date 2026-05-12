@@ -22,9 +22,9 @@ class StorageRepository {
       if (taskId != null) 'taskId': taskId,
     });
 
-    final res = await _api.post(
+    final res = await _api.upload(
       ApiEndpoints.storageUpload,
-      data: formData,
+      formData: formData,
       onSendProgress: onProgress,
     );
     return StorageFileModel.fromJson(res.data['data']);
@@ -38,7 +38,7 @@ class StorageRepository {
     int page = 1,
     int limit = 20,
   }) async {
-    final res = await _api.get(ApiEndpoints.storageFiles, queryParameters: {
+    final res = await _api.get(ApiEndpoints.storageAssets, queryParameters: {
       if (workspaceId != null) 'workspaceId': workspaceId,
       if (projectId != null) 'projectId': projectId,
       if (taskId != null) 'taskId': taskId,
@@ -50,12 +50,19 @@ class StorageRepository {
     return data.map((e) => StorageFileModel.fromJson(e)).toList();
   }
 
-  Future<void> deleteFile(String id) async {
-    await _api.delete(ApiEndpoints.storageFile(id));
+  Future<StorageFileModel> getFile(String id) async {
+    final res = await _api.get(ApiEndpoints.storageAsset(id));
+    return StorageFileModel.fromJson(res.data['data']);
   }
 
-  Future<String> getDownloadUrl(String id) async {
-    final res = await _api.get(ApiEndpoints.storageFileUrl(id));
-    return res.data['data']['url'] as String;
+  Future<void> deleteFile(String id) async {
+    await _api.delete(ApiEndpoints.storageAsset(id));
+  }
+
+  Future<Map<String, dynamic>> attachToResource(
+      String id, Map<String, dynamic> body) async {
+    final res =
+        await _api.patch(ApiEndpoints.storageAssetAttach(id), data: body);
+    return res.data['data'] as Map<String, dynamic>;
   }
 }

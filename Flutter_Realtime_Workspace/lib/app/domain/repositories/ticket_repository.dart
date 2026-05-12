@@ -32,7 +32,7 @@ class TicketRepository {
   }
 
   Future<TicketModel> updateTicket(String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.ticket(id), data: body);
+    final res = await _api.put(ApiEndpoints.ticket(id), data: body);
     return TicketModel.fromJson(res.data['data']);
   }
 
@@ -40,11 +40,12 @@ class TicketRepository {
     await _api.delete(ApiEndpoints.ticket(id));
   }
 
-  Future<void> assignTicket(String id, String userId) async {
-    await _api.patch(ApiEndpoints.ticketAssign(id), data: {'userId': userId});
+  Future<void> addComment(String id, String content) async {
+    await _api.post(ApiEndpoints.ticketComments(id),
+        data: {'content': content});
   }
 
-  Future<void> resolveTicket(String id, String resolution) async {
-    await _api.post(ApiEndpoints.ticketResolve(id), data: {'resolution': resolution});
+  Future<void> addAttachment(String id, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.ticketAttachments(id), data: body);
   }
 }

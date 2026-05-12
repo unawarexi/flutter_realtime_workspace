@@ -1,32 +1,22 @@
 import 'package:flutter_realtime_workspace/core/network/api_client.dart';
 import 'package:flutter_realtime_workspace/core/apis/endpoints.dart';
-import 'package:flutter_realtime_workspace/app/domain/models/user_model.dart';
-import 'package:flutter_realtime_workspace/app/domain/models/meeting_model.dart';
 
 class SearchRepository {
   final _api = ApiClient.instance;
 
-  /// Global search across users and meetings.
+  /// Global search across all resources.
   Future<Map<String, dynamic>> globalSearch(String query) async {
-    final res = await _api.get(ApiEndpoints.search, queryParameters: {
-      'q': query,
-    });
+    final res = await _api.get(ApiEndpoints.search, queryParameters: {'q': query});
     return res.data['data'] as Map<String, dynamic>;
   }
 
-  Future<List<UserModel>> searchUsers(String query) async {
-    final res = await _api.get(ApiEndpoints.searchUsers, queryParameters: {
-      'q': query,
-    });
-    final list = res.data['data'] as List;
-    return list.map((e) => UserModel.fromJson(e)).toList();
-  }
-
-  Future<List<MeetingModel>> searchMeetings(String query) async {
-    final res = await _api.get(ApiEndpoints.searchMeetings, queryParameters: {
-      'q': query,
-    });
-    final list = res.data['data'] as List;
-    return list.map((e) => MeetingModel.fromJson(e)).toList();
+  /// Search within a specific resource type (e.g. 'users', 'meetings', 'tasks').
+  Future<List<Map<String, dynamic>>> searchResource(
+      String resource, String query) async {
+    final res = await _api.get(
+      ApiEndpoints.searchResource(resource),
+      queryParameters: {'q': query},
+    );
+    return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
   }
 }

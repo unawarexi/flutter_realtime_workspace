@@ -5,9 +5,10 @@ import 'package:flutter_realtime_workspace/app/domain/models/organization_model.
 class OrganizationRepository {
   final _api = ApiClient.instance;
 
-  Future<OrganizationModel> getMyOrganization() async {
-    final res = await _api.get(ApiEndpoints.myOrganization);
-    return OrganizationModel.fromJson(res.data['data']);
+  Future<List<OrganizationModel>> getOrganizations() async {
+    final res = await _api.get(ApiEndpoints.organizations);
+    final data = res.data['data'] as List? ?? [];
+    return data.map((e) => OrganizationModel.fromJson(e)).toList();
   }
 
   Future<OrganizationModel> getOrganization(String id) async {
@@ -23,17 +24,12 @@ class OrganizationRepository {
 
   Future<OrganizationModel> updateOrganization(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.organization(id), data: body);
+    final res = await _api.put(ApiEndpoints.organization(id), data: body);
     return OrganizationModel.fromJson(res.data['data']);
   }
 
-  Future<String> generateInviteCode(String orgId) async {
-    final res = await _api.post(ApiEndpoints.orgInviteCode(orgId));
-    return res.data['data']['code'] as String;
-  }
-
-  Future<void> joinByInviteCode(String code) async {
-    await _api.post(ApiEndpoints.orgJoin, data: {'code': code});
+  Future<void> invite(String orgId, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.orgInvite(orgId), data: body);
   }
 
   Future<List<Map<String, dynamic>>> getMembers(String orgId) async {
@@ -45,9 +41,14 @@ class OrganizationRepository {
     await _api.delete(ApiEndpoints.orgMember(orgId, userId));
   }
 
-  Future<void> updateMemberRole(
-      String orgId, String userId, String role) async {
-    await _api.patch(ApiEndpoints.orgMember(orgId, userId),
-        data: {'role': role});
+  Future<Map<String, dynamic>> getSettings(String orgId) async {
+    final res = await _api.get(ApiEndpoints.orgSettings(orgId));
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateSettings(
+      String orgId, Map<String, dynamic> body) async {
+    final res = await _api.put(ApiEndpoints.orgSettings(orgId), data: body);
+    return res.data['data'] as Map<String, dynamic>;
   }
 }

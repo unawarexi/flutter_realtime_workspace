@@ -24,7 +24,7 @@ class ChannelRepository {
 
   Future<ChannelModel> updateChannel(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.channel(id), data: body);
+    final res = await _api.put(ApiEndpoints.channel(id), data: body);
     return ChannelModel.fromJson(res.data['data']);
   }
 
@@ -32,12 +32,13 @@ class ChannelRepository {
     await _api.delete(ApiEndpoints.channel(id));
   }
 
-  Future<void> joinChannel(String id) async {
-    await _api.post(ApiEndpoints.channelJoin(id));
+  Future<void> addMember(String channelId, String userId) async {
+    await _api.post(ApiEndpoints.channelMembers(channelId),
+        data: {'userId': userId});
   }
 
-  Future<void> leaveChannel(String id) async {
-    await _api.post(ApiEndpoints.channelLeave(id));
+  Future<void> removeMember(String channelId, String memberId) async {
+    await _api.delete(ApiEndpoints.channelMember(channelId, memberId));
   }
 
   Future<List<Map<String, dynamic>>> getMessages(String channelId,

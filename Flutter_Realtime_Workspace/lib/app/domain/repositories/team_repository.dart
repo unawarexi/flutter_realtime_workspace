@@ -23,7 +23,7 @@ class TeamRepository {
   }
 
   Future<TeamModel> updateTeam(String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.team(id), data: body);
+    final res = await _api.put(ApiEndpoints.team(id), data: body);
     return TeamModel.fromJson(res.data['data']);
   }
 
@@ -31,16 +31,7 @@ class TeamRepository {
     await _api.delete(ApiEndpoints.team(id));
   }
 
-  Future<void> addMember(String teamId, String userId) async {
-    await _api.post(ApiEndpoints.teamMembers(teamId), data: {'userId': userId});
-  }
-
-  Future<void> removeMember(String teamId, String userId) async {
-    await _api.delete(ApiEndpoints.teamMember(teamId, userId));
-  }
-
-  Future<List<Map<String, dynamic>>> getAllOrgUsers(String orgId) async {
-    final res = await _api.get(ApiEndpoints.orgMembers(orgId));
-    return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
+  Future<void> invite(String teamId, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.teamInvite(teamId), data: body);
   }
 }

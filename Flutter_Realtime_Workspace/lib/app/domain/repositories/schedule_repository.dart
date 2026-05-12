@@ -31,16 +31,34 @@ class ScheduleRepository {
 
   Future<ScheduleModel> updateSchedule(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.schedule(id), data: body);
+    final res = await _api.put(ApiEndpoints.schedule(id), data: body);
     return ScheduleModel.fromJson(res.data['data']);
+  }
+
+  Future<void> cancelSchedule(String id) async {
+    await _api.patch(ApiEndpoints.scheduleCancel(id));
   }
 
   Future<void> deleteSchedule(String id) async {
     await _api.delete(ApiEndpoints.schedule(id));
   }
 
-  Future<void> respondToSchedule(String id, String response) async {
-    await _api.post(ApiEndpoints.scheduleRespond(id),
+  Future<Map<String, dynamic>> getCalendar() async {
+    final res = await _api.get(ApiEndpoints.scheduleCalendar);
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getAvailability() async {
+    final res = await _api.get(ApiEndpoints.scheduleAvailability);
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<void> addAttendee(String id, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.scheduleAttendees(id), data: body);
+  }
+
+  Future<void> rsvp(String id, String response) async {
+    await _api.patch(ApiEndpoints.scheduleRsvp(id),
         data: {'response': response});
   }
 }

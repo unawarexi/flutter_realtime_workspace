@@ -33,17 +33,12 @@ class DocumentRepository {
 
   Future<DocumentModel> updateDocument(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.document(id), data: body);
+    final res = await _api.put(ApiEndpoints.document(id), data: body);
     return DocumentModel.fromJson(res.data['data']);
   }
 
   Future<void> deleteDocument(String id) async {
     await _api.delete(ApiEndpoints.document(id));
-  }
-
-  Future<List<Map<String, dynamic>>> getVersionHistory(String id) async {
-    final res = await _api.get(ApiEndpoints.documentVersions(id));
-    return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
   }
 
   Future<void> shareDocument(String id, List<String> userIds) async {

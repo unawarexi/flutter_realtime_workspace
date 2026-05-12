@@ -38,7 +38,7 @@ class IssueRepository {
   }
 
   Future<IssueModel> updateIssue(String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.issue(id), data: body);
+    final res = await _api.put(ApiEndpoints.issue(id), data: body);
     return IssueModel.fromJson(res.data['data']);
   }
 
@@ -54,5 +54,13 @@ class IssueRepository {
   Future<void> addComment(String issueId, String content) async {
     await _api.post(ApiEndpoints.issueComments(issueId),
         data: {'content': content});
+  }
+
+  Future<void> linkIssue(String issueId, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.issueLink(issueId), data: body);
+  }
+
+  Future<void> addAttachment(String issueId, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.issueAttachments(issueId), data: body);
   }
 }

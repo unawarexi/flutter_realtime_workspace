@@ -20,7 +20,7 @@ class IntegrationRepository {
 
   Future<IntegrationModel> updateIntegration(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.integration(id), data: body);
+    final res = await _api.put(ApiEndpoints.integration(id), data: body);
     return IntegrationModel.fromJson(res.data['data']);
   }
 
@@ -28,12 +28,8 @@ class IntegrationRepository {
     await _api.delete(ApiEndpoints.integration(id));
   }
 
-  Future<List<Map<String, dynamic>>> getAvailableIntegrations() async {
-    final res = await _api.get(ApiEndpoints.integrationsAvailable);
-    return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
-  }
-
-  Future<void> syncIntegration(String id) async {
-    await _api.post(ApiEndpoints.integrationSync(id));
+  Future<Map<String, dynamic>> testIntegration(String id) async {
+    final res = await _api.post(ApiEndpoints.integrationTest(id));
+    return res.data['data'] as Map<String, dynamic>;
   }
 }

@@ -23,7 +23,7 @@ class WorkspaceRepository {
 
   Future<WorkspaceModel> updateWorkspace(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.workspace(id), data: body);
+    final res = await _api.put(ApiEndpoints.workspace(id), data: body);
     return WorkspaceModel.fromJson(res.data['data']);
   }
 
@@ -36,8 +36,8 @@ class WorkspaceRepository {
     return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
   }
 
-  Future<void> inviteMember(String workspaceId, Map<String, dynamic> body) async {
-    await _api.post(ApiEndpoints.workspaceInvite(workspaceId), data: body);
+  Future<void> addMember(String workspaceId, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.workspaceMembers(workspaceId), data: body);
   }
 
   Future<void> removeMember(String workspaceId, String userId) async {

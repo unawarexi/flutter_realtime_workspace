@@ -9,19 +9,10 @@ class AnalyticsRepository {
     return res.data['data'] as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> getUsage({
-    String? startDate,
-    String? endDate,
-  }) async {
-    final res = await _api.get(ApiEndpoints.analyticsUsage, queryParameters: {
-      'startDate': ?startDate,
-      'endDate': ?endDate,
-    });
-    return res.data['data'] as Map<String, dynamic>;
-  }
-
-  Future<Map<String, dynamic>> getMeetingAnalytics(String meetingId) async {
-    final res = await _api.get(ApiEndpoints.meetingAnalytics(meetingId));
+  Future<Map<String, dynamic>> generateReport(
+      Map<String, dynamic> params) async {
+    final res = await _api.get(ApiEndpoints.analyticsReportsGenerate,
+        queryParameters: params);
     return res.data['data'] as Map<String, dynamic>;
   }
 }

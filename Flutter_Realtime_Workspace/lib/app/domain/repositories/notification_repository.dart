@@ -1,33 +1,30 @@
 import 'package:flutter_realtime_workspace/core/network/api_client.dart';
 import 'package:flutter_realtime_workspace/core/apis/endpoints.dart';
-import 'package:flutter_realtime_workspace/app/domain/models/notification_model.dart';
 
+/// Push notification repository — interacts with the backend FCM push routes.
+/// In-app notification routes do not exist in the backend at this time.
 class NotificationRepository {
   final _api = ApiClient.instance;
 
-  Future<List<NotificationModel>> getNotifications({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    final res = await _api.get(ApiEndpoints.notifications, queryParameters: {
-      'page': page,
-      'limit': limit,
+  Future<void> subscribeDevice(
+      {required String token, required String platform}) async {
+    await _api.post(ApiEndpoints.notificationSubscribe, data: {
+      'token': token,
+      'platform': platform,
     });
-    final list = res.data['data'] as List;
-    return list.map((e) => NotificationModel.fromJson(e)).toList();
   }
 
-  Future<int> getUnreadCount() async {
-    final res = await _api.get(ApiEndpoints.notificationUnreadCount);
-    return res.data['data']['count'] as int;
+  Future<void> unsubscribeDevice(String token) async {
+    await _api.post(ApiEndpoints.notificationUnsubscribe,
+        data: {'token': token});
   }
 
-  Future<void> markAllAsRead() =>
-      _api.put(ApiEndpoints.notificationReadAll);
+  Future<void> send(Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.notificationSend, data: body);
+  }
 
-  Future<void> markAsRead(String id) =>
-      _api.put(ApiEndpoints.notificationRead(id));
-
-  Future<void> delete(String id) =>
-      _api.delete(ApiEndpoints.notificationDelete(id));
+  Future<void> sendToTopic(String topic, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.notificationSendTopic,
+        data: {'topic': topic, ...body});
+  }
 }

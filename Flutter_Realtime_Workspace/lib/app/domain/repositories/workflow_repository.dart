@@ -24,7 +24,7 @@ class WorkflowRepository {
 
   Future<WorkflowModel> updateWorkflow(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.workflow(id), data: body);
+    final res = await _api.put(ApiEndpoints.workflow(id), data: body);
     return WorkflowModel.fromJson(res.data['data']);
   }
 
@@ -32,12 +32,12 @@ class WorkflowRepository {
     await _api.delete(ApiEndpoints.workflow(id));
   }
 
-  Future<void> toggleWorkflow(String id, bool isActive) async {
-    await _api.patch(ApiEndpoints.workflow(id), data: {'isActive': isActive});
+  Future<void> toggleWorkflow(String id) async {
+    await _api.patch(ApiEndpoints.workflowToggle(id));
   }
 
-  Future<List<Map<String, dynamic>>> getWorkflowRuns(String id) async {
-    final res = await _api.get(ApiEndpoints.workflowRuns(id));
-    return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
+  Future<Map<String, dynamic>> testWorkflow(String id) async {
+    final res = await _api.post(ApiEndpoints.workflowTest(id));
+    return res.data['data'] as Map<String, dynamic>;
   }
 }

@@ -36,7 +36,7 @@ class TaskRepository {
   }
 
   Future<TaskModel> updateTask(String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.task(id), data: body);
+    final res = await _api.put(ApiEndpoints.task(id), data: body);
     return TaskModel.fromJson(res.data['data']);
   }
 
@@ -44,7 +44,16 @@ class TaskRepository {
     await _api.delete(ApiEndpoints.task(id));
   }
 
-  Future<void> reorderTasks(String projectId, List<Map<String, dynamic>> order) async {
-    await _api.post(ApiEndpoints.taskReorder(projectId), data: {'tasks': order});
+  Future<void> addComment(String id, String content) async {
+    await _api.post(ApiEndpoints.taskComments(id), data: {'content': content});
+  }
+
+  Future<void> updateChecklist(
+      String id, List<Map<String, dynamic>> checklist) async {
+    await _api.put(ApiEndpoints.taskChecklist(id), data: {'checklist': checklist});
+  }
+
+  Future<void> addAttachment(String id, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.taskAttachments(id), data: body);
   }
 }

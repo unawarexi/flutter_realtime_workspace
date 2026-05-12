@@ -26,7 +26,7 @@ class ProjectRepository {
 
   Future<ProjectModel> updateProject(
       String id, Map<String, dynamic> body) async {
-    final res = await _api.patch(ApiEndpoints.project(id), data: body);
+    final res = await _api.put(ApiEndpoints.project(id), data: body);
     return ProjectModel.fromJson(res.data['data']);
   }
 
@@ -46,5 +46,31 @@ class ProjectRepository {
 
   Future<void> removeMember(String projectId, String userId) async {
     await _api.delete(ApiEndpoints.projectMember(projectId, userId));
+  }
+
+  Future<void> starProject(String id) async {
+    await _api.patch(ApiEndpoints.projectStar(id));
+  }
+
+  Future<void> archiveProject(String id) async {
+    await _api.patch(ApiEndpoints.projectArchive(id));
+  }
+
+  Future<void> updateCollaborators(
+      String id, List<String> collaborators) async {
+    await _api.patch(ApiEndpoints.projectCollaborators(id),
+        data: {'collaborators': collaborators});
+  }
+
+  Future<void> addTimeline(String id, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.projectTimeline(id), data: body);
+  }
+
+  Future<void> addAttachment(String id, Map<String, dynamic> body) async {
+    await _api.post(ApiEndpoints.projectAttachments(id), data: body);
+  }
+
+  Future<void> deleteAttachment(String id, String attachmentId) async {
+    await _api.delete(ApiEndpoints.projectAttachment(id, attachmentId));
   }
 }

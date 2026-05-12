@@ -37,6 +37,6 @@ class AuditRepository {
   }
 
   Future<void> exportAuditLogs(Map<String, dynamic> filters) async {
-    await _api.post(ApiEndpoints.auditExport, data: filters);
+    await _api.get(ApiEndpoints.auditExport, queryParameters: filters);
   }
 }

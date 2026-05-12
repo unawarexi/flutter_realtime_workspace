@@ -12,20 +12,24 @@ class BillingRepository {
     return SubscriptionModel.fromJson(data);
   }
 
-  /// Returns Stripe Checkout session URL.
-  Future<String> createCheckout(String plan) async {
-    final res = await _api.post(ApiEndpoints.billingCheckout, data: {
-      'plan': plan,
-    });
-    return res.data['data']['url'] as String;
+  Future<SubscriptionModel> updateSubscription(
+      Map<String, dynamic> body) async {
+    final res = await _api.put(ApiEndpoints.subscription, data: body);
+    return SubscriptionModel.fromJson(res.data['data']);
   }
 
-  /// Returns Stripe Customer Portal URL.
-  Future<String> createPortal() async {
-    final res = await _api.post(ApiEndpoints.billingPortal);
-    return res.data['data']['url'] as String;
+  Future<List<Map<String, dynamic>>> getInvoices() async {
+    final res = await _api.get(ApiEndpoints.billingInvoices);
+    return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
   }
 
-  Future<void> cancelSubscription() =>
-      _api.post(ApiEndpoints.billingCancel);
+  Future<Map<String, dynamic>> getInvoice(String id) async {
+    final res = await _api.get(ApiEndpoints.billingInvoice(id));
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getUsage() async {
+    final res = await _api.get(ApiEndpoints.billingUsage);
+    return res.data['data'] as Map<String, dynamic>;
+  }
 }
