@@ -6,6 +6,7 @@ import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_event.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/ios_params.dart';
+import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_realtime_workspace/router/app_router.dart';
@@ -22,6 +23,7 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _local =
       FlutterLocalNotificationsPlugin();
+  bool _callkitEventsBound = false;
 
   // ── Android Notification Channels ──
 
@@ -60,30 +62,18 @@ class NotificationService {
   /// Initialize local notifications + FCM listeners + CallKit.
   Future<void> init() async {
     // --- Local notifications setup ---
-
-//  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-//     // Comment out iOS/macOS notification setup
-//     // const darwinInit = DarwinInitializationSettings(
-//     //   requestAlertPermission: true,
-//     //   requestBadgePermission: true,
-//     //   requestSoundPermission: true,
-//     // );
-//     const initSettings = InitializationSettings(
-//       android: androidInit,
-//       // iOS: darwinInit,
-//       // macOS: darwinInit,
-//     );
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    // Only provide iOS/macOS settings if not running on iOS
-    InitializationSettings initSettings;
-    if (Platform.isIOS || Platform.isMacOS) {
-      // Do not initialize notifications on iOS/macOS
-      return;
-    } else {
-      initSettings = const InitializationSettings(
-        android: androidInit,
-      );
-    }
+    // iOS/macOS local notification initialization is intentionally disabled.
+    // const darwinInit = DarwinInitializationSettings(
+    //   requestAlertPermission: true,
+    //   requestBadgePermission: true,
+    //   requestSoundPermission: true,
+    // );
+    const initSettings = InitializationSettings(
+      android: androidInit,
+      // iOS: darwinInit,
+      // macOS: darwinInit,
+    );
 
     await _local.initialize(
       initSettings,
@@ -103,13 +93,15 @@ class NotificationService {
     // --- FCM setup ---
     final messaging = FirebaseMessaging.instance;
 
-    // Comment out iOS/macOS permission request
-    // await messaging.requestPermission(
-    //   alert: true,
-    //   badge: true,
-    //   sound: true,
-    //   criticalAlert: true, // For incoming calls on iOS
-    // );
+    // iOS/macOS FCM permission request is intentionally disabled.
+    // if (Platform.isIOS || Platform.isMacOS) {
+    //   await messaging.requestPermission(
+    //     alert: true,
+    //     badge: true,
+    //     sound: true,
+    //     criticalAlert: true,
+    //   );
+    // }
 
     // Foreground messages
     FirebaseMessaging.onMessage.listen(_handleRemoteMessage);
@@ -125,29 +117,7 @@ class NotificationService {
       _navigateFromMessage(message.data);
     });
 
-    // Comment out CallKit events for iOS
-    // FlutterCallkitIncoming.onEvent.listen((event) {
-    //   if (event == null) return;
-    //   switch (event.event) {
-    //     case Event.actionCallAccept:
-    //       final data = event.body as Map<String, dynamic>? ?? {};
-    //       final extra = data['extra'] as Map<String, dynamic>? ?? {};
-    //       final meetingCode = extra['meetingCode'] as String?;
-    //       if (meetingCode != null) {
-    //         rootNavigatorKey.currentState?.pushNamed(
-    //           'join-by-code',
-    //           arguments: meetingCode,
-    //         );
-    //       }
-    //       break;
-    //     case Event.actionCallDecline:
-    //     case Event.actionCallEnded:
-    //       FlutterCallkitIncoming.endAllCalls();
-    //       break;
-    //     default:
-    //       break;
-    //   }
-    // });
+    _bindCallkitEvents();
   }
 
   /// Get the FCM token for device registration.
@@ -173,48 +143,65 @@ class NotificationService {
     await _showLocalNotification(message);
   }
 
-  /// Show native incoming call UI (rings, vibrates, full-screen on lock screen).
+  /// Show an incoming call notification using local notifications (CallKit removed).
   Future<void> _showIncomingCall(RemoteMessage message) async {
-    // iOS CallKit logic is disabled
-    if (Platform.isAndroid) {
-      final data = message.data;
-      final callerName = data['hostName'] ?? data['title'] ?? 'TeamSpot Call';
-      final meetingCode = data['meetingCode'] ?? data['code'] ?? '';
-      final avatar = data['hostAvatar'] ?? '';
+    final data = message.data;
+    final callId =
+        (data['callId'] ?? message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString())
+            .toString();
+    final callerName =
+        (data['callerName'] ?? data['title'] ?? message.notification?.title ?? 'Incoming Call')
+            .toString();
+    final handle = (data['handle'] ?? data['meetingCode'] ?? 'TeamSpot').toString();
+    final isVideo = (data['isVideo']?.toString().toLowerCase() == 'true') ||
+        (data['callType']?.toString().toLowerCase() == 'video');
 
-      final params = CallKitParams(
-        id: data['meetingId'] ?? message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+    await FlutterCallkitIncoming.showCallkitIncoming(
+      CallKitParams(
+        id: callId,
         nameCaller: callerName,
         appName: 'TeamSpot',
-        avatar: avatar,
-        type: 1, // Video call
-        duration: 45000, // Ring for 45 seconds
-        textAccept: 'Join Call',
+        handle: handle,
+        type: isVideo ? 1 : 0,
+        duration: 45000,
+        textAccept: 'Accept',
         textDecline: 'Decline',
-        extra: {'meetingCode': meetingCode, 'meetingId': data['meetingId'] ?? ''},
+        missedCallNotification: const NotificationParams(
+          showNotification: true,
+          isShowCallback: false,
+          subtitle: 'Missed call',
+          callbackText: 'Call back',
+        ),
+        extra: Map<String, dynamic>.from(data),
         android: const AndroidParams(
-          isCustomNotification: false,
-          isShowLogo: true,
+          isCustomNotification: true,
+          isShowLogo: false,
           ringtonePath: 'system_ringtone_default',
-          backgroundColor: '#1A73E8',
+          backgroundColor: '#0A0A0A',
           actionColor: '#4CAF50',
-          isShowFullLockedScreen: true,
+          textColor: '#FFFFFF',
+          incomingCallNotificationChannelName: 'Incoming Calls',
+          missedCallNotificationChannelName: 'Missed Calls',
           isShowCallID: false,
         ),
-        // ios: const IOSParams(
-        //   iconName: 'AppIcon',
-        //   handleType: 'generic',
-        //   supportsVideo: true,
-        //   maximumCallGroups: 1,
-        //   maximumCallsPerCallGroup: 1,
-        //   audioSessionMode: 'videoChat',
-        //   ringtonePath: 'system_ringtone_default',
-        // ),
-      );
-
-      await FlutterCallkitIncoming.showCallkitIncoming(params);
-    }
-    // else: do nothing for iOS
+        ios: const IOSParams(
+          iconName: 'AppIcon',
+          handleType: 'generic',
+          supportsVideo: true,
+          maximumCallGroups: 1,
+          maximumCallsPerCallGroup: 1,
+          audioSessionMode: 'default',
+          audioSessionActive: true,
+          audioSessionPreferredSampleRate: 44100.0,
+          audioSessionPreferredIOBufferDuration: 0.005,
+          supportsDTMF: true,
+          supportsHolding: true,
+          supportsGrouping: false,
+          supportsUngrouping: false,
+          ringtonePath: 'system_ringtone_default',
+        ),
+      ),
+    );
   }
 
   /// Show a local notification with the right channel based on type.
@@ -315,5 +302,36 @@ class NotificationService {
       default:
         appRouter.go('/home');
     }
+  }
+
+  void _bindCallkitEvents() {
+    if (_callkitEventsBound) return;
+    _callkitEventsBound = true;
+
+    FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+      if (event == null) return;
+
+      final body = event.body;
+      final extra = body['extra'] as Map<dynamic, dynamic>?;
+      final payload = <String, dynamic>{};
+      if (extra != null) {
+        for (final entry in extra.entries) {
+          payload[entry.key.toString()] = entry.value;
+        }
+      }
+
+      switch (event.event) {
+        case Event.actionCallAccept:
+          _navigateFromMessage(payload);
+          break;
+        case Event.actionCallDecline:
+        case Event.actionCallEnded:
+        case Event.actionCallTimeout:
+          FlutterCallkitIncoming.endAllCalls();
+          break;
+        default:
+          break;
+      }
+    });
   }
 }

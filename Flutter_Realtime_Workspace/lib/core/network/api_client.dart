@@ -5,8 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter_realtime_workspace/core/config/base_url.dart';
+import 'package:flutter_realtime_workspace/core/apis/endpoints.dart';
 import 'package:flutter_realtime_workspace/core/network/account_guard.dart';
 import 'package:flutter_realtime_workspace/core/network/connectivity_service.dart';
+import 'package:flutter_realtime_workspace/core/services/storage_service.dart';
 
 final _log = Logger(printer: PrettyPrinter(methodCount: 0));
 
@@ -124,7 +126,7 @@ class _ConnectivityInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final connected = await ConnectivityService().isConnected;
+    final connected = await ConnectivityService.instance.isConnected;
     if (!connected) {
       return handler.reject(
         DioException(
@@ -145,6 +147,13 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    final backendToken = await SecureStorageService.getAccessToken();
+    if (backendToken != null && backendToken.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $backendToken';
+      handler.next(options);
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
@@ -174,14 +183,58 @@ class _AuthInterceptor extends Interceptor {
     }
 
     if (statusCode == 401) {
-      // Force refresh the Firebase token and retry once
+      final hasRetried = err.requestOptions.extra['_authRetried'] == true;
+      if (hasRetried) {
+        handler.next(err);
+        return;
+      }
+
+      // Try backend refresh token flow first.
+      final refreshToken = await SecureStorageService.getRefreshToken();
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        try {
+          final refreshDio = Dio(
+            BaseOptions(
+              baseUrl: AppBaseUrl.value,
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 15),
+              headers: const {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+            ),
+          );
+
+          final refreshRes = await refreshDio.post(
+            ApiEndpoints.authRefresh,
+            data: {'refreshToken': refreshToken},
+          );
+          final newAccessToken =
+              refreshRes.data['data']?['accessToken'] as String?;
+          if (newAccessToken != null && newAccessToken.isNotEmpty) {
+            await SecureStorageService.saveAccessToken(newAccessToken);
+            err.requestOptions.headers['Authorization'] =
+                'Bearer $newAccessToken';
+            err.requestOptions.extra['_authRetried'] = true;
+            final retryResponse = await _retryWithDio(err.requestOptions);
+            handler.resolve(retryResponse);
+            return;
+          }
+        } catch (_) {
+          // Continue to Firebase fallback.
+        }
+      }
+
+      // Fallback: refresh Firebase token and retry once.
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         try {
           final newToken = await user.getIdToken(true);
           if (newToken != null) {
             err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-            final retryResponse = await Dio().fetch(err.requestOptions);
+            err.requestOptions.extra['_authRetried'] = true;
+            final retryResponse = await _retryWithDio(err.requestOptions);
             return handler.resolve(retryResponse);
           }
         } catch (_) {
@@ -203,6 +256,18 @@ class _AuthInterceptor extends Interceptor {
       if (error is Map<String, dynamic>) return error['code'] as String?;
     }
     return null;
+  }
+
+  Future<Response<dynamic>> _retryWithDio(RequestOptions options) {
+    final retryDio = Dio(
+      BaseOptions(
+        baseUrl: AppBaseUrl.value,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 15),
+      ),
+    );
+    return retryDio.fetch(options);
   }
 }
 

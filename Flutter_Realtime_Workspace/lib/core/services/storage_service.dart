@@ -18,11 +18,37 @@ class SecureStorageService {
   static const _storage = FlutterSecureStorage();
 
   static const _userIdKey = 'user_id';
+  static const _accessTokenKey = 'access_token';
+  static const _refreshTokenKey = 'refresh_token';
 
   static Future<void> saveUserId(String id) =>
       _storage.write(key: _userIdKey, value: id);
 
   static Future<String?> getUserId() => _storage.read(key: _userIdKey);
+
+  static Future<void> saveAccessToken(String token) =>
+      _storage.write(key: _accessTokenKey, value: token);
+
+  static Future<String?> getAccessToken() =>
+      _storage.read(key: _accessTokenKey);
+
+  static Future<void> saveRefreshToken(String token) =>
+      _storage.write(key: _refreshTokenKey, value: token);
+
+  static Future<String?> getRefreshToken() =>
+      _storage.read(key: _refreshTokenKey);
+
+  static Future<void> saveSession({
+    required String userId,
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await Future.wait([
+      saveUserId(userId),
+      saveAccessToken(accessToken),
+      saveRefreshToken(refreshToken),
+    ]);
+  }
 
   static Future<void> clearAll() => _storage.deleteAll();
 }

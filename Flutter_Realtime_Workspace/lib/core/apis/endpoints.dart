@@ -3,70 +3,54 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // ──────────── Auth (2FA) ────────────
-  // Sign-in / sign-out handled by Firebase SDK directly.
-  static const auth2faEmailGenerate = '/auth/2fa/email/generate';
-  static const auth2faEmailVerify = '/auth/2fa/email/verify';
-  static const auth2faSmsGenerate = '/auth/2fa/sms/generate';
-  static const auth2faSmsVerify = '/auth/2fa/sms/verify';
-  static const auth2faTotpGenerate = '/auth/2fa/totp/generate';
+  // ──────────── Auth ────────────
+  static const signIn = '/auth/social';
+  static const signOut = '/auth/logout';
+  static const authRegister = '/auth/register';
+  static const authVerifyEmail = '/auth/verify-email';
+  static const authResendVerification = '/auth/resend-verification';
+  static const authLogin = '/auth/login';
+  static const authRefresh = '/auth/refresh';
+  static const authForgotPassword = '/auth/forgot-password';
+  static const authResetPassword = '/auth/reset-password';
+  static const authLogoutAll = '/auth/logout-all';
+  static const authSessions = '/auth/sessions';
+  static String authSession(String sessionId) => '/auth/sessions/$sessionId';
+  static const authChangePassword = '/auth/change-password';
+  static const auth2faStatus = '/auth/2fa/status';
+  static const auth2faTotpSetup = '/auth/2fa/totp/setup';
   static const auth2faTotpConfirm = '/auth/2fa/totp/confirm';
   static const auth2faTotpVerify = '/auth/2fa/totp/verify';
   static const auth2faTotpDisable = '/auth/2fa/totp/disable';
-  static const auth2faStatus = '/auth/2fa/status';
+  static const auth2faEmailSend = '/auth/2fa/email/send';
+  static const auth2faEmailVerify = '/auth/2fa/email/verify';
+  static const auth2faSmsSend = '/auth/2fa/sms/send';
+  static const auth2faSmsVerify = '/auth/2fa/sms/verify';
 
   // ──────────── Users ────────────
   static const me = '/users/me';
+  static const deleteAccount = '/users/me';
+  static const userProfile = '/users/me';
   static const userUploadPicture = '/users/me/upload-picture';
-  static const userRegenerateInvite = '/users/me/regenerate-invite';
-  static const userReferralStats = '/users/me/my-referral-stats';
-  static const userReferralChain = '/users/me/referral-chain';
-  static const userFind = '/users/find';
   static const users = '/users';
   static String userById(String id) => '/users/$id';
-  static String userRevokeReferral(String id) => '/users/$id/revoke-referral';
-  static String userInvitePermissions(String id) => '/users/$id/invite-permissions';
 
   // ──────────── Meetings ────────────
-  // /meetings handles live-meeting CRUD; /schedules handles scheduling.
   static const meetings = '/meetings';
   static String meeting(String id) => '/meetings/$id';
+  static String meetingRsvp(String id) => '/meetings/$id/rsvp';
   static String joinMeeting(String id) => '/meetings/$id/join';
-  static String leaveMeeting(String id) => '/meetings/$id/leave';
 
-  // ──────────── Schedules (Meeting Scheduling) ────────────
+  // ──────────── Schedules ────────────
   static const schedules = '/schedules';
+  static const scheduleCalendar = '/schedules/calendar';
+  static const scheduleAvailability = '/schedules/availability';
   static String schedule(String id) => '/schedules/$id';
-  static const scheduleTemplate = '/schedules/template';
-  static String scheduleFromTemplate(String templateId) =>
-      '/schedules/from-template/$templateId';
-  static String userSchedules(String userId) => '/schedules/user/$userId';
-  static String userTodaySchedules(String userId) =>
-      '/schedules/user/$userId/today';
-  static String userUpcomingSchedules(String userId) =>
-      '/schedules/user/$userId/upcoming';
-  static String userScheduleInvitations(String userId) =>
-      '/schedules/user/$userId/invitations';
-  static String userScheduleConflicts(String userId) =>
-      '/schedules/user/$userId/conflicts';
-  static String userCalendar(String userId) =>
-      '/schedules/user/$userId/calendar';
-  static String userMeetingStats(String userId) =>
-      '/schedules/user/$userId/stats';
-  static const scheduleSearch = '/schedules/search';
-  static const scheduleExport = '/schedules/export';
-  static const scheduleTemplates = '/schedules/templates';
-  static String scheduleStatus(String id) => '/schedules/$id/status';
-  static String schedulePostpone(String id) => '/schedules/$id/postpone';
-  static String scheduleParticipants(String id) =>
-      '/schedules/$id/participants';
-  static String scheduleParticipant(String id, String userId) =>
-      '/schedules/$id/participants/$userId';
-  static String scheduleAttachments(String id) => '/schedules/$id/attachments';
-  static String scheduleRecordings(String id) => '/schedules/$id/recordings';
-  static String scheduleInvitations(String id) => '/schedules/$id/invitations';
+  static String scheduleCancel(String id) => '/schedules/$id/cancel';
+  static String scheduleAttendees(String id) => '/schedules/$id/attendees';
+  static String scheduleRsvp(String id) => '/schedules/$id/rsvp';
 
-  // ──────────── Notifications (FCM) ────────────
+  // ──────────── Notifications (FCM Push) ────────────
   static const notificationSend = '/notifications/send';
   static const notificationSendMultiple = '/notifications/send-multiple';
   static const notificationSendTopic = '/notifications/send-to-topic';
@@ -75,9 +59,16 @@ class ApiEndpoints {
   static const notificationValidateToken = '/notifications/validate-token';
   static const notificationTypes = '/notifications/types';
 
+  // ──────────── Notifications (In-App) ────────────
+  static const notifications = '/notifications/in-app';
+  static const notificationUnreadCount = '/notifications/in-app/unread-count';
+  static const notificationReadAll = '/notifications/in-app/read-all';
+  static String notificationRead(String id) => '/notifications/in-app/$id/read';
+  static String notificationDelete(String id) => '/notifications/in-app/$id';
+
   // ──────────── Analytics ────────────
   static const analyticsDashboard = '/analytics/dashboard';
-  static const analyticsUsage = '/analytics/usage';
+  static const analyticsReportsGenerate = '/analytics/reports/generate';
 
   // ──────────── Billing ────────────
   static const subscription = '/billing/subscription';
@@ -120,39 +111,41 @@ class ApiEndpoints {
   static String workspaceMembers(String id) => '/workspaces/$id/members';
   static String workspaceMember(String workspaceId, String userId) =>
       '/workspaces/$workspaceId/members/$userId';
+  static String workspaceInvite(String id) => '/workspaces/$id/invite';
 
   // ──────────── Projects ────────────
   static const projects = '/projects';
-  static const projectStats = '/projects/stats';
-  static const projectKeyGenerate = '/projects/generate/project-key';
-  static const projectTeamIdGenerate = '/projects/generate/team-id';
   static String project(String id) => '/projects/$id';
   static String projectStar(String id) => '/projects/$id/star';
   static String projectArchive(String id) => '/projects/$id/archive';
-  static String projectProgress(String id) => '/projects/$id/progress';
-  static String projectDuplicate(String id) => '/projects/$id/duplicate';
-  static String projectCollaborators(String id) =>
-      '/projects/$id/collaborators';
+  static String projectCollaborators(String id) => '/projects/$id/collaborators';
+  static String projectTimeline(String id) => '/projects/$id/timeline';
+  static String projectMembers(String id) => '/projects/$id/members';
+  static String projectMember(String id, String userId) =>
+      '/projects/$id/members/$userId';
   static String projectAttachments(String id) => '/projects/$id/attachments';
   static String projectAttachment(String id, String attachmentId) =>
       '/projects/$id/attachments/$attachmentId';
-  static String projectTimeline(String id) => '/projects/$id/timeline';
 
   // ──────────── Tasks ────────────
   static const tasks = '/tasks';
   static String task(String id) => '/tasks/$id';
+  static String taskComments(String id) => '/tasks/$id/comments';
+  static String taskChecklist(String id) => '/tasks/$id/checklist';
+  static String taskAttachments(String id) => '/tasks/$id/attachments';
 
   // ──────────── Issues ────────────
   static const issues = '/issues';
   static String issue(String id) => '/issues/$id';
   static String issueComments(String issueId) => '/issues/$issueId/comments';
+  static String issueLink(String issueId) => '/issues/$issueId/link';
+  static String issueAttachments(String issueId) => '/issues/$issueId/attachments';
 
   // ──────────── Tickets ────────────
   static const tickets = '/tickets';
   static String ticket(String id) => '/tickets/$id';
-  static String ticketAssign(String id) => '/tickets/$id/assign';
-  static String ticketStatus(String id) => '/tickets/$id/status';
   static String ticketComments(String id) => '/tickets/$id/comments';
+  static String ticketAttachments(String id) => '/tickets/$id/attachments';
 
   // ──────────── Channels ────────────
   static const channels = '/channels';
@@ -161,54 +154,47 @@ class ApiEndpoints {
   static String channelMember(String channelId, String memberId) =>
       '/channels/$channelId/members/$memberId';
   static String channelMessages(String id) => '/channels/$id/messages';
-  static String messageThreads(String channelId, String messageId) =>
-      '/channels/$channelId/messages/$messageId/threads';
-  static String channelPin(String channelId, String messageId) =>
-      '/channels/$channelId/pins/$messageId';
+
+  // ──────────── Communication (LiveKit video + VoIP + DMs) ────────────
+  static const communicationRoomToken = '/communication/rooms/token';
+  static const communicationRooms = '/communication/rooms';
+  static String communicationRoom(String name) => '/communication/rooms/$name';
+  static String communicationRoomParticipants(String name) =>
+      '/communication/rooms/$name/participants';
+  static String communicationRoomRemoveParticipant(String name) =>
+      '/communication/rooms/$name/remove-participant';
+  static const communicationCallInitiate = '/communication/calls/initiate';
+  static String communicationCallAccept(String id) => '/communication/calls/$id/accept';
+  static String communicationCallEnd(String id) => '/communication/calls/$id/end';
+  static String communicationCallReject(String id) => '/communication/calls/$id/reject';
+  static const communicationCallHistory = '/communication/calls/history';
+  static const communicationMessages = '/communication/messages';
+  static const communicationMessagesSearch = '/communication/messages/search';
+  static String communicationMessage(String id) => '/communication/messages/$id';
 
   // ──────────── Teams ────────────
   static const teams = '/teams';
-  static const teamsSearch = '/teams/search';
-  static String team(String identifier) => '/teams/$identifier';
+  static String team(String id) => '/teams/$id';
+  static String teamMembers(String teamId) => '/teams/$teamId/members';
   static String teamInvite(String teamId) => '/teams/$teamId/invite';
-  static String teamInvitationAccept(String token) =>
-      '/teams/invitations/$token/accept';
-  static String teamMemberRole(String teamId, String memberId) =>
-      '/teams/$teamId/members/$memberId/role';
-  static String teamMember(String teamId, String memberId) =>
-      '/teams/$teamId/members/$memberId';
-  static String teamLeave(String teamId) => '/teams/$teamId/leave';
-  static String teamTransferOwnership(String teamId) =>
-      '/teams/$teamId/transfer-ownership';
-  static String teamBulkPermissions(String teamId) =>
-      '/teams/$teamId/members/bulk-permissions';
-  static String teamProjects(String teamId) => '/teams/$teamId/projects';
-  static String teamProjectAssign(String teamId, String projectId) =>
-      '/teams/$teamId/projects/$projectId/assign';
-  static String teamAnalytics(String teamId) => '/teams/$teamId/analytics';
-  static String teamActivity(String teamId) => '/teams/$teamId/activity';
-  static String teamIntegrations(String teamId) =>
-      '/teams/$teamId/integrations';
-  static String teamPermissions(String teamId) => '/teams/$teamId/permissions';
 
   // ──────────── Documents ────────────
-  static const documentUpload = '/documents/upload';
   static const documents = '/documents';
   static String document(String id) => '/documents/$id';
   static String documentShare(String id) => '/documents/$id/share';
-  static String documentReindex(String id) => '/documents/$id/reindex';
 
   // ──────────── Workflows ────────────
   static const workflows = '/workflows';
   static String workflow(String id) => '/workflows/$id';
   static String workflowToggle(String id) => '/workflows/$id/toggle';
-  static String workflowExecute(String id) => '/workflows/$id/execute';
+  static String workflowTest(String id) => '/workflows/$id/test';
 
-  // ──────────── Storage / Assets ────────────
+  // ──────────── Storage ────────────
   static const storageUpload = '/storage/upload';
   static const storageUploadMultiple = '/storage/upload/multiple';
   static const storageAssets = '/storage';
   static String storageAsset(String id) => '/storage/$id';
+  static String storageAssetAttach(String id) => '/storage/$id/attach';
 
   // ──────────── Audit ────────────
   static const auditLogs = '/audit';
@@ -224,8 +210,7 @@ class ApiEndpoints {
   static const integrations = '/integrations';
   static String integration(String id) => '/integrations/$id';
   static String integrationTest(String id) => '/integrations/$id/test';
-  static String integrationWebhook(String id) =>
-      '/integrations/webhooks/$id';
+  static String integrationWebhook(String id) => '/integrations/webhooks/$id';
 
   // ──────────── Identity (Roles, Policies & Permissions) ────────────
   static const identityRoles = '/identity/roles';
@@ -241,14 +226,18 @@ class ApiEndpoints {
   static String template(String id) => '/templates/$id';
   static String templatePreview(String id) => '/templates/$id/preview';
 
+  // ──────────── Whiteboards ────────────
+  static const whiteboards = '/whiteboards';
+  static String whiteboard(String id) => '/whiteboards/$id';
+  static String whiteboardState(String id) => '/whiteboards/$id/state';
+  static String whiteboardCursor(String id) => '/whiteboards/$id/cursor';
+  static String whiteboardCollaborator(String id, String userId) =>
+      '/whiteboards/$id/collaborators/$userId';
+  static String whiteboardThumbnail(String id) => '/whiteboards/$id/thumbnail';
+
   // ──────────── Admin ────────────
-  // Admin routes are defined but backend file is currently empty (placeholder).
-  static const adminUsers = '/admin/users';
-  static String adminUser(String userId) => '/admin/users/$userId';
-  static String adminSuspendUser(String userId) =>
-      '/admin/users/$userId/suspend';
-  static String adminUnsuspendUser(String userId) =>
-      '/admin/users/$userId/unsuspend';
-  static String adminImpersonate(String userId) =>
-      '/admin/users/$userId/impersonate';
+  static const adminTenants = '/admin/tenants';
+  static String adminTenantStatus(String id) => '/admin/tenants/$id/status';
+  static const adminStats = '/admin/stats';
+  static const adminImpersonate = '/admin/impersonate';
 }

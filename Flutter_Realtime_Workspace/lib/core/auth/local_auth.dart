@@ -50,8 +50,11 @@ class LocalAuthService {
   }) async {
     return _localAuth.authenticate(
       localizedReason: reason,
-      biometricOnly: false,
-      sensitiveTransaction: true,
+      options: const AuthenticationOptions(
+        biometricOnly: false,
+        sensitiveTransaction: true,
+        stickyAuth: true,
+      ),
     );
   }
 }

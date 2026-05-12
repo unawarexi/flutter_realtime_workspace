@@ -32,7 +32,7 @@ final accountGuardProvider = Provider<AccountGuard>(
 // ── Real-time ────────────────────────────────────────────────────────────────
 
 final webSocketProvider = Provider<WebSocketService>(
-  (_) => WebSocketService.instance,
+  (_) => WebSocketService(),
 );
 
 // NOTE: StorageService and HiveService expose only static methods —

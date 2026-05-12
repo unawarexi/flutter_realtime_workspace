@@ -13,7 +13,8 @@ import 'package:flutter_realtime_workspace/router/app_router.dart';
 /// dialog.  Safe to call from interceptors — only the first invocation shows
 /// the dialog; subsequent calls are no-ops until the flow completes.
 class AccountGuard {
-  AccountGuard._();
+  AccountGuard._internal();
+  static final AccountGuard instance = AccountGuard._internal();
 
   static bool _triggered = false;
 
@@ -51,19 +52,19 @@ class AccountGuard {
           title: Text(
             'Account Not Found',
             style: TextStyle(
-              color: isDark ? SColors.textDark : SColors.textLight,
+              color: isDark ? TColors.textPrimaryDark : TColors.textPrimaryLight,
               fontWeight: FontWeight.w600,
             ),
           ),
           content: Padding(
-            padding: const EdgeInsets.only(top: SSizes.sm),
+            padding: const EdgeInsets.only(top: TSizes.paddingSM),
             child: Text(
               'Your account may have been suspended or deleted.\n\n'
               'Please contact customer support or sign up again.',
               style: TextStyle(
                 color: isDark
-                    ? SColors.textDarkSecondary
-                    : SColors.textLightSecondary,
+                    ? TColors.textSecondaryDark
+                    : TColors.textSecondaryLight,
                 fontSize: 13,
               ),
             ),
@@ -74,7 +75,7 @@ class AccountGuard {
               child: Text(
                 'OK',
                 style: TextStyle(
-                  color: SColors.primary,
+                  color: TColors.accentBlue,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -98,7 +99,15 @@ class AccountGuard {
       await SecureStorageService.clearAll();
     } catch (_) {}
     try {
-      await HiveService.clearAll();
+      await Future.wait([
+        HiveService.clearBox(HiveService.user),
+        HiveService.clearBox(HiveService.projects),
+        HiveService.clearBox(HiveService.teams),
+        HiveService.clearBox(HiveService.tasks),
+        HiveService.clearBox(HiveService.notifications),
+        HiveService.clearBox(HiveService.schedule),
+        HiveService.clearBox(HiveService.settings),
+      ]);
     } catch (_) {}
   }
 }

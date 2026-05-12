@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleSignInService {
-  static final _googleSignIn = GoogleSignIn.instance;
+  static final _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
   static final _auth = FirebaseAuth.instance;
 
   /// Initialize Google Sign-In. Call once at app startup.
   static Future<void> init() async {
-    await _googleSignIn.initialize();
+    // No explicit initialization needed for google_sign_in v6.
   }
 
   /// Sign in with Google and return Firebase UserCredential.
@@ -18,12 +18,16 @@ class GoogleSignInService {
   /// with a user-readable message.
   static Future<UserCredential?> signIn() async {
     try {
-      final account = await _googleSignIn.authenticate(
-        scopeHint: ['email', 'profile'],
-      );
+      final account = await _googleSignIn.signIn();
+      if (account == null) return null; // user cancelled
 
-      final idToken = account.authentication.idToken;
-      final credential = GoogleAuthProvider.credential(idToken: idToken);
+      final googleAuth = await account.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+      final credential = GoogleAuthProvider.credential(
+        idToken: idToken,
+        accessToken: accessToken,
+      );
 
       return _auth.signInWithCredential(credential);
     } on PlatformException catch (e) {
