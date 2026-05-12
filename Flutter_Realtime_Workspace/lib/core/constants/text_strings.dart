@@ -1,6 +1,6 @@
 /// Centralised static UI strings — never hardcode text in widgets.
-class STexts {
-  STexts._();
+class TTexts {
+  TTexts._();
 
   // ── App ──────────────────────────────────────────────────────
   static const String appName = 'Teamspot';

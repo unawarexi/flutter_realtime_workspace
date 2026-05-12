@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Pre-built widget animations for consistent motion design.
-class SWidgetAnimations {
-  SWidgetAnimations._();
+class TWidgetAnimations {
+  TWidgetAnimations._();
 
   /// Fade-in from transparent.
   static Widget fadeIn({

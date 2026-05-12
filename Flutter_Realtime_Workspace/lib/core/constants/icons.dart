@@ -2,8 +2,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter/material.dart';
 
 /// Centralised icon mapping so screens never reference raw icon values directly.
-class SIcons {
-  SIcons._();
+class TIcons {
+  TIcons._();
 
   // ── Navigation ───────────────────────────────────────────────
   static const home = Iconsax.home;

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Shared route / page transition animations.
-class SAnimations {
-  SAnimations._();
+class TAnimations {
+  TAnimations._();
 
   static const defaultDuration = Duration(milliseconds: 300);
   static const fastDuration = Duration(milliseconds: 150);
@@ -20,7 +20,7 @@ class SAnimations {
       CustomTransitionPage<T>(
         key: state.pageKey,
         child: child,
-        transitionsBuilder: (_, animation, _, widget) =>
+        transitionsBuilder: (context, animation, secondaryAnimation, widget) =>
             FadeTransition(opacity: animation, child: widget),
       );
 
@@ -32,7 +32,7 @@ class SAnimations {
       CustomTransitionPage<T>(
         key: state.pageKey,
         child: child,
-        transitionsBuilder: (_, animation, _, widget) {
+        transitionsBuilder: (context, animation, secondaryAnimation, widget) {
           final tween =
               Tween(begin: const Offset(0, 1), end: Offset.zero)
                   .chain(CurveTween(curve: defaultCurve));
