@@ -11,17 +11,8 @@ final analyticsDashboardProvider =
   return ref.read(analyticsRepositoryProvider).getDashboard();
 });
 
-/// Usage stats with optional date range.
-final analyticsUsageProvider = FutureProvider.family
-    .autoDispose<Map<String, dynamic>, ({String? startDate, String? endDate})>(
-        (ref, params) {
-  return ref
-      .read(analyticsRepositoryProvider)
-      .getUsage(startDate: params.startDate, endDate: params.endDate);
-});
-
-/// Per-meeting analytics.
-final meetingAnalyticsProvider = FutureProvider.family
-    .autoDispose<Map<String, dynamic>, String>((ref, meetingId) {
-  return ref.read(analyticsRepositoryProvider).getMeetingAnalytics(meetingId);
+/// Generate a report with optional params.
+final analyticsReportProvider = FutureProvider.family
+    .autoDispose<Map<String, dynamic>, Map<String, dynamic>>((ref, params) {
+  return ref.read(analyticsRepositoryProvider).generateReport(params);
 });

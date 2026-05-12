@@ -6,10 +6,10 @@ final organizationRepositoryProvider = Provider<OrganizationRepository>((_) {
   return OrganizationRepository();
 });
 
-/// Current user's organization.
-final currentOrganizationProvider =
-    FutureProvider.autoDispose<OrganizationModel>((ref) {
-  return ref.watch(organizationRepositoryProvider).getMyOrganization();
+/// All organizations for the current user.
+final organizationsProvider =
+    FutureProvider.autoDispose<List<OrganizationModel>>((ref) {
+  return ref.watch(organizationRepositoryProvider).getOrganizations();
 });
 
 /// Organization members.
@@ -19,36 +19,49 @@ final orgMembersProvider =
   return ref.watch(organizationRepositoryProvider).getMembers(orgId);
 });
 
-/// Invite code generation state.
-final inviteCodeProvider = StateProvider<String?>((ref) => null);
+/// Organization CRUD + invite notifier.
+final organizationNotifierProvider =
+    StateNotifierProvider<OrganizationNotifier, AsyncValue<OrganizationModel?>>(
+        (ref) => OrganizationNotifier(ref));
 
-final inviteCodeNotifierProvider =
-    StateNotifierProvider<InviteCodeNotifier, AsyncValue<String?>>((ref) {
-  return InviteCodeNotifier(ref);
-});
-
-class InviteCodeNotifier extends StateNotifier<AsyncValue<String?>> {
+class OrganizationNotifier
+    extends StateNotifier<AsyncValue<OrganizationModel?>> {
   final Ref _ref;
-  InviteCodeNotifier(this._ref) : super(const AsyncValue.data(null));
+  OrganizationNotifier(this._ref) : super(const AsyncValue.data(null));
 
-  Future<void> generateCode(String orgId) async {
+  Future<OrganizationModel> create(Map<String, dynamic> body) async {
     state = const AsyncValue.loading();
     try {
-      final code =
-          await _ref.read(organizationRepositoryProvider).generateInviteCode(orgId);
-      state = AsyncValue.data(code);
+      final org = await _ref
+          .read(organizationRepositoryProvider)
+          .createOrganization(body);
+      state = AsyncValue.data(org);
+      return org;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 
-  Future<void> joinByCode(String code) async {
+  Future<OrganizationModel> update(String id, Map<String, dynamic> body) async {
     state = const AsyncValue.loading();
     try {
-      await _ref.read(organizationRepositoryProvider).joinByInviteCode(code);
-      state = const AsyncValue.data(null);
+      final org = await _ref
+          .read(organizationRepositoryProvider)
+          .updateOrganization(id, body);
+      state = AsyncValue.data(org);
+      return org;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
+  }
+
+  Future<void> invite(String orgId, Map<String, dynamic> body) async {
+    await _ref.read(organizationRepositoryProvider).invite(orgId, body);
+  }
+
+  Future<void> removeMember(String orgId, String userId) async {
+    await _ref.read(organizationRepositoryProvider).removeMember(orgId, userId);
   }
 }

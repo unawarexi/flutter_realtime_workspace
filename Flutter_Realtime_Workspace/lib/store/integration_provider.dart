@@ -12,11 +12,6 @@ final integrationsProvider =
   return ref.watch(integrationRepositoryProvider).getIntegrations(workspaceId);
 });
 
-final availableIntegrationsProvider =
-    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
-  return ref.watch(integrationRepositoryProvider).getAvailableIntegrations();
-});
-
 final integrationNotifierProvider =
     StateNotifierProvider<IntegrationNotifier, AsyncValue<IntegrationModel?>>(
         (ref) => IntegrationNotifier(ref));
@@ -44,7 +39,7 @@ class IntegrationNotifier extends StateNotifier<AsyncValue<IntegrationModel?>> {
     await _ref.read(integrationRepositoryProvider).uninstallIntegration(id);
   }
 
-  Future<void> sync(String id) async {
-    await _ref.read(integrationRepositoryProvider).syncIntegration(id);
+  Future<Map<String, dynamic>> test(String id) async {
+    return _ref.read(integrationRepositoryProvider).testIntegration(id);
   }
 }

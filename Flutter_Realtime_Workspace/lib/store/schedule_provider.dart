@@ -50,7 +50,11 @@ class ScheduleNotifier extends StateNotifier<AsyncValue<ScheduleModel?>> {
     }
   }
 
-  Future<void> respondToSchedule(String id, String response) async {
-    await _ref.read(scheduleRepositoryProvider).respondToSchedule(id, response);
+  Future<void> cancelSchedule(String id) async {
+    await _ref.read(scheduleRepositoryProvider).cancelSchedule(id);
+  }
+
+  Future<void> rsvp(String id, String response) async {
+    await _ref.read(scheduleRepositoryProvider).rsvp(id, response);
   }
 }

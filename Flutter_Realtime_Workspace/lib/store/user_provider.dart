@@ -29,3 +29,15 @@ final updateAvatarProvider =
     return user;
   };
 });
+
+/// All workspace users — used for participant selection sheets.
+final allUsersProvider = FutureProvider.autoDispose<List<UserModel>>((ref) {
+  return ref.read(userRepositoryProvider).getUsers();
+});
+
+
+/// Fetch a user's public profile by ID.
+final userInfoByIdProvider =
+    FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
+  (ref, userId) => ref.read(userRepositoryProvider).getUserById(userId),
+);

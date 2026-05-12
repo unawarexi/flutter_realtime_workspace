@@ -66,7 +66,7 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
     try {
       final messages = await _ref
           .read(chatRepositoryProvider)
-          .getMessages(chatRoomId);
+          .getMessages();
       state = ChatMessagesState(
         messages: messages,
         hasMore: messages.length >= 50,
@@ -83,7 +83,7 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
     try {
       final more = await _ref
           .read(chatRepositoryProvider)
-          .getMessages(chatRoomId, cursor: state.cursor);
+          .getMessages(cursor: state.cursor);
       state = state.copyWith(
         messages: [...state.messages, ...more],
         hasMore: more.length >= 50,
@@ -100,12 +100,11 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
     String type = 'TEXT',
     String? replyToId,
   }) async {
-    final message = await _ref.read(chatRepositoryProvider).sendMessage(
-          chatRoomId: chatRoomId,
-          content: content,
-          type: type,
-          replyToId: replyToId,
-        );
+    final message = await _ref.read(chatRepositoryProvider).sendMessage({
+      'content': content,
+      'type': type,
+      if (replyToId != null) 'replyToId': replyToId,
+    });
     state = state.copyWith(messages: [message, ...state.messages]);
   }
 

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_realtime_workspace/app/domain/models/auth_session_model.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/user_model.dart';
 import 'package:flutter_realtime_workspace/app/domain/repositories/auth_repository.dart';
 import 'package:flutter_realtime_workspace/store/user_provider.dart';
@@ -53,12 +54,13 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   Future<void> signInWithGoogle() async {
     state = const AsyncValue.loading();
     try {
-      final user = await _ref.read(authRepositoryProvider).signInWithGoogle();
-      if (user == null) {
+      final session = await _ref.read(authRepositoryProvider).signInWithGoogle();
+      if (session == null || session.user == null) {
         // User cancelled the sign-in flow — restore idle state
         state = const AsyncValue.data(null);
         return;
       }
+      final user = session.user!;
       state = AsyncValue.data(user);
       _registerFcmToken();
       _connectWebSocket(user);
@@ -70,12 +72,58 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   Future<void> signInWithGithub() async {
     state = const AsyncValue.loading();
     try {
-      final user = await _ref.read(authRepositoryProvider).signInWithGithub();
+      final session = await _ref.read(authRepositoryProvider).signInWithGithub();
+      final user = session.user;
+      if (user == null) {
+        state = AsyncValue.error('No user returned from backend session.', StackTrace.current);
+        return;
+      }
       state = AsyncValue.data(user);
       _registerFcmToken();
       _connectWebSocket(user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<AuthSessionModel> signInWithEmailPassword(
+    String email,
+    String password,
+  ) async {
+    state = const AsyncValue.loading();
+    try {
+      final session = await _ref
+          .read(authRepositoryProvider)
+          .signInWithEmailPassword(email, password);
+
+      if (session.user != null) {
+        state = AsyncValue.data(session.user);
+        _registerFcmToken();
+        _connectWebSocket(session.user);
+      } else {
+        state = const AsyncValue.data(null);
+      }
+      return session;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  Future<void> signUpWithEmailPassword(
+    String email,
+    String password,
+    String fullName,
+  ) async {
+    state = const AsyncValue.loading();
+    try {
+      await _ref
+          .read(authRepositoryProvider)
+          .signUpWithEmailPassword(email, password, fullName);
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 

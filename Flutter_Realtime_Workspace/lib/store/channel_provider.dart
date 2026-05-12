@@ -45,11 +45,11 @@ class ChannelNotifier extends StateNotifier<AsyncValue<ChannelModel?>> {
     }
   }
 
-  Future<void> joinChannel(String id) async {
-    await _ref.read(channelRepositoryProvider).joinChannel(id);
+  Future<void> addMember(String channelId, String userId) async {
+    await _ref.read(channelRepositoryProvider).addMember(channelId, userId);
   }
 
-  Future<void> leaveChannel(String id) async {
-    await _ref.read(channelRepositoryProvider).leaveChannel(id);
+  Future<void> removeMember(String channelId, String memberId) async {
+    await _ref.read(channelRepositoryProvider).removeMember(channelId, memberId);
   }
 }

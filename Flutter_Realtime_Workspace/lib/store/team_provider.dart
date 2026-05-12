@@ -37,11 +37,7 @@ class TeamNotifier extends StateNotifier<AsyncValue<TeamModel?>> {
     }
   }
 
-  Future<void> addMember(String teamId, String userId) async {
-    await _ref.read(teamRepositoryProvider).addMember(teamId, userId);
-  }
-
-  Future<void> removeMember(String teamId, String userId) async {
-    await _ref.read(teamRepositoryProvider).removeMember(teamId, userId);
+  Future<void> invite(String teamId, Map<String, dynamic> body) async {
+    await _ref.read(teamRepositoryProvider).invite(teamId, body);
   }
 }

@@ -38,7 +38,11 @@ class WorkflowNotifier extends StateNotifier<AsyncValue<WorkflowModel?>> {
     }
   }
 
-  Future<void> toggleWorkflow(String id, bool isActive) async {
-    await _ref.read(workflowRepositoryProvider).toggleWorkflow(id, isActive);
+  Future<void> toggleWorkflow(String id) async {
+    await _ref.read(workflowRepositoryProvider).toggleWorkflow(id);
+  }
+
+  Future<Map<String, dynamic>> testWorkflow(String id) async {
+    return _ref.read(workflowRepositoryProvider).testWorkflow(id);
   }
 }

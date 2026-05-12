@@ -5,29 +5,14 @@ final adminRepositoryProvider = Provider<AdminRepository>((_) {
   return AdminRepository();
 });
 
-final adminOrgStatsProvider =
-    FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
-        (ref, orgId) {
-  return ref.watch(adminRepositoryProvider).getOrgStats(orgId);
-});
-
-final adminUsersProvider =
-    FutureProvider.autoDispose.family<List<Map<String, dynamic>>,
-        Map<String, dynamic>>((ref, filters) {
-  return ref.watch(adminRepositoryProvider).getAllUsers(
-        orgId: filters['orgId'] as String?,
-        workspaceId: filters['workspaceId'] as String?,
-      );
-});
-
-final systemHealthProvider =
-    FutureProvider.autoDispose<Map<String, dynamic>>((ref) {
-  return ref.watch(adminRepositoryProvider).getSystemHealth();
-});
-
-final pendingApprovalsProvider =
+final adminTenantsProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
-  return ref.watch(adminRepositoryProvider).getPendingApprovals();
+  return ref.watch(adminRepositoryProvider).getTenants();
+});
+
+final adminStatsProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) {
+  return ref.watch(adminRepositoryProvider).getStats();
 });
 
 final adminActionsProvider =
@@ -38,42 +23,20 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref _ref;
   AdminActionsNotifier(this._ref) : super(const AsyncValue.data(null));
 
-  Future<void> suspendUser(String userId) async {
+  Future<void> updateTenantStatus(String id, String status) async {
     state = const AsyncValue.loading();
     try {
-      await _ref.read(adminRepositoryProvider).suspendUser(userId);
+      await _ref.read(adminRepositoryProvider).updateTenantStatus(id, status);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
-  Future<void> unsuspendUser(String userId) async {
+  Future<void> impersonate(String userId) async {
     state = const AsyncValue.loading();
     try {
-      await _ref.read(adminRepositoryProvider).unsuspendUser(userId);
-      state = const AsyncValue.data(null);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-
-  Future<void> approveRequest(String requestId) async {
-    state = const AsyncValue.loading();
-    try {
-      await _ref.read(adminRepositoryProvider).approveRequest(requestId);
-      state = const AsyncValue.data(null);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-
-  Future<void> rejectRequest(String requestId, String reason) async {
-    state = const AsyncValue.loading();
-    try {
-      await _ref
-          .read(adminRepositoryProvider)
-          .rejectRequest(requestId, reason);
+      await _ref.read(adminRepositoryProvider).impersonate(userId);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
