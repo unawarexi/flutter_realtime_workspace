@@ -6,22 +6,22 @@ class TBottomSheetTheme {
 
   static const BottomSheetThemeData lightBottomSheetTheme =
       BottomSheetThemeData(
-    backgroundColor: SColors.lightSurface,
-    modalBackgroundColor: SColors.lightSurface,
+    backgroundColor: TColors.lightSurface,
+    modalBackgroundColor: TColors.lightSurface,
     shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
     constraints: BoxConstraints(minWidth: double.infinity),
     showDragHandle: true,
-    dragHandleColor: SColors.lightMuted,
+    dragHandleColor: TColors.lightMuted,
   );
 
   static const BottomSheetThemeData darkBottomSheetTheme = BottomSheetThemeData(
-    backgroundColor: SColors.darkSurface,
-    modalBackgroundColor: SColors.darkSurface,
+    backgroundColor: TColors.darkSurface,
+    modalBackgroundColor: TColors.darkSurface,
     shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
     constraints: BoxConstraints(minWidth: double.infinity),
     showDragHandle: true,
-    dragHandleColor: SColors.darkMuted,
+    dragHandleColor: TColors.darkMuted,
   );
 }

@@ -17,23 +17,23 @@ class TAppTheme {
     useMaterial3: true,
     fontFamily: 'Poppins',
     brightness: Brightness.light,
-    primaryColor: SColors.primary,
+    primaryColor: TColors.primary,
     colorScheme: const ColorScheme.light(
-      primary: SColors.primary,
-      primaryContainer: SColors.primarySurface,
-      secondary: SColors.blue700,
-      surface: SColors.lightSurface,
-      error: SColors.error,
+      primary: TColors.primary,
+      primaryContainer: TColors.primarySurface,
+      secondary: TColors.blue700,
+      surface: TColors.lightSurface,
+      error: TColors.error,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onSurface: SColors.textLight,
+      onSurface: TColors.textLight,
       onError: Colors.white,
-      outline: SColors.lightBorder,
+      outline: TColors.lightBorder,
     ),
-    scaffoldBackgroundColor: SColors.lightBg,
-    cardColor: SColors.lightCard,
-    dividerColor: SColors.lightBorder,
-    hoverColor: SColors.lightHover,
+    scaffoldBackgroundColor: TColors.lightBg,
+    cardColor: TColors.lightCard,
+    dividerColor: TColors.lightBorder,
+    hoverColor: TColors.lightHover,
     textTheme: TTextTheme.lightTextTheme,
     chipTheme: TChipTheme.lightChipTheme,
     appBarTheme: TAppBarTheme.lightAppBarTheme,
@@ -43,39 +43,39 @@ class TAppTheme {
     elevatedButtonTheme: TElevatedButtonTheme.lightElevatedButtonTheme,
     inputDecorationTheme: TTextFormFieldTheme.lightInputDecorationTheme,
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: SColors.lightSurface,
-      selectedItemColor: SColors.primary,
-      unselectedItemColor: SColors.lightMuted,
+      backgroundColor: TColors.lightSurface,
+      selectedItemColor: TColors.primary,
+      unselectedItemColor: TColors.lightMuted,
       type: BottomNavigationBarType.fixed,
       elevation: 8,
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: SColors.primary,
+      backgroundColor: TColors.primary,
       foregroundColor: Colors.white,
       elevation: 4,
       shape: CircleBorder(),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: SColors.lightSurface,
+      backgroundColor: TColors.lightSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: SColors.darkCard,
+      backgroundColor: TColors.darkCard,
       contentTextStyle: const TextStyle(color: Colors.white),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       behavior: SnackBarBehavior.floating,
     ),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: SColors.primary,
+      color: TColors.primary,
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return SColors.primary;
-        return SColors.lightMuted;
+        if (states.contains(WidgetState.selected)) return TColors.primary;
+        return TColors.lightMuted;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return SColors.primaryMuted;
-        return SColors.lightBorder;
+        if (states.contains(WidgetState.selected)) return TColors.primaryMuted;
+        return TColors.lightBorder;
       }),
     ),
   );
@@ -85,23 +85,23 @@ class TAppTheme {
     useMaterial3: true,
     fontFamily: 'Poppins',
     brightness: Brightness.dark,
-    primaryColor: SColors.primary,
+    primaryColor: TColors.primary,
     colorScheme: const ColorScheme.dark(
-      primary: SColors.primary,
-      primaryContainer: SColors.blue900,
-      secondary: SColors.blue400,
-      surface: SColors.darkSurface,
-      error: SColors.error,
+      primary: TColors.primary,
+      primaryContainer: TColors.blue900,
+      secondary: TColors.blue400,
+      surface: TColors.darkSurface,
+      error: TColors.error,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onSurface: SColors.textDark,
+      onSurface: TColors.textDark,
       onError: Colors.white,
-      outline: SColors.darkBorder,
+      outline: TColors.darkBorder,
     ),
-    scaffoldBackgroundColor: SColors.darkBg,
-    cardColor: SColors.darkCard,
-    dividerColor: SColors.darkBorder,
-    hoverColor: SColors.darkHover,
+    scaffoldBackgroundColor: TColors.darkBg,
+    cardColor: TColors.darkCard,
+    dividerColor: TColors.darkBorder,
+    hoverColor: TColors.darkHover,
     textTheme: TTextTheme.darkTextTheme,
     chipTheme: TChipTheme.darkChipTheme,
     appBarTheme: TAppBarTheme.darkAppBarTheme,
@@ -111,39 +111,39 @@ class TAppTheme {
     elevatedButtonTheme: TElevatedButtonTheme.darkElevatedButtonTheme,
     inputDecorationTheme: TTextFormFieldTheme.darkInputDecorationTheme,
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: SColors.darkSurface,
-      selectedItemColor: SColors.primary,
-      unselectedItemColor: SColors.darkMuted,
+      backgroundColor: TColors.darkSurface,
+      selectedItemColor: TColors.primary,
+      unselectedItemColor: TColors.darkMuted,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: SColors.primary,
+      backgroundColor: TColors.primary,
       foregroundColor: Colors.white,
       elevation: 4,
       shape: CircleBorder(),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: SColors.darkCard,
+      backgroundColor: TColors.darkCard,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: SColors.darkElevated,
-      contentTextStyle: const TextStyle(color: SColors.textDark),
+      backgroundColor: TColors.darkElevated,
+      contentTextStyle: const TextStyle(color: TColors.textDark),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       behavior: SnackBarBehavior.floating,
     ),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: SColors.primary,
+      color: TColors.primary,
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return SColors.primary;
-        return SColors.darkMuted;
+        if (states.contains(WidgetState.selected)) return TColors.primary;
+        return TColors.darkMuted;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return SColors.blue900;
-        return SColors.darkBorder;
+        if (states.contains(WidgetState.selected)) return TColors.blue900;
+        return TColors.darkBorder;
       }),
     ),
   );

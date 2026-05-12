@@ -11,15 +11,15 @@ class TAppBarTheme {
     scrolledUnderElevation: 0,
     backgroundColor: Colors.transparent,
     surfaceTintColor: Colors.transparent,
-    iconTheme: IconThemeData(color: SColors.textLight, size: 24),
-    actionsIconTheme: IconThemeData(color: SColors.textLight, size: 24),
+    iconTheme: IconThemeData(color: TColors.textLight, size: 24),
+    actionsIconTheme: IconThemeData(color: TColors.textLight, size: 24),
     titleTextStyle: TextStyle(
-        fontSize: 18.0, fontWeight: FontWeight.w600, color: SColors.textLight),
+        fontSize: 18.0, fontWeight: FontWeight.w600, color: TColors.textLight),
     systemOverlayStyle: SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark, // dark icons on light bg
       statusBarBrightness: Brightness.light, // iOS: light status bar bg
-      systemNavigationBarColor: SColors.lightBg,
+      systemNavigationBarColor: TColors.lightBg,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
@@ -30,15 +30,15 @@ class TAppBarTheme {
     scrolledUnderElevation: 0,
     backgroundColor: Colors.transparent,
     surfaceTintColor: Colors.transparent,
-    iconTheme: IconThemeData(color: SColors.textDark, size: 24),
-    actionsIconTheme: IconThemeData(color: SColors.textDark, size: 24),
+    iconTheme: IconThemeData(color: TColors.textDark, size: 24),
+    actionsIconTheme: IconThemeData(color: TColors.textDark, size: 24),
     titleTextStyle: TextStyle(
-        fontSize: 18.0, fontWeight: FontWeight.w600, color: SColors.textDark),
+        fontSize: 18.0, fontWeight: FontWeight.w600, color: TColors.textDark),
     systemOverlayStyle: SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light, // light icons on dark bg
       statusBarBrightness: Brightness.dark, // iOS: dark status bar bg
-      systemNavigationBarColor: SColors.darkBg,
+      systemNavigationBarColor: TColors.darkBg,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
