@@ -46,3 +46,44 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 sentry.properties
+
+# ── CI/CD & Signing ─────────────────────────────────────────────────────────
+# Android signing — NEVER commit real keystore or key.properties
+android/key.properties
+android/*.keystore
+android/*.jks
+# (commit android/key.properties.example instead)
+
+# iOS provisioning profiles and certificates (managed by Fastlane Match)
+ios/certs/
+*.mobileprovision
+*.cer
+*.p12
+*.p8
+
+# Fastlane generated output
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/.env.default
+
+# Ruby / Bundler
+.bundle/
+vendor/bundle/
+
+# Dart defines — local overrides only; committed envs are in dart_defines/
+dart_defines/*.local.env
+
+# Build artifacts
+build/debug-info/
+*.symbols
+
+# Secrets / environment overrides (use .env.example as template)
+.env
+.env.local
+.env.*.local
+
+# Play Store service account
+play-store-key.json
+google-services-key.json
