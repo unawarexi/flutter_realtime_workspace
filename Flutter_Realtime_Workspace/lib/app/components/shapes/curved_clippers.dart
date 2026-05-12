@@ -12,15 +12,15 @@ import 'package:flutter/material.dart';
 ///
 /// ```
 /// ClipPath(
-///   clipper: SWaveClipper(waveDepth: 30),
+///   clipper: TWaveClipper(waveDepth: 30),
 ///   child: Container(color: Colors.blue),
 /// )
 /// ```
-class SWaveClipper extends CustomClipper<Path> {
+class TWaveClipper extends CustomClipper<Path> {
   final double waveDepth;
   final double wavePhase;
 
-  SWaveClipper({this.waveDepth = 28, this.wavePhase = 0.0});
+  TWaveClipper({this.waveDepth = 28, this.wavePhase = 0.0});
 
   @override
   Path getClip(Size size) {
@@ -46,18 +46,18 @@ class SWaveClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(SWaveClipper oldClipper) =>
+  bool shouldReclip(TWaveClipper oldClipper) =>
       waveDepth != oldClipper.waveDepth || wavePhase != oldClipper.wavePhase;
 }
 
 /// Diagonal slice — a clean angular cut at the bottom.
 ///
 /// [angle] – height delta from left to right (positive = slopes down-right).
-class SDiagonalClipper extends CustomClipper<Path> {
+class TDiagonalClipper extends CustomClipper<Path> {
   final double angle;
   final bool reverse;
 
-  SDiagonalClipper({this.angle = 40, this.reverse = false});
+  TDiagonalClipper({this.angle = 40, this.reverse = false});
 
   @override
   Path getClip(Size size) {
@@ -79,7 +79,7 @@ class SDiagonalClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(SDiagonalClipper oldClipper) =>
+  bool shouldReclip(TDiagonalClipper oldClipper) =>
       angle != oldClipper.angle || reverse != oldClipper.reverse;
 }
 
@@ -87,10 +87,10 @@ class SDiagonalClipper extends CustomClipper<Path> {
 /// Great for avatar backgrounds and floating accents.
 ///
 /// [morphFactor] 0.0–1.0 controls how "blobby" it is.
-class SBlobClipper extends CustomClipper<Path> {
+class TBlobClipper extends CustomClipper<Path> {
   final double morphFactor;
 
-  SBlobClipper({this.morphFactor = 0.5});
+  TBlobClipper({this.morphFactor = 0.5});
 
   @override
   Path getClip(Size size) {
@@ -131,16 +131,16 @@ class SBlobClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(SBlobClipper oldClipper) =>
+  bool shouldReclip(TBlobClipper oldClipper) =>
       morphFactor != oldClipper.morphFactor;
 }
 
 /// Multi-wave ribbon — stacks 2 overlapping sine curves.
 /// Use as a decorative bottom edge on a header.
-class SDoubleWaveClipper extends CustomClipper<Path> {
+class TDoubleWaveClipper extends CustomClipper<Path> {
   final double amplitude;
 
-  SDoubleWaveClipper({this.amplitude = 20});
+  TDoubleWaveClipper({this.amplitude = 20});
 
   @override
   Path getClip(Size size) {
@@ -164,16 +164,16 @@ class SDoubleWaveClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(SDoubleWaveClipper oldClipper) =>
+  bool shouldReclip(TDoubleWaveClipper oldClipper) =>
       amplitude != oldClipper.amplitude;
 }
 
 /// Rounded arch — convex bulge at the bottom.
 /// Good for profile header sections.
-class SArchClipper extends CustomClipper<Path> {
+class TArchClipper extends CustomClipper<Path> {
   final double archHeight;
 
-  SArchClipper({this.archHeight = 40});
+  TArchClipper({this.archHeight = 40});
 
   @override
   Path getClip(Size size) {
@@ -189,16 +189,16 @@ class SArchClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(SArchClipper oldClipper) =>
+  bool shouldReclip(TArchClipper oldClipper) =>
       archHeight != oldClipper.archHeight;
 }
 
 /// Liquid edge with 3 control-point cubic curves.
 /// Looks like a fluid, organic container bottom.
-class SLiquidClipper extends CustomClipper<Path> {
+class TLiquidClipper extends CustomClipper<Path> {
   final double intensity;
 
-  SLiquidClipper({this.intensity = 1.0});
+  TLiquidClipper({this.intensity = 1.0});
 
   @override
   Path getClip(Size size) {
@@ -226,11 +226,11 @@ class SLiquidClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(SLiquidClipper oldClipper) =>
+  bool shouldReclip(TLiquidClipper oldClipper) =>
       intensity != oldClipper.intensity;
 }
 
-/// A widget that wraps its child with the [SLiquidClipper] organic shape
+/// A widget that wraps its child with the [TLiquidClipper] organic shape
 /// and optionally blends the decorative background into the layer below
 /// using a full-height gradient overlay.
 ///
@@ -245,14 +245,14 @@ class SLiquidClipper extends CustomClipper<Path> {
 /// above the gradient veil so it stays fully visible.
 ///
 /// ```dart
-/// SLiquidShape(
+/// TLiquidShape(
 ///   blendBase: true,
 ///   isDark: isDark,
 ///   foreground: MyContent(),
 ///   child: MyDecorativeBackground(),
 /// )
 /// ```
-class SLiquidShape extends StatelessWidget {
+class TLiquidShape extends StatelessWidget {
   final double intensity;
   final bool blendBase;
   final bool isDark;
@@ -260,7 +260,7 @@ class SLiquidShape extends StatelessWidget {
   final Widget? foreground;
   final Widget child;
 
-  const SLiquidShape({
+  const TLiquidShape({
     super.key,
     this.intensity = 1.0,
     this.blendBase = false,
@@ -274,7 +274,7 @@ class SLiquidShape extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!blendBase) {
       return ClipPath(
-        clipper: SLiquidClipper(intensity: intensity),
+        clipper: TLiquidClipper(intensity: intensity),
         child: child,
       );
     }

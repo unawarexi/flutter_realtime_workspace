@@ -5,7 +5,7 @@ import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
 /// Premium text input with Cupertino-style rounded container and smooth focus.
-class SInput extends StatelessWidget {
+class TInput extends StatelessWidget {
   final TextEditingController? controller;
   final String? label;
   final String? hint;
@@ -25,7 +25,7 @@ class SInput extends StatelessWidget {
   final FocusNode? focusNode;
   final bool enabled;
 
-  const SInput({
+  const TInput({
     super.key,
     this.controller,
     this.label,
@@ -50,8 +50,8 @@ class SInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDark ? SColors.darkBorder : SColors.lightBorder;
-    final focusColor = SColors.primary.withValues(alpha: 0.5);
+    final borderColor = isDark ? TColors.darkBorder : TColors.lightBorder;
+    final focusColor = TColors.primary.withValues(alpha: 0.5);
 
     return TextFormField(
       controller: controller,
@@ -67,9 +67,9 @@ class SInput extends StatelessWidget {
       inputFormatters: inputFormatters,
       focusNode: focusNode,
       enabled: enabled,
-      cursorColor: SColors.primary,
+      cursorColor: TColors.primary,
       style: TextStyle(
-        color: isDark ? SColors.textDark : SColors.textLight,
+        color: isDark ? TColors.textDark : TColors.textLight,
         fontSize: 15,
       ),
       decoration: InputDecoration(
@@ -77,43 +77,43 @@ class SInput extends StatelessWidget {
         hintText: hint,
         errorText: errorText,
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: isDark ? SColors.darkMuted : SColors.lightMuted)
+            ? Icon(prefixIcon, color: isDark ? TColors.darkMuted : TColors.lightMuted)
             : null,
         suffixIcon: suffix,
         filled: true,
         fillColor: isDark
-            ? SColors.darkCard.withValues(alpha: 0.6)
-            : SColors.lightElevated.withValues(alpha: 0.5),
+            ? TColors.darkCard.withValues(alpha: 0.6)
+            : TColors.lightElevated.withValues(alpha: 0.5),
         hintStyle: TextStyle(
-          color: isDark ? SColors.darkMuted : SColors.lightMuted,
+          color: isDark ? TColors.darkMuted : TColors.lightMuted,
           fontSize: 15,
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: SSizes.md,
-          vertical: SSizes.inputPadding,
+          horizontal: TSizes.md,
+          vertical: TSizes.inputPadding,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
           borderSide: BorderSide(color: borderColor, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
           borderSide: BorderSide(color: borderColor, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
           borderSide: BorderSide(color: focusColor, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
-          borderSide: const BorderSide(color: SColors.error, width: 1),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
+          borderSide: const BorderSide(color: TColors.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
-          borderSide: const BorderSide(color: SColors.error, width: 1.5),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
+          borderSide: const BorderSide(color: TColors.error, width: 1.5),
         ),
         disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
           borderSide: BorderSide(color: borderColor.withValues(alpha: 0.4), width: 1),
         ),
       ),
@@ -122,13 +122,13 @@ class SInput extends StatelessWidget {
 }
 
 /// Premium search bar — CupertinoSearchTextField style.
-class SSearchBar extends StatelessWidget {
+class TSearchBar extends StatelessWidget {
   final TextEditingController? controller;
   final String hint;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onClear;
 
-  const SSearchBar({
+  const TSearchBar({
     super.key,
     this.controller,
     this.hint = 'Search...',
@@ -144,19 +144,19 @@ class SSearchBar extends StatelessWidget {
       onChanged: onChanged,
       placeholder: hint,
       placeholderStyle: TextStyle(
-        color: isDark ? SColors.darkMuted : SColors.lightMuted,
+        color: isDark ? TColors.darkMuted : TColors.lightMuted,
         fontSize: 15,
       ),
       style: TextStyle(
-        color: isDark ? SColors.textDark : SColors.textLight,
+        color: isDark ? TColors.textDark : TColors.textLight,
         fontSize: 15,
       ),
       backgroundColor: isDark
-          ? SColors.darkCard.withValues(alpha: 0.6)
-          : SColors.lightElevated,
+          ? TColors.darkCard.withValues(alpha: 0.6)
+          : TColors.lightElevated,
       prefixIcon: Icon(
         CupertinoIcons.search,
-        color: isDark ? SColors.darkMuted : SColors.lightMuted,
+        color: isDark ? TColors.darkMuted : TColors.lightMuted,
         size: 18,
       ),
       suffixIcon: const Icon(CupertinoIcons.xmark_circle_fill, size: 16),
@@ -166,10 +166,10 @@ class SSearchBar extends StatelessWidget {
         onClear?.call();
       },
       padding: const EdgeInsets.symmetric(
-        horizontal: SSizes.sm,
-        vertical: SSizes.sm + 2,
+        horizontal: TSizes.sm,
+        vertical: TSizes.sm + 2,
       ),
-      borderRadius: BorderRadius.circular(SSizes.radiusMd),
+      borderRadius: BorderRadius.circular(TSizes.radiusMd),
     );
   }
 }

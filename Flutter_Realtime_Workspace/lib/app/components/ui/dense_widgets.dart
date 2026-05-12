@@ -25,7 +25,7 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.only(bottom: SSizes.sm),
+      padding: const EdgeInsets.only(bottom: TSizes.sm),
       child: Row(
         children: [
           Text(
@@ -33,7 +33,7 @@ class SectionHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: isDark ? SColors.textDark : SColors.textLight,
+              color: isDark ? TColors.textDark : TColors.textLight,
               letterSpacing: -0.3,
             ),
           ),
@@ -50,12 +50,12 @@ class SectionHeader extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: SColors.primary,
+                        color: TColors.primary,
                       ),
                     ),
                   if (actionIcon != null) ...[
                     const SizedBox(width: 2),
-                    Icon(actionIcon, size: 14, color: SColors.primary),
+                    Icon(actionIcon, size: 14, color: TColors.primary),
                   ],
                 ],
               ),
@@ -124,9 +124,9 @@ class _DenseTileState extends State<DenseTile> {
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
             decoration: BoxDecoration(
               color: _pressed
-                  ? (isDark ? SColors.darkHover : SColors.lightHover)
+                  ? (isDark ? TColors.darkHover : TColors.lightHover)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(SSizes.radiusSm),
+              borderRadius: BorderRadius.circular(TSizes.radiusSm),
             ),
             child: Row(
               children: [
@@ -140,17 +140,17 @@ class _DenseTileState extends State<DenseTile> {
                     decoration: BoxDecoration(
                       color: widget.iconBgColor ??
                           (isDark
-                              ? SColors.darkElevated
-                              : SColors.lightElevated),
-                      borderRadius: BorderRadius.circular(SSizes.radiusSm),
+                              ? TColors.darkElevated
+                              : TColors.lightElevated),
+                      borderRadius: BorderRadius.circular(TSizes.radiusSm),
                     ),
                     child: Icon(
                       widget.icon,
                       size: 17,
                       color: widget.iconColor ??
                           (isDark
-                              ? SColors.textDarkSecondary
-                              : SColors.textLightSecondary),
+                              ? TColors.textDarkSecondary
+                              : TColors.textLightSecondary),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -165,7 +165,7 @@ class _DenseTileState extends State<DenseTile> {
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color:
-                              isDark ? SColors.textDark : SColors.textLight,
+                              isDark ? TColors.textDark : TColors.textLight,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -177,8 +177,8 @@ class _DenseTileState extends State<DenseTile> {
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark
-                                ? SColors.textDarkTertiary
-                                : SColors.textLightTertiary,
+                                ? TColors.textDarkTertiary
+                                : TColors.textLightTertiary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -197,8 +197,8 @@ class _DenseTileState extends State<DenseTile> {
                     CupertinoIcons.chevron_right,
                     size: 14,
                     color: isDark
-                        ? SColors.textDarkTertiary
-                        : SColors.textLightTertiary,
+                        ? TColors.textDarkTertiary
+                        : TColors.textLightTertiary,
                   ),
                 ],
               ],
@@ -210,7 +210,7 @@ class _DenseTileState extends State<DenseTile> {
             height: 1,
             thickness: 0.5,
             indent: widget.icon != null ? 50 : 0,
-            color: isDark ? SColors.darkBorder : SColors.lightBorder,
+            color: isDark ? TColors.darkBorder : TColors.lightBorder,
           ),
       ],
     );
@@ -233,7 +233,7 @@ class StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
-    this.color = SColors.primary,
+    this.color = TColors.primary,
     this.change,
     this.isPositive = true,
   });
@@ -244,10 +244,10 @@ class StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? SColors.darkCard : SColors.lightCard,
-        borderRadius: BorderRadius.circular(SSizes.radiusMd),
+        color: isDark ? TColors.darkCard : TColors.lightCard,
+        borderRadius: BorderRadius.circular(TSizes.radiusMd),
         border: Border.all(
-          color: isDark ? SColors.darkBorder : SColors.lightBorder,
+          color: isDark ? TColors.darkBorder : TColors.lightBorder,
           width: 0.5,
         ),
       ),
@@ -271,16 +271,16 @@ class StatCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: (isPositive ? SColors.success : SColors.error)
+                    color: (isPositive ? TColors.success : TColors.error)
                         .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(SSizes.radiusFull),
+                    borderRadius: BorderRadius.circular(TSizes.radiusFull),
                   ),
                   child: Text(
                     change!,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: isPositive ? SColors.success : SColors.error,
+                      color: isPositive ? TColors.success : TColors.error,
                     ),
                   ),
                 ),
@@ -292,7 +292,7 @@ class StatCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: isDark ? SColors.textDark : SColors.textLight,
+              color: isDark ? TColors.textDark : TColors.textLight,
               letterSpacing: -0.5,
             ),
           ),
@@ -302,8 +302,8 @@ class StatCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               color: isDark
-                  ? SColors.textDarkTertiary
-                  : SColors.textLightTertiary,
+                  ? TColors.textDarkTertiary
+                  : TColors.textLightTertiary,
             ),
           ),
         ],
@@ -315,14 +315,14 @@ class StatCard extends StatelessWidget {
 // ============================================================================
 // CHIP — compact tag / filter chip
 // ============================================================================
-class SChip extends StatelessWidget {
+class TChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback? onTap;
   final IconData? icon;
   final Color? color;
 
-  const SChip({
+  const TChip({
     super.key,
     required this.label,
     this.isSelected = false,
@@ -334,7 +334,7 @@ class SChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final chipColor = color ?? SColors.primary;
+    final chipColor = color ?? TColors.primary;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -346,8 +346,8 @@ class SChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? chipColor.withValues(alpha: 0.15)
-              : (isDark ? SColors.darkElevated : SColors.lightElevated),
-          borderRadius: BorderRadius.circular(SSizes.radiusFull),
+              : (isDark ? TColors.darkElevated : TColors.lightElevated),
+          borderRadius: BorderRadius.circular(TSizes.radiusFull),
           border: Border.all(
             color: isSelected
                 ? chipColor.withValues(alpha: 0.4)
@@ -359,7 +359,7 @@ class SChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 13, color: isSelected ? chipColor : (isDark ? SColors.textDarkSecondary : SColors.textLightSecondary)),
+              Icon(icon, size: 13, color: isSelected ? chipColor : (isDark ? TColors.textDarkSecondary : TColors.textLightSecondary)),
               const SizedBox(width: 4),
             ],
             Text(
@@ -370,8 +370,8 @@ class SChip extends StatelessWidget {
                 color: isSelected
                     ? chipColor
                     : (isDark
-                        ? SColors.textDarkSecondary
-                        : SColors.textLightSecondary),
+                        ? TColors.textDarkSecondary
+                        : TColors.textLightSecondary),
               ),
             ),
           ],
@@ -384,14 +384,14 @@ class SChip extends StatelessWidget {
 // ============================================================================
 // AVATAR — compact user avatar with online indicator
 // ============================================================================
-class SAvatar extends StatelessWidget {
+class TAvatar extends StatelessWidget {
   final String? imageUrl;
   final String name;
   final double size;
   final bool showOnline;
   final bool isOnline;
 
-  const SAvatar({
+  const TAvatar({
     super.key,
     this.imageUrl,
     required this.name,
@@ -414,7 +414,7 @@ class SAvatar extends StatelessWidget {
           CircleAvatar(
             radius: size / 2,
             backgroundColor:
-                isDark ? SColors.darkElevated : SColors.lightElevated,
+                isDark ? TColors.darkElevated : TColors.lightElevated,
             backgroundImage:
                 imageUrl != null ? NetworkImage(imageUrl!) : null,
             child: imageUrl == null
@@ -423,7 +423,7 @@ class SAvatar extends StatelessWidget {
                     style: TextStyle(
                       fontSize: size * 0.38,
                       fontWeight: FontWeight.w600,
-                      color: SColors.primary,
+                      color: TColors.primary,
                     ),
                   )
                 : null,
@@ -436,10 +436,10 @@ class SAvatar extends StatelessWidget {
                 width: size * 0.3,
                 height: size * 0.3,
                 decoration: BoxDecoration(
-                  color: isOnline ? SColors.success : SColors.darkMuted,
+                  color: isOnline ? TColors.success : TColors.darkMuted,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isDark ? SColors.darkBg : SColors.lightBg,
+                    color: isDark ? TColors.darkBg : TColors.lightBg,
                     width: 2,
                   ),
                 ),
@@ -462,18 +462,18 @@ class StatusBadge extends StatelessWidget {
   const StatusBadge({
     super.key,
     required this.label,
-    this.color = SColors.success,
+    this.color = TColors.success,
     this.pulse = false,
   });
 
   factory StatusBadge.live() =>
-      const StatusBadge(label: 'LIVE', color: SColors.error, pulse: true);
+      const StatusBadge(label: 'LIVE', color: TColors.error, pulse: true);
   factory StatusBadge.scheduled() =>
-      const StatusBadge(label: 'Scheduled', color: SColors.primary);
+      const StatusBadge(label: 'Scheduled', color: TColors.primary);
   factory StatusBadge.ended() =>
-      const StatusBadge(label: 'Ended', color: SColors.darkMuted);
+      const StatusBadge(label: 'Ended', color: TColors.darkMuted);
   factory StatusBadge.recording() =>
-      const StatusBadge(label: 'REC', color: SColors.error, pulse: true);
+      const StatusBadge(label: 'REC', color: TColors.error, pulse: true);
 
   @override
   Widget build(BuildContext context) {
@@ -481,7 +481,7 @@ class StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(SSizes.radiusFull),
+        borderRadius: BorderRadius.circular(TSizes.radiusFull),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -536,7 +536,7 @@ class EmptyState extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(SSizes.xl),
+        padding: const EdgeInsets.all(TSizes.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -544,24 +544,24 @@ class EmptyState extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: isDark ? SColors.darkElevated : SColors.lightElevated,
+                color: isDark ? TColors.darkElevated : TColors.lightElevated,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 26,
                 color: isDark
-                    ? SColors.textDarkTertiary
-                    : SColors.textLightTertiary,
+                    ? TColors.textDarkTertiary
+                    : TColors.textLightTertiary,
               ),
             ),
-            const SizedBox(height: SSizes.md),
+            const SizedBox(height: TSizes.md),
             Text(
               message,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: isDark ? SColors.textDark : SColors.textLight,
+                color: isDark ? TColors.textDark : TColors.textLight,
               ),
               textAlign: TextAlign.center,
             ),
@@ -572,14 +572,14 @@ class EmptyState extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   color: isDark
-                      ? SColors.textDarkTertiary
-                      : SColors.textLightTertiary,
+                      ? TColors.textDarkTertiary
+                      : TColors.textLightTertiary,
                 ),
                 textAlign: TextAlign.center,
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: SSizes.md),
+              const SizedBox(height: TSizes.md),
               TextButton(
                 onPressed: onAction,
                 child: Text(
@@ -587,7 +587,7 @@ class EmptyState extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: SColors.primary,
+                    color: TColors.primary,
                   ),
                 ),
               ),
@@ -602,7 +602,7 @@ class EmptyState extends StatelessWidget {
 // ============================================================================
 // SEARCH BAR — compact iOS-style search
 // ============================================================================
-class SSearchBar extends StatelessWidget {
+class TSearchBar extends StatelessWidget {
   final TextEditingController? controller;
   final String hint;
   final ValueChanged<String>? onChanged;
@@ -610,7 +610,7 @@ class SSearchBar extends StatelessWidget {
   final bool readOnly;
   final bool autofocus;
 
-  const SSearchBar({
+  const TSearchBar({
     super.key,
     this.controller,
     this.hint = 'Search...',
@@ -628,8 +628,8 @@ class SSearchBar extends StatelessWidget {
       child: Container(
         height: 38,
         decoration: BoxDecoration(
-          color: isDark ? SColors.darkElevated : SColors.lightElevated,
-          borderRadius: BorderRadius.circular(SSizes.radiusSm),
+          color: isDark ? TColors.darkElevated : TColors.lightElevated,
+          borderRadius: BorderRadius.circular(TSizes.radiusSm),
         ),
         child: TextField(
           controller: controller,
@@ -638,22 +638,22 @@ class SSearchBar extends StatelessWidget {
           autofocus: autofocus,
           style: TextStyle(
             fontSize: 14,
-            color: isDark ? SColors.textDark : SColors.textLight,
+            color: isDark ? TColors.textDark : TColors.textLight,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               fontSize: 14,
               color: isDark
-                  ? SColors.textDarkTertiary
-                  : SColors.textLightTertiary,
+                  ? TColors.textDarkTertiary
+                  : TColors.textLightTertiary,
             ),
             prefixIcon: Icon(
               CupertinoIcons.search,
               size: 17,
               color: isDark
-                  ? SColors.textDarkTertiary
-                  : SColors.textLightTertiary,
+                  ? TColors.textDarkTertiary
+                  : TColors.textLightTertiary,
             ),
             prefixIconConstraints:
                 const BoxConstraints(minWidth: 38, minHeight: 38),
@@ -697,15 +697,15 @@ class ToggleRow extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: isDark ? SColors.darkElevated : SColors.lightElevated,
-                borderRadius: BorderRadius.circular(SSizes.radiusSm),
+                color: isDark ? TColors.darkElevated : TColors.lightElevated,
+                borderRadius: BorderRadius.circular(TSizes.radiusSm),
               ),
               child: Icon(
                 icon,
                 size: 17,
                 color: isDark
-                    ? SColors.textDarkSecondary
-                    : SColors.textLightSecondary,
+                    ? TColors.textDarkSecondary
+                    : TColors.textLightSecondary,
               ),
             ),
             const SizedBox(width: 12),
@@ -719,7 +719,7 @@ class ToggleRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? SColors.textDark : SColors.textLight,
+                    color: isDark ? TColors.textDark : TColors.textLight,
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -729,8 +729,8 @@ class ToggleRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark
-                          ? SColors.textDarkTertiary
-                          : SColors.textLightTertiary,
+                          ? TColors.textDarkTertiary
+                          : TColors.textLightTertiary,
                     ),
                   ),
                 ],
@@ -740,7 +740,7 @@ class ToggleRow extends StatelessWidget {
           CupertinoSwitch(
             value: value,
             onChanged: onChanged,
-            activeTrackColor: SColors.primary,
+            activeTrackColor: TColors.primary,
           ),
         ],
       ),

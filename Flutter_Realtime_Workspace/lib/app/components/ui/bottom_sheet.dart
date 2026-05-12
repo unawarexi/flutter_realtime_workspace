@@ -4,8 +4,8 @@ import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
 /// Premium bottom sheet with iOS-style blur backdrop and refined drag handle.
-class SBottomSheet {
-  SBottomSheet._();
+class TBottomSheet {
+  TBottomSheet._();
 
   static Future<T?> show<T>({
     required BuildContext context,
@@ -30,7 +30,7 @@ class SBottomSheet {
           : null,
       builder: (_) => ClipRRect(
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(SSizes.radiusXl),
+          top: Radius.circular(TSizes.radiusXl),
         ),
         child: BackdropFilter(
           filter: useBlur
@@ -39,10 +39,10 @@ class SBottomSheet {
           child: Container(
             decoration: BoxDecoration(
               color: isDark
-                  ? SColors.darkSurface.withValues(alpha: useBlur ? 0.85 : 1.0)
-                  : SColors.lightSurface.withValues(alpha: useBlur ? 0.9 : 1.0),
+                  ? TColors.darkSurface.withValues(alpha: useBlur ? 0.85 : 1.0)
+                  : TColors.lightSurface.withValues(alpha: useBlur ? 0.9 : 1.0),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(SSizes.radiusXl),
+                top: Radius.circular(TSizes.radiusXl),
               ),
               border: Border(
                 top: BorderSide(
@@ -56,10 +56,10 @@ class SBottomSheet {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  SSizes.pagePadding,
-                  SSizes.sm,
-                  SSizes.pagePadding,
-                  SSizes.pagePadding,
+                  TSizes.pagePadding,
+                  TSizes.sm,
+                  TSizes.pagePadding,
+                  TSizes.pagePadding,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -76,16 +76,16 @@ class SBottomSheet {
                       ),
                     ),
                     if (title != null) ...[
-                      const SizedBox(height: SSizes.md),
+                      const SizedBox(height: TSizes.md),
                       Text(
                         title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                       ),
-                      const SizedBox(height: SSizes.md),
+                      const SizedBox(height: TSizes.md),
                     ] else
-                      const SizedBox(height: SSizes.md),
+                      const SizedBox(height: TSizes.md),
                     child,
                   ],
                 ),

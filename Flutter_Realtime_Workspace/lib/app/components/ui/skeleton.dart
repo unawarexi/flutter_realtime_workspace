@@ -3,24 +3,24 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
-class SSkeleton extends StatelessWidget {
+class TSkeleton extends StatelessWidget {
   final double width;
   final double height;
   final double borderRadius;
 
-  const SSkeleton({
+  const TSkeleton({
     super.key,
     this.width = double.infinity,
     required this.height,
-    this.borderRadius = SSizes.radiusSm,
+    this.borderRadius = TSizes.radiusSm,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
-      baseColor: isDark ? SColors.darkElevated : SColors.lightElevated,
-      highlightColor: isDark ? SColors.darkHover : SColors.lightHover,
+      baseColor: isDark ? TColors.darkElevated : TColors.lightElevated,
+      highlightColor: isDark ? TColors.darkHover : TColors.lightHover,
       child: Container(
         width: width,
         height: height,
@@ -34,26 +34,26 @@ class SSkeleton extends StatelessWidget {
 }
 
 /// Skeleton for meeting card list.
-class SMeetingCardSkeleton extends StatelessWidget {
-  const SMeetingCardSkeleton({super.key});
+class TMeetingCardSkeleton extends StatelessWidget {
+  const TMeetingCardSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(vertical: SSizes.sm),
+      padding: EdgeInsets.symmetric(vertical: TSizes.sm),
       child: Row(
         children: [
-          SSkeleton(width: 4, height: 48, borderRadius: 2),
-          SizedBox(width: SSizes.md),
+          TSkeleton(width: 4, height: 48, borderRadius: 2),
+          SizedBox(width: TSizes.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SSkeleton(height: 16, width: 180),
-                SizedBox(height: SSizes.sm),
-                SSkeleton(height: 12, width: 120),
-                SizedBox(height: SSizes.sm),
-                SSkeleton(height: 12, width: 80),
+                TSkeleton(height: 16, width: 180),
+                SizedBox(height: TSizes.sm),
+                TSkeleton(height: 12, width: 120),
+                SizedBox(height: TSizes.sm),
+                TSkeleton(height: 12, width: 80),
               ],
             ),
           ),
@@ -64,13 +64,13 @@ class SMeetingCardSkeleton extends StatelessWidget {
 }
 
 /// Skeleton for avatar row.
-class SAvatarSkeleton extends StatelessWidget {
+class TAvatarSkeleton extends StatelessWidget {
   final double size;
-  const SAvatarSkeleton({super.key, this.size = SSizes.avatarMd});
+  const TAvatarSkeleton({super.key, this.size = TSizes.avatarMd});
 
   @override
   Widget build(BuildContext context) {
-    return SSkeleton(
+    return TSkeleton(
       width: size,
       height: size,
       borderRadius: size / 2,

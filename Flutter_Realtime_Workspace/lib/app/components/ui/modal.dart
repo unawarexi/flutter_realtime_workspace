@@ -5,8 +5,8 @@ import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
 /// Premium modal dialog with iOS-style blur backdrop and Cupertino actions.
-class SModal {
-  SModal._();
+class TModal {
+  TModal._();
 
   static Future<T?> show<T>({
     required BuildContext context,
@@ -32,20 +32,20 @@ class SModal {
             title: Text(
               title,
               style: TextStyle(
-                color: isDark ? SColors.textDark : SColors.textLight,
+                color: isDark ? TColors.textDark : TColors.textLight,
                 fontWeight: FontWeight.w600,
               ),
             ),
             content: content ??
                 (message != null
                     ? Padding(
-                        padding: const EdgeInsets.only(top: SSizes.sm),
+                        padding: const EdgeInsets.only(top: TSizes.sm),
                         child: Text(
                           message,
                           style: TextStyle(
                             color: isDark
-                                ? SColors.textDarkSecondary
-                                : SColors.textLightSecondary,
+                                ? TColors.textDarkSecondary
+                                : TColors.textLightSecondary,
                             fontSize: 13,
                           ),
                         ),
@@ -60,7 +60,7 @@ class SModal {
                 child: Text(
                   cancelText,
                   style: TextStyle(
-                    color: isDark ? SColors.textDarkSecondary : SColors.textLightSecondary,
+                    color: isDark ? TColors.textDarkSecondary : TColors.textLightSecondary,
                   ),
                 ),
               ),
@@ -73,7 +73,7 @@ class SModal {
                 child: Text(
                   confirmText,
                   style: TextStyle(
-                    color: isDanger ? SColors.error : SColors.primary,
+                    color: isDanger ? TColors.error : TColors.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

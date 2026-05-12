@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+// ignore: unused_import
+// TColors and TSizes are defined in the above imports
 
 enum SButtonVariant { primary, secondary, outline, ghost, danger }
 enum SButtonSize { sm, md, lg }
 
 /// Premium button with Cupertino-style press scaling + haptic feedback.
-class SButton extends StatefulWidget {
+class TButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final SButtonVariant variant;
@@ -19,7 +21,7 @@ class SButton extends StatefulWidget {
   final IconData? suffixIcon;
   final Widget? child;
 
-  const SButton({
+  const TButton({
     super.key,
     this.text = '',
     this.onPressed,
@@ -33,19 +35,19 @@ class SButton extends StatefulWidget {
   });
 
   @override
-  State<SButton> createState() => _SButtonState();
+  State<TButton> createState() => _SButtonState();
 }
 
-class _SButtonState extends State<SButton> {
+class _SButtonState extends State<TButton> {
   bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final height = switch (widget.size) {
-      SButtonSize.sm => SSizes.buttonHeightSm,
-      SButtonSize.md => SSizes.buttonHeightMd,
-      SButtonSize.lg => SSizes.buttonHeightLg,
+      SButtonSize.sm => TSizes.buttonHeightSm,
+      SButtonSize.md => TSizes.buttonHeightMd,
+      SButtonSize.lg => TSizes.buttonHeightLg,
     };
     final fontSize = switch (widget.size) {
       SButtonSize.sm => 13.0,
@@ -76,7 +78,7 @@ class _SButtonState extends State<SButton> {
           height: height,
           decoration: BoxDecoration(
             color: isDisabled ? bg.withValues(alpha: 0.5) : bg,
-            borderRadius: BorderRadius.circular(SSizes.radiusMd),
+            borderRadius: BorderRadius.circular(TSizes.radiusMd),
             border: border != null ? Border.all(color: border) : null,
             boxShadow: widget.variant == SButtonVariant.primary && !_pressed
                 ? [
@@ -102,7 +104,7 @@ class _SButtonState extends State<SButton> {
                       children: [
                         if (widget.prefixIcon != null) ...[
                           Icon(widget.prefixIcon, size: fontSize + 2, color: fg),
-                          const SizedBox(width: SSizes.sm),
+                          const SizedBox(width: TSizes.sm),
                         ],
                         Text(
                           widget.text,
@@ -113,7 +115,7 @@ class _SButtonState extends State<SButton> {
                           ),
                         ),
                         if (widget.suffixIcon != null) ...[
-                          const SizedBox(width: SSizes.sm),
+                          const SizedBox(width: TSizes.sm),
                           Icon(widget.suffixIcon, size: fontSize + 2, color: fg),
                         ],
                       ],
@@ -127,27 +129,27 @@ class _SButtonState extends State<SButton> {
   (Color bg, Color fg, Color? border) _resolveColors(bool isDark) {
     return switch (widget.variant) {
       SButtonVariant.primary => (
-          SColors.primary,
+          TColors.primary,
           Colors.white,
           null,
         ),
       SButtonVariant.secondary => (
-          isDark ? SColors.darkElevated : SColors.lightElevated,
-          isDark ? SColors.textDark : SColors.textLight,
+          isDark ? TColors.darkElevated : TColors.lightElevated,
+          isDark ? TColors.textDark : TColors.textLight,
           null,
         ),
       SButtonVariant.outline => (
           Colors.transparent,
-          isDark ? SColors.textDark : SColors.textLight,
-          isDark ? SColors.darkBorder : SColors.lightBorder,
+          isDark ? TColors.textDark : TColors.textLight,
+          isDark ? TColors.darkBorder : TColors.lightBorder,
         ),
       SButtonVariant.ghost => (
           Colors.transparent,
-          isDark ? SColors.textDark : SColors.textLight,
+          isDark ? TColors.textDark : TColors.textLight,
           null,
         ),
       SButtonVariant.danger => (
-          SColors.error,
+          TColors.error,
           Colors.white,
           null,
         ),
@@ -156,7 +158,7 @@ class _SButtonState extends State<SButton> {
 }
 
 /// Icon-only circular button (meeting controls).
-class SIconButton extends StatelessWidget {
+class TIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final Color? backgroundColor;
@@ -164,7 +166,7 @@ class SIconButton extends StatelessWidget {
   final double size;
   final String? tooltip;
 
-  const SIconButton({
+  const TIconButton({
     super.key,
     required this.icon,
     this.onPressed,
@@ -178,9 +180,9 @@ class SIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg =
-        backgroundColor ?? (isDark ? SColors.darkElevated : SColors.lightElevated);
+        backgroundColor ?? (isDark ? TColors.darkElevated : TColors.lightElevated);
     final fg =
-        iconColor ?? (isDark ? SColors.textDark : SColors.textLight);
+        iconColor ?? (isDark ? TColors.textDark : TColors.textLight);
 
     final button = Material(
       color: bg,

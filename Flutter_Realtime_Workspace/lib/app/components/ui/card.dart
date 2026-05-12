@@ -4,7 +4,7 @@ import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
 /// Premium card with Cupertino-style press scale and haptic feedback.
-class SCard extends StatefulWidget {
+class TCard extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -14,7 +14,7 @@ class SCard extends StatefulWidget {
   final bool hasBorder;
   final bool hasShadow;
 
-  const SCard({
+  const TCard({
     super.key,
     required this.child,
     this.onTap,
@@ -27,10 +27,10 @@ class SCard extends StatefulWidget {
   });
 
   @override
-  State<SCard> createState() => _SCardState();
+  State<TCard> createState() => _SCardState();
 }
 
-class _SCardState extends State<SCard> {
+class _SCardState extends State<TCard> {
   bool _pressed = false;
 
   bool get _interactive => widget.onTap != null || widget.onLongPress != null;
@@ -39,21 +39,21 @@ class _SCardState extends State<SCard> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg =
-        widget.backgroundColor ?? (isDark ? SColors.darkCard : SColors.lightCard);
-    final radius = widget.borderRadius ?? SSizes.radiusMd;
+        widget.backgroundColor ?? (isDark ? TColors.darkCard : TColors.lightCard);
+    final radius = widget.borderRadius ?? TSizes.radiusMd;
 
     final card = AnimatedScale(
       scale: _pressed ? 0.97 : 1.0,
       duration: const Duration(milliseconds: 100),
       curve: Curves.easeOut,
       child: Container(
-        padding: widget.padding ?? const EdgeInsets.all(SSizes.cardPadding),
+        padding: widget.padding ?? const EdgeInsets.all(TSizes.cardPadding),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(radius),
           border: widget.hasBorder
               ? Border.all(
-                  color: isDark ? SColors.darkBorder : SColors.lightBorder,
+                  color: isDark ? TColors.darkBorder : TColors.lightBorder,
                 )
               : null,
           boxShadow: widget.hasShadow
@@ -92,7 +92,7 @@ class _SCardState extends State<SCard> {
 }
 
 /// Meeting card for upcoming / past meetings list.
-class SMeetingCard extends StatelessWidget {
+class TMeetingCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String time;
@@ -100,7 +100,7 @@ class SMeetingCard extends StatelessWidget {
   final bool isLive;
   final VoidCallback? onTap;
 
-  const SMeetingCard({
+  const TMeetingCard({
     super.key,
     required this.title,
     required this.subtitle,
@@ -113,7 +113,7 @@ class SMeetingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return SCard(
+    return TCard(
       onTap: onTap,
       hasBorder: true,
       child: Row(
@@ -122,11 +122,11 @@ class SMeetingCard extends StatelessWidget {
             width: 4,
             height: 48,
             decoration: BoxDecoration(
-              color: isLive ? SColors.success : SColors.primary,
+              color: isLive ? TColors.success : TColors.primary,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: SSizes.md),
+          const SizedBox(width: TSizes.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,13 +144,13 @@ class SMeetingCard extends StatelessWidget {
                     if (isLive)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: SSizes.sm,
+                          horizontal: TSizes.sm,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: SColors.success,
+                          color: TColors.success,
                           borderRadius:
-                              BorderRadius.circular(SSizes.radiusFull),
+                              BorderRadius.circular(TSizes.radiusFull),
                         ),
                         child: const Text(
                           'LIVE',
@@ -163,48 +163,48 @@ class SMeetingCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: SSizes.xs),
+                const SizedBox(height: TSizes.xs),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isDark
-                            ? SColors.textDarkSecondary
-                            : SColors.textLightSecondary,
+                            ? TColors.textDarkSecondary
+                            : TColors.textLightSecondary,
                       ),
                 ),
-                const SizedBox(height: SSizes.xs),
+                const SizedBox(height: TSizes.xs),
                 Row(
                   children: [
                     Icon(Icons.access_time,
                         size: 14,
                         color: isDark
-                            ? SColors.textDarkTertiary
-                            : SColors.textLightTertiary),
+                            ? TColors.textDarkTertiary
+                            : TColors.textLightTertiary),
                     const SizedBox(width: 4),
                     Text(
                       time,
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark
-                            ? SColors.textDarkTertiary
-                            : SColors.textLightTertiary,
+                            ? TColors.textDarkTertiary
+                            : TColors.textLightTertiary,
                       ),
                     ),
                     if (participantCount > 0) ...[
-                      const SizedBox(width: SSizes.md),
+                      const SizedBox(width: TSizes.md),
                       Icon(Icons.people_outline,
                           size: 14,
                           color: isDark
-                              ? SColors.textDarkTertiary
-                              : SColors.textLightTertiary),
+                              ? TColors.textDarkTertiary
+                              : TColors.textLightTertiary),
                       const SizedBox(width: 4),
                       Text(
                         '$participantCount',
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
-                              ? SColors.textDarkTertiary
-                              : SColors.textLightTertiary,
+                              ? TColors.textDarkTertiary
+                              : TColors.textLightTertiary,
                         ),
                       ),
                     ],

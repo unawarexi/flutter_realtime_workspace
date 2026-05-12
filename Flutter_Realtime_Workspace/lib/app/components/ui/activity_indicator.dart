@@ -4,13 +4,13 @@ import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 
 /// Hybrid activity indicator — uses CupertinoActivityIndicator for a premium
 /// iOS-style spinner, with Material fallback for branding when needed.
-class SActivityIndicator extends StatelessWidget {
+class TActivityIndicator extends StatelessWidget {
   final double size;
   final Color? color;
   final double strokeWidth;
   final bool adaptive;
 
-  const SActivityIndicator({
+  const TActivityIndicator({
     super.key,
     this.size = 24,
     this.color,
@@ -23,7 +23,7 @@ class SActivityIndicator extends StatelessWidget {
     if (adaptive) {
       return CupertinoActivityIndicator(
         radius: size / 2,
-        color: color ?? SColors.primary,
+        color: color ?? TColors.primary,
       );
     }
 
@@ -33,7 +33,7 @@ class SActivityIndicator extends StatelessWidget {
       child: CircularProgressIndicator(
         strokeWidth: strokeWidth,
         valueColor: AlwaysStoppedAnimation(
-          color ?? SColors.primary,
+          color ?? TColors.primary,
         ),
       ),
     );
@@ -41,10 +41,10 @@ class SActivityIndicator extends StatelessWidget {
 }
 
 /// Full-screen loading overlay with Cupertino spinner.
-class SLoadingOverlay extends StatelessWidget {
+class TLoadingOverlay extends StatelessWidget {
   final String? message;
 
-  const SLoadingOverlay({super.key, this.message});
+  const TLoadingOverlay({super.key, this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -59,8 +59,8 @@ class SLoadingOverlay extends StatelessWidget {
               message!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? SColors.textDarkSecondary
-                        : SColors.textLightSecondary,
+                        ? TColors.textDarkSecondary
+                        : TColors.textLightSecondary,
                   ),
             ),
           ],

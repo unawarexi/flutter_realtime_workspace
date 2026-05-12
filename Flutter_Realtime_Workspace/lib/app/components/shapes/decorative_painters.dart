@@ -2,201 +2,191 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 // ═══════════════════════════════════════════════
-//  SpeakUp Decorative Painters
-//  Painted curves, swooshes, and accent shapes
-//  using CustomPainter for layered compositions.
+//  Realtime Workspace — Decorative Painters
+//  Ambient accent shapes specific to a modern
+//  collaboration and productivity dashboard.
 // ═══════════════════════════════════════════════
 
-/// A flowing, multi-layer gradient swoosh.
-/// Stacks 2–3 translucent Bezier ribbon layers.
-///
-/// ```dart
-/// CustomPaint(
-///   size: Size(double.infinity, 260),
-///   painter: SSwooshPainter(
-///     colors: [SColors.primary, SColors.screenShare],
-///     isDark: true,
-///   ),
-/// )
-/// ```
-class SSwooshPainter extends CustomPainter {
-  final List<Color> colors;
+/// Node-graph fragment — a handful of scattered dots connected
+/// by thin quadratic-bezier arcs. Evokes team topology and
+/// collaboration graphs. Keep [color] opacity low (≈ 0.12).
+class TNetworkArcsPainter extends CustomPainter {
+  final Color color;
   final bool isDark;
-  final double intensity;
+  final int seed;
+  final int nodeCount;
 
-  SSwooshPainter({
-    required this.colors,
+  TNetworkArcsPainter({
+    required this.color,
     this.isDark = true,
-    this.intensity = 1.0,
+    this.seed = 11,
+    this.nodeCount = 6,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    final rng = math.Random(seed);
     final w = size.width;
     final h = size.height;
-    final baseAlpha = isDark ? 0.15 : 0.10;
 
-    // Layer 1 — wide background swoosh
-    final p1 = Path()
-      ..moveTo(0, h * 0.55)
-      ..cubicTo(w * 0.2, h * 0.3, w * 0.5, h * 0.7, w, h * 0.35)
-      ..lineTo(w, h)
-      ..lineTo(0, h)
-      ..close();
-
-    final paint1 = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          colors[0].withValues(alpha: baseAlpha * intensity),
-          (colors.length > 1 ? colors[1] : colors[0])
-              .withValues(alpha: baseAlpha * 0.6 * intensity),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, w, h));
-
-    canvas.drawPath(p1, paint1);
-
-    // Layer 2 — sharper mid-swoosh
-    final p2 = Path()
-      ..moveTo(0, h * 0.72)
-      ..cubicTo(w * 0.35, h * 0.45, w * 0.65, h * 0.85, w, h * 0.6)
-      ..lineTo(w, h)
-      ..lineTo(0, h)
-      ..close();
-
-    final paint2 = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          colors[0].withValues(alpha: baseAlpha * 0.7 * intensity),
-          (colors.length > 1 ? colors[1] : colors[0])
-              .withValues(alpha: baseAlpha * 0.4 * intensity),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, w, h));
-
-    canvas.drawPath(p2, paint2);
-
-    // Layer 3 — thin accent line along the top edge of the main swoosh
-    final p3 = Path()
-      ..moveTo(0, h * 0.72)
-      ..cubicTo(w * 0.35, h * 0.45, w * 0.65, h * 0.85, w, h * 0.6);
+    final nodes = List.generate(
+      nodeCount,
+      (_) => Offset(rng.nextDouble() * w, rng.nextDouble() * h),
+    );
 
     final linePaint = Paint()
-      ..color = colors[0].withValues(alpha: isDark ? 0.2 : 0.12)
+      ..color = color.withValues(alpha: isDark ? 0.07 : 0.05)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 0.9
+      ..strokeCap = StrokeCap.round;
 
-    canvas.drawPath(p3, linePaint);
+    final dotPaint = Paint()
+      ..color = color.withValues(alpha: isDark ? 0.15 : 0.10)
+      ..style = PaintingStyle.fill;
+
+    // Connect a sparse set of node pairs with gentle arcs
+    final connections = [
+      [0, 2], [1, 4], [2, 5], [0, 3], [3, 5],
+    ];
+    for (final pair in connections) {
+      if (pair[0] >= nodeCount || pair[1] >= nodeCount) continue;
+      final a = nodes[pair[0]];
+      final b = nodes[pair[1]];
+      final mid = (a + b) / 2;
+      final ctrl = Offset(
+        mid.dx + (rng.nextDouble() - 0.5) * 55,
+        mid.dy - 18 - rng.nextDouble() * 38,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(a.dx, a.dy)
+          ..quadraticBezierTo(ctrl.dx, ctrl.dy, b.dx, b.dy),
+        linePaint,
+      );
+    }
+
+    for (final node in nodes) {
+      canvas.drawCircle(node, 2.2, dotPaint);
+    }
   }
 
   @override
-  bool shouldRepaint(SSwooshPainter oldDelegate) =>
-      colors != oldDelegate.colors ||
-      isDark != oldDelegate.isDark ||
-      intensity != oldDelegate.intensity;
+  bool shouldRepaint(TNetworkArcsPainter old) =>
+      color != old.color ||
+      isDark != old.isDark ||
+      seed != old.seed ||
+      nodeCount != old.nodeCount;
 }
 
-/// Animated-ready aurora / northern-lights effect.
-/// Multiple overlapping gradient arcs.
-class SAuroraPainter extends CustomPainter {
-  final List<Color> colors;
-  final double phase;
+/// Broadcast rings — concentric partial-circle arcs radiating
+/// from one corner. Suggests a live / realtime presence signal.
+class TBroadcastRingsPainter extends CustomPainter {
+  final Color color;
   final bool isDark;
+  final int ringCount;
+  final CornerPosition corner;
 
-  SAuroraPainter({
-    required this.colors,
-    this.phase = 0.0,
+  TBroadcastRingsPainter({
+    required this.color,
     this.isDark = true,
+    this.ringCount = 4,
+    this.corner = CornerPosition.topLeft,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    late Offset origin;
+    switch (corner) {
+      case CornerPosition.topLeft:
+        origin = Offset.zero;
+      case CornerPosition.topRight:
+        origin = Offset(size.width, 0);
+      case CornerPosition.bottomLeft:
+        origin = Offset(0, size.height);
+      case CornerPosition.bottomRight:
+        origin = Offset(size.width, size.height);
+    }
+
+    for (int i = 1; i <= ringCount; i++) {
+      final radius = size.width * 0.16 * i;
+      final paint = Paint()
+        ..color = color.withValues(alpha: (isDark ? 0.09 : 0.065) / i)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1;
+      canvas.drawCircle(origin, radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(TBroadcastRingsPainter old) =>
+      color != old.color ||
+      isDark != old.isDark ||
+      ringCount != old.ringCount ||
+      corner != old.corner;
+}
+
+/// Data-stream lines — stacked horizontal paths with a gentle
+/// sinusoidal drift. Suggests realtime data flowing through
+/// channels. Pair with low-opacity colors.
+class TDataFlowPainter extends CustomPainter {
+  final Color color;
+  final bool isDark;
+  final int lineCount;
+  final double phase;
+
+  TDataFlowPainter({
+    required this.color,
+    this.isDark = true,
+    this.lineCount = 5,
+    this.phase = 0.0,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    final spacing = h / (lineCount + 1);
 
-    for (int i = 0; i < colors.length; i++) {
-      final t = (phase + i * 0.7) % (math.pi * 2);
-      final yOffset = math.sin(t) * h * 0.1;
-
-      final path = Path()
-        ..moveTo(-w * 0.1, h * (0.3 + i * 0.12) + yOffset)
-        ..cubicTo(
-          w * 0.25, h * (0.15 + i * 0.08) + yOffset,
-          w * 0.75, h * (0.45 + i * 0.06) + yOffset,
-          w * 1.1, h * (0.2 + i * 0.1) + yOffset,
-        );
+    for (int i = 1; i <= lineCount; i++) {
+      final baseY = spacing * i;
+      final amplitude = 3.5 + i * 1.4;
+      final frequency = 0.007 + i * 0.002;
+      final alpha =
+          (isDark ? 0.055 : 0.038) * (1 - (i / (lineCount + 1)) * 0.35);
 
       final paint = Paint()
-        ..color = colors[i].withValues(alpha: isDark ? 0.08 : 0.06)
+        ..color = color.withValues(alpha: alpha)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 40 + i * 15.0
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25);
+        ..strokeWidth = 0.9
+        ..strokeCap = StrokeCap.round;
 
+      final path = Path()..moveTo(0, baseY);
+      for (double x = 0; x <= w; x += 2) {
+        path.lineTo(
+          x,
+          baseY + math.sin((x * frequency) + phase + i * 1.1) * amplitude,
+        );
+      }
       canvas.drawPath(path, paint);
     }
   }
 
   @override
-  bool shouldRepaint(SAuroraPainter oldDelegate) =>
-      colors != oldDelegate.colors ||
-      phase != oldDelegate.phase ||
-      isDark != oldDelegate.isDark;
-}
-
-/// Geometric accent — a rotated diamond/rhombus shape.
-/// Use as a floating decorative element.
-class SDiamondPainter extends CustomPainter {
-  final Color color;
-  final double rotation;
-  final bool filled;
-
-  SDiamondPainter({
-    required this.color,
-    this.rotation = math.pi / 4,
-    this.filled = false,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r = math.min(size.width, size.height) / 2.2;
-
-    canvas.save();
-    canvas.translate(cx, cy);
-    canvas.rotate(rotation);
-
-    final path = Path()
-      ..moveTo(0, -r)
-      ..lineTo(r, 0)
-      ..lineTo(0, r)
-      ..lineTo(-r, 0)
-      ..close();
-
-    final paint = Paint()
-      ..color = color
-      ..style = filled ? PaintingStyle.fill : PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    canvas.drawPath(path, paint);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(SDiamondPainter oldDelegate) =>
-      color != oldDelegate.color ||
-      rotation != oldDelegate.rotation ||
-      filled != oldDelegate.filled;
+  bool shouldRepaint(TDataFlowPainter old) =>
+      color != old.color ||
+      isDark != old.isDark ||
+      lineCount != old.lineCount ||
+      phase != old.phase;
 }
 
 /// Corner gradient arc — a curved accent in one corner.
 /// Typically placed top-right or bottom-left.
-class SCornerArcPainter extends CustomPainter {
+class TCornerArcPainter extends CustomPainter {
   final Color color;
   final double radius;
   final CornerPosition corner;
 
-  SCornerArcPainter({
+  TCornerArcPainter({
     required this.color,
     this.radius = 200,
     this.corner = CornerPosition.topRight,
@@ -230,7 +220,7 @@ class SCornerArcPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(SCornerArcPainter oldDelegate) =>
+  bool shouldRepaint(TCornerArcPainter oldDelegate) =>
       color != oldDelegate.color ||
       radius != oldDelegate.radius ||
       corner != oldDelegate.corner;

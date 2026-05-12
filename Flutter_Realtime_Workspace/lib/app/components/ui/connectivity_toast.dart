@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/app/components/ui/toast_notifier.dart';
+import 'package:flutter_realtime_workspace/app/components/common/toast_alerts.dart';
 import 'package:flutter_realtime_workspace/store/connectivity_provider.dart';
 
 /// Listens to connectivity changes and fires toasts just below the notch.
@@ -12,25 +12,25 @@ class ConnectivityToast extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<NetworkState>(connectivityProvider, (prev, next) {
       if (next.quality == NetworkQuality.offline) {
-        SToast.show(
-          context,
-          message: 'No internet connection',
-          type: SToastType.error,
-          duration: const Duration(seconds: 5),
+        AppToast.show(
+          'No internet connection',
+          context: context,
+          type: ToastType.error,
+          durationSeconds: 5,
         );
       } else if (next.quality == NetworkQuality.slow) {
-        SToast.show(
-          context,
-          message: 'Slow network detected',
-          type: SToastType.warning,
+        AppToast.show(
+          'Slow network detected',
+          context: context,
+          type: ToastType.warning,
         );
       } else if (prev != null &&
           (prev.quality == NetworkQuality.offline ||
               prev.quality == NetworkQuality.slow)) {
-        SToast.show(
-          context,
-          message: 'Back online',
-          type: SToastType.success,
+        AppToast.show(
+          'Back online',
+          context: context,
+          type: ToastType.success,
         );
       }
     });

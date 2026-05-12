@@ -12,21 +12,21 @@ import 'package:flutter/material.dart';
 ///
 /// ```dart
 /// CustomPaint(
-///   painter: SOrbFieldPainter(
-///     colors: [SColors.primary, SColors.screenShare],
+///   painter: TOrbFieldPainter(
+///     colors: [TColors.primary, TColors.screenShare],
 ///     orbCount: 5,
 ///     isDark: true,
 ///   ),
 ///   child: yourContent,
 /// )
 /// ```
-class SOrbFieldPainter extends CustomPainter {
+class TOrbFieldPainter extends CustomPainter {
   final List<Color> colors;
   final int orbCount;
   final bool isDark;
   final double seed;
 
-  SOrbFieldPainter({
+  TOrbFieldPainter({
     required this.colors,
     this.orbCount = 5,
     this.isDark = true,
@@ -59,7 +59,7 @@ class SOrbFieldPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(SOrbFieldPainter oldDelegate) =>
+  bool shouldRepaint(TOrbFieldPainter oldDelegate) =>
       colors != oldDelegate.colors ||
       orbCount != oldDelegate.orbCount ||
       isDark != oldDelegate.isDark ||
@@ -68,12 +68,12 @@ class SOrbFieldPainter extends CustomPainter {
 
 /// Dot grid — a subtle matrix of evenly-spaced dots.
 /// Common in modern SaaS dashboards and hero sections.
-class SDotGridPainter extends CustomPainter {
+class TDotGridPainter extends CustomPainter {
   final Color dotColor;
   final double spacing;
   final double dotRadius;
 
-  SDotGridPainter({
+  TDotGridPainter({
     required this.dotColor,
     this.spacing = 24,
     this.dotRadius = 1.2,
@@ -91,7 +91,7 @@ class SDotGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(SDotGridPainter oldDelegate) =>
+  bool shouldRepaint(TDotGridPainter oldDelegate) =>
       dotColor != oldDelegate.dotColor ||
       spacing != oldDelegate.spacing ||
       dotRadius != oldDelegate.dotRadius;
@@ -99,14 +99,14 @@ class SDotGridPainter extends CustomPainter {
 
 /// Concentric ripple rings — radiating from a focal point.
 /// Perfect behind avatars or as a subtle "pulse" background.
-class SRippleRingsPainter extends CustomPainter {
+class TRippleRingsPainter extends CustomPainter {
   final Color color;
   final int ringCount;
   final Offset center;
   final double maxRadius;
   final double strokeWidth;
 
-  SRippleRingsPainter({
+  TRippleRingsPainter({
     required this.color,
     this.ringCount = 4,
     this.center = Offset.zero,
@@ -135,7 +135,7 @@ class SRippleRingsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(SRippleRingsPainter oldDelegate) =>
+  bool shouldRepaint(TRippleRingsPainter oldDelegate) =>
       color != oldDelegate.color ||
       ringCount != oldDelegate.ringCount ||
       maxRadius != oldDelegate.maxRadius;
@@ -143,12 +143,12 @@ class SRippleRingsPainter extends CustomPainter {
 
 /// Topographic / contour lines — organic layered waves.
 /// Gives a premium, generative-art feel.
-class STopographyPainter extends CustomPainter {
+class TTopographyPainter extends CustomPainter {
   final Color lineColor;
   final int lineCount;
   final double seed;
 
-  STopographyPainter({
+  TTopographyPainter({
     required this.lineColor,
     this.lineCount = 8,
     this.seed = 0,
@@ -183,7 +183,7 @@ class STopographyPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(STopographyPainter oldDelegate) =>
+  bool shouldRepaint(TTopographyPainter oldDelegate) =>
       lineColor != oldDelegate.lineColor ||
       lineCount != oldDelegate.lineCount ||
       seed != oldDelegate.seed;
@@ -191,11 +191,11 @@ class STopographyPainter extends CustomPainter {
 
 /// Hexagonal mesh — a subtle honeycomb overlay.
 /// Used for tech-forward, conference-style branding.
-class SHexMeshPainter extends CustomPainter {
+class THexMeshPainter extends CustomPainter {
   final Color strokeColor;
   final double hexSize;
 
-  SHexMeshPainter({
+  THexMeshPainter({
     required this.strokeColor,
     this.hexSize = 30,
   });
@@ -239,7 +239,7 @@ class SHexMeshPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(SHexMeshPainter oldDelegate) =>
+  bool shouldRepaint(THexMeshPainter oldDelegate) =>
       strokeColor != oldDelegate.strokeColor ||
       hexSize != oldDelegate.hexSize;
 }
@@ -252,16 +252,16 @@ class SHexMeshPainter extends CustomPainter {
 /// Automatically sizes to fill its parent.
 ///
 /// ```dart
-/// SPatternBackground(
-///   painter: SDotGridPainter(dotColor: SColors.primary.withValues(alpha:0.1)),
+/// TPatternBackground(
+///   painter: TDotGridPainter(dotColor: TColors.primary.withValues(alpha:0.1)),
 ///   child: YourWidget(),
 /// )
 /// ```
-class SPatternBackground extends StatelessWidget {
+class TPatternBackground extends StatelessWidget {
   final CustomPainter painter;
   final Widget child;
 
-  const SPatternBackground({
+  const TPatternBackground({
     super.key,
     required this.painter,
     required this.child,
