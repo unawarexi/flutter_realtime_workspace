@@ -1,0 +1,22 @@
+source "https://rubygems.org"
+
+gem "fastlane", "~> 2.225"
+
+# --- iOS signing & delivery ---
+gem "fastlane-plugin-match",                    require: false  # included in fastlane core
+gem "fastlane-plugin-upload_to_app_store",      require: false  # included in fastlane core
+
+# --- Firebase App Distribution ---
+gem "fastlane-plugin-firebase_app_distribution"
+
+# --- Version management ---
+gem "fastlane-plugin-flutter_version"
+
+# --- Changelog / release notes ---
+gem "fastlane-plugin-changelog"
+
+# --- Slack notifications ---
+# fastlane includes slack action natively
+
+# --- Utilities ---
+gem "fastlane-plugin-badge"

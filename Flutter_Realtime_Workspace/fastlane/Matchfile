@@ -1,0 +1,20 @@
+# Matchfile — manages iOS code signing certificates via a private git repo
+# Run `fastlane match init` to set up, or populate these manually.
+
+# Private git repo that stores encrypted certificates & provisioning profiles
+git_url ENV["MATCH_GIT_URL"]
+
+storage_mode "git"          # alternatives: s3, google_cloud
+
+# Encrypted with MATCH_PASSWORD env var
+# type is overridden per-lane (development, adhoc, appstore)
+type "appstore"
+
+app_identifier ["com.teamspot.app"]
+username "your.apple.id@email.com"
+
+# Platform
+platform "ios"
+
+# Clone to a temp dir instead of system keychain (safer for CI)
+readonly true               # set to false in match setup lane to generate new ones

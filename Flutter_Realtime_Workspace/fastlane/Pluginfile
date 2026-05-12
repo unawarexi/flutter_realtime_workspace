@@ -1,0 +1,4 @@
+fastlane_require "fastlane-plugin-firebase_app_distribution"
+fastlane_require "fastlane-plugin-flutter_version"
+fastlane_require "fastlane-plugin-changelog"
+fastlane_require "fastlane-plugin-badge"

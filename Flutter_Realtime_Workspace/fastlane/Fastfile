@@ -1,0 +1,353 @@
+# ============================================================================
+# Teamspot — Fastfile
+# Lanes:
+#   Shared:  test, bump_version
+#   Android: android beta | release | firebase
+#   iOS:     ios beta | release | firebase | certs
+#
+# Required env vars — see .env.example
+# ============================================================================
+
+default_platform(:ios)
+
+FLUTTER       = "flutter"
+PUBSPEC       = "../pubspec.yaml"
+BUNDLE_ID     = "com.teamspot.app"
+PACKAGE_NAME  = "com.teamspot.app"
+SLACK_WEBHOOK = ENV["SLACK_WEBHOOK_URL"]
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+def flutter_version
+  require "yaml"
+  pubspec = YAML.load_file(PUBSPEC)
+  parts = pubspec["version"].split("+")
+  { name: parts[0], code: parts[1].to_i }
+end
+
+def build_number
+  # Prefer CI build number, fall back to pubspec versionCode
+  ENV.fetch("BUILD_NUMBER") { flutter_version[:code] }.to_i
+end
+
+def dart_defines(env)
+  file = File.expand_path("../dart_defines/#{env}.env", __FILE__)
+  File.read(file).split("\n")
+      .reject { |l| l.strip.empty? || l.start_with?("#") }
+      .map { |l| "--dart-define=#{l.strip}" }
+      .join(" ")
+end
+
+# ── Shared hooks ─────────────────────────────────────────────────────────────
+
+before_all do
+  ensure_git_status_clean(show_uncommitted_changes: true) unless ENV["CI"]
+end
+
+after_all do |lane|
+  if SLACK_WEBHOOK
+    slack(
+      message: "✅ *#{lane}* succeeded",
+      channel: "#deployments",
+      webhook_url: SLACK_WEBHOOK,
+      payload: {
+        "Version" => flutter_version[:name],
+        "Build"   => build_number,
+        "Branch"  => git_branch,
+      },
+      default_payloads: []
+    )
+  end
+end
+
+error do |lane, exception|
+  if SLACK_WEBHOOK
+    slack(
+      message: "❌ *#{lane}* failed: #{exception.message}",
+      channel: "#deployments",
+      webhook_url: SLACK_WEBHOOK,
+      success: false,
+      default_payloads: []
+    )
+  end
+end
+
+# ── Shared lanes ─────────────────────────────────────────────────────────────
+
+desc "Run static analysis and all unit/widget tests"
+lane :test do
+  sh("#{FLUTTER} pub get")
+  sh("#{FLUTTER} analyze --no-fatal-warnings")
+  sh("#{FLUTTER} test --coverage --reporter=compact")
+  UI.success("All tests passed ✓")
+end
+
+desc "Bump pubspec.yaml version name (major|minor|patch) or set explicit version"
+lane :bump do |options|
+  type    = options[:type]    # major | minor | patch
+  version = options[:version] # explicit e.g. "2.1.0"
+
+  current = flutter_version[:name]
+  major, minor, patch = current.split(".").map(&:to_i)
+
+  new_version = if version
+                  version
+                elsif type == "major"
+                  "#{major + 1}.0.0"
+                elsif type == "minor"
+                  "#{major}.#{minor + 1}.0"
+                else
+                  "#{major}.#{minor}.#{patch + 1}"
+                end
+
+  new_build = (flutter_version[:code] + 1).to_s
+  new_entry = "#{new_version}+#{new_build}"
+
+  sh("sed -i '' \"s/^version: .*/version: #{new_entry}/\" #{PUBSPEC}")
+  git_add(path: PUBSPEC)
+  git_commit(path: PUBSPEC, message: "chore: bump version to #{new_entry} [skip ci]")
+  UI.success("Bumped to #{new_entry}")
+end
+
+# ============================================================================
+# ANDROID
+# ============================================================================
+
+platform :android do
+
+  # ── Private helpers ─────────────────────────────────────────────────────
+
+  def write_key_properties
+    content = [
+      "storePassword=#{ENV.fetch('ANDROID_STORE_PASSWORD')}",
+      "keyPassword=#{ENV.fetch('ANDROID_KEY_PASSWORD')}",
+      "keyAlias=#{ENV.fetch('ANDROID_KEY_ALIAS')}",
+      "storeFile=#{File.expand_path('../android/teamspot.keystore', __FILE__)}",
+    ].join("\n")
+    File.write(File.expand_path("../android/key.properties", __FILE__), content)
+  end
+
+  def decode_keystore
+    require "base64"
+    ks_b64 = ENV.fetch("ANDROID_KEYSTORE_BASE64")
+    ks_path = File.expand_path("../android/teamspot.keystore", __FILE__)
+    File.binwrite(ks_path, Base64.decode64(ks_b64))
+    UI.message("Keystore written to #{ks_path}")
+  end
+
+  def build_aab(env: "production")
+    build_num  = build_number
+    build_name = flutter_version[:name]
+    defines    = dart_defines(env)
+
+    sh([
+      FLUTTER, "build appbundle --release",
+      "--build-number=#{build_num}",
+      "--build-name=#{build_name}",
+      "--obfuscate",
+      "--split-debug-info=build/debug-info/android",
+      defines,
+    ].join(" "))
+  end
+
+  def build_apk(env: "production")
+    build_num  = build_number
+    build_name = flutter_version[:name]
+    defines    = dart_defines(env)
+
+    sh([
+      FLUTTER, "build apk --release --split-per-abi",
+      "--build-number=#{build_num}",
+      "--build-name=#{build_name}",
+      "--obfuscate",
+      "--split-debug-info=build/debug-info/android",
+      defines,
+    ].join(" "))
+  end
+
+  # ── Lanes ────────────────────────────────────────────────────────────────
+
+  desc "Build & upload to Play Store internal testing track"
+  lane :beta do |options|
+    env = options.fetch(:env, "staging")
+
+    decode_keystore
+    write_key_properties
+    sh("#{FLUTTER} pub get")
+    build_aab(env: env)
+
+    upload_to_play_store(
+      track:           "internal",
+      aab:             "../build/app/outputs/bundle/release/app-release.aab",
+      json_key_data:   ENV.fetch("GOOGLE_PLAY_JSON_KEY"),
+      package_name:    PACKAGE_NAME,
+      release_status:  "draft",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images:   true,
+      skip_upload_screenshots: true,
+    )
+    UI.success("Android beta uploaded to internal track ✓")
+  end
+
+  desc "Build & upload to Play Store production track"
+  lane :release do |options|
+    env = options.fetch(:env, "production")
+
+    decode_keystore
+    write_key_properties
+    sh("#{FLUTTER} pub get")
+    bump(type: "patch") unless ENV["CI"]
+    build_aab(env: env)
+
+    upload_to_play_store(
+      track:           "production",
+      aab:             "../build/app/outputs/bundle/release/app-release.aab",
+      json_key_data:   ENV.fetch("GOOGLE_PLAY_JSON_KEY"),
+      package_name:    PACKAGE_NAME,
+      skip_upload_apk: true,
+    )
+    UI.success("Android release uploaded to production ✓")
+  end
+
+  desc "Build APK & distribute via Firebase App Distribution"
+  lane :firebase do |options|
+    env      = options.fetch(:env, "staging")
+    groups   = options.fetch(:groups, "internal-testers")
+
+    decode_keystore
+    write_key_properties
+    sh("#{FLUTTER} pub get")
+    build_apk(env: env)
+
+    apk_paths = Dir["../build/app/outputs/flutter-apk/*-release.apk"]
+
+    apk_paths.each do |apk|
+      firebase_app_distribution(
+        app:             ENV.fetch("FIREBASE_APP_ID_ANDROID"),
+        apk_path:        apk,
+        groups:          groups,
+        release_notes:   last_git_commit[:message],
+        firebase_cli_token: ENV.fetch("FIREBASE_TOKEN"),
+      )
+    end
+
+    UI.success("Android APK distributed via Firebase ✓")
+  end
+
+end
+
+# ============================================================================
+# iOS
+# ============================================================================
+
+platform :ios do
+
+  # ── Private helpers ─────────────────────────────────────────────────────
+
+  def setup_app_store_connect_api
+    app_store_connect_api_key(
+      key_id:        ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id:     ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+      key_content:   Base64.decode64(ENV.fetch("APP_STORE_CONNECT_API_KEY_BASE64")),
+      is_key_content_base64: false,
+      duration:      1200,
+      in_house:      false,
+    )
+  end
+
+  def build_ipa(env: "production", export_method: "app-store")
+    build_num  = build_number
+    build_name = flutter_version[:name]
+    defines    = dart_defines(env)
+
+    sh([
+      FLUTTER, "build ipa --release",
+      "--build-number=#{build_num}",
+      "--build-name=#{build_name}",
+      "--obfuscate",
+      "--split-debug-info=build/debug-info/ios",
+      "--export-options-plist=ios/ExportOptions#{export_method == 'ad-hoc' ? 'AdHoc' : ''}.plist",
+      defines,
+    ].join(" "))
+  end
+
+  # ── Lanes ────────────────────────────────────────────────────────────────
+
+  desc "Sync development certificates (run locally to bootstrap)"
+  lane :certs do
+    setup_app_store_connect_api
+    match(type: "development", readonly: false, force_for_new_devices: true)
+    match(type: "appstore",    readonly: false)
+    match(type: "adhoc",       readonly: false, force_for_new_devices: true)
+  end
+
+  desc "Build & upload to TestFlight (beta)"
+  lane :beta do |options|
+    env = options.fetch(:env, "staging")
+    require "base64"
+
+    setup_app_store_connect_api
+    match(type: "appstore", readonly: true)
+
+    sh("#{FLUTTER} pub get")
+    sh("cd ios && pod install --repo-update")
+    build_ipa(env: env, export_method: "app-store")
+
+    upload_to_testflight(
+      ipa:                           "build/ios/ipa/Runner.ipa",
+      skip_waiting_for_build_processing: true,
+      apple_id:                      BUNDLE_ID,
+    )
+    UI.success("iOS beta uploaded to TestFlight ✓")
+  end
+
+  desc "Build & submit to App Store for review"
+  lane :release do |options|
+    env = options.fetch(:env, "production")
+    require "base64"
+
+    setup_app_store_connect_api
+    match(type: "appstore", readonly: true)
+
+    sh("#{FLUTTER} pub get")
+    sh("cd ios && pod install --repo-update")
+    bump(type: "patch") unless ENV["CI"]
+    build_ipa(env: env, export_method: "app-store")
+
+    deliver(
+      ipa:                           "build/ios/ipa/Runner.ipa",
+      submit_for_review:             false,   # set to true for fully automated submission
+      automatic_release:             false,
+      force:                         true,
+      skip_metadata:                 true,
+      skip_screenshots:              true,
+      precheck_include_in_app_purchases: false,
+    )
+    UI.success("iOS release submitted to App Store ✓")
+  end
+
+  desc "Build IPA & distribute via Firebase App Distribution"
+  lane :firebase do |options|
+    env    = options.fetch(:env, "staging")
+    groups = options.fetch(:groups, "internal-testers")
+    require "base64"
+
+    setup_app_store_connect_api
+    match(type: "adhoc", readonly: true)
+
+    sh("#{FLUTTER} pub get")
+    sh("cd ios && pod install --repo-update")
+    build_ipa(env: env, export_method: "ad-hoc")
+
+    firebase_app_distribution(
+      app:               ENV.fetch("FIREBASE_APP_ID_IOS"),
+      ipa_path:          "build/ios/ipa/Runner.ipa",
+      groups:            groups,
+      release_notes:     last_git_commit[:message],
+      firebase_cli_token: ENV.fetch("FIREBASE_TOKEN"),
+    )
+    UI.success("iOS IPA distributed via Firebase ✓")
+  end
+
+end
