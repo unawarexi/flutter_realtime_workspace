@@ -42,6 +42,8 @@ export async function registerModules(app, apiPrefix) {
     { path: "ai", prefix: "/ai" },
     { path: "identity", prefix: "/identity" },
     { path: "legal", prefix: "/legal" },
+    { path: "whiteboards", prefix: "/whiteboards" },
+    { path: "schedules", prefix: "/schedules" },
   ];
 
   const registered = [];
