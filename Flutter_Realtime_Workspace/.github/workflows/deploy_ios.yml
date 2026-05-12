@@ -1,0 +1,232 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Deploy iOS — builds signed IPA and uploads to TestFlight / App Store
+# Triggers: push to main/release/**, or manual dispatch
+# Requires: macOS runner (Apple toolchain)
+# ──────────────────────────────────────────────────────────────────────────────
+name: Deploy iOS
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+      destination:
+        description: Upload destination
+        required: true
+        default: testflight
+        type: choice
+        options: [testflight, appstore, firebase]
+      bump:
+        description: Version bump type (skip to keep current)
+        required: false
+        default: none
+        type: choice
+        options: [none, patch, minor, major]
+
+concurrency:
+  group: deploy-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.24.0"
+  RUBY_VERSION: "3.3"
+  XCODE_VERSION: "16.0"
+
+jobs:
+  deploy:
+    name: Build & Deploy to App Store / TestFlight
+    runs-on: macos-14
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      # ── Toolchain ─────────────────────────────────────────────────────────
+      - name: Select Xcode ${{ env.XCODE_VERSION }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Set up Ruby ${{ env.RUBY_VERSION }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      # ── Dependencies ──────────────────────────────────────────────────────
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: pods-
+
+      - name: Install CocoaPods
+        run: cd ios && pod install --repo-update
+
+      # ── Version bump ──────────────────────────────────────────────────────
+      - name: Bump version
+        if: ${{ github.event.inputs.bump != 'none' && github.event.inputs.bump != '' }}
+        run: |
+          BUMP="${{ github.event.inputs.bump }}"
+          CURRENT=$(grep "^version:" pubspec.yaml | sed 's/version: //')
+          IFS='+' read -r NAME CODE <<< "$CURRENT"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$NAME"
+          NEW_CODE=$((CODE + 1))
+          case "$BUMP" in
+            major) NEW_NAME="$((MAJOR+1)).0.0" ;;
+            minor) NEW_NAME="${MAJOR}.$((MINOR+1)).0" ;;
+            patch) NEW_NAME="${MAJOR}.${MINOR}.$((PATCH+1))" ;;
+          esac
+          sed -i '' "s/^version: .*/version: ${NEW_NAME}+${NEW_CODE}/" pubspec.yaml
+          git config user.email "ci@teamspot.app"
+          git config user.name "Teamspot CI"
+          git add pubspec.yaml
+          git commit -m "chore: bump version to ${NEW_NAME}+${NEW_CODE} [skip ci]"
+          git push
+
+      # ── Build number ──────────────────────────────────────────────────────
+      - name: Set build number
+        run: echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+
+      # ── App Store Connect API key ─────────────────────────────────────────
+      - name: Write App Store Connect API key
+        run: |
+          mkdir -p ~/.private_keys
+          echo "${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}" | base64 --decode \
+            > ~/.private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+
+      # ── Code signing via Fastlane Match ───────────────────────────────────
+      - name: Determine export method
+        run: |
+          DEST="${{ github.event.inputs.destination || 'testflight' }}"
+          if [[ "$DEST" == "firebase" ]]; then
+            echo "EXPORT_METHOD=ad-hoc" >> $GITHUB_ENV
+            echo "MATCH_TYPE=adhoc" >> $GITHUB_ENV
+          else
+            echo "EXPORT_METHOD=app-store" >> $GITHUB_ENV
+            echo "MATCH_TYPE=appstore" >> $GITHUB_ENV
+          fi
+
+      - name: Sync certificates via Match
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          bundle exec fastlane run match \
+            type:"${{ env.MATCH_TYPE }}" \
+            readonly:true \
+            git_url:"${MATCH_GIT_URL}" \
+            app_identifier:"com.teamspot.app" \
+            api_key_path:"~/.private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8"
+
+      # ── Determine environment ─────────────────────────────────────────────
+      - name: Determine environment
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" == "push" ]]; then
+            ENV="production"
+          fi
+          echo "DEPLOY_ENV=$ENV" >> $GITHUB_ENV
+
+      # ── Build IPA ─────────────────────────────────────────────────────────
+      - name: Build IPA
+        run: |
+          EXPORT_PLIST="ios/ExportOptions${{ env.EXPORT_METHOD == 'ad-hoc' && 'AdHoc' || '' }}.plist"
+          flutter build ipa --release \
+            --build-number=${{ env.BUILD_NUMBER }} \
+            --obfuscate \
+            --split-debug-info=build/debug-info/ios \
+            --export-options-plist="$EXPORT_PLIST" \
+            --dart-define-from-file=dart_defines/${{ env.DEPLOY_ENV }}.env
+
+      # ── Upload debug symbols to Sentry ────────────────────────────────────
+      - name: Upload dSYMs to Sentry
+        if: ${{ env.DEPLOY_ENV == 'production' }}
+        continue-on-error: true
+        run: |
+          brew install getsentry/tools/sentry-cli 2>/dev/null || true
+          sentry-cli upload-dif build/debug-info/ios \
+            --org "${{ secrets.SENTRY_ORG }}" \
+            --project "${{ secrets.SENTRY_PROJECT }}" \
+            --auth-token "${{ secrets.SENTRY_AUTH_TOKEN }}"
+
+      # ── Upload ────────────────────────────────────────────────────────────
+      - name: Upload to TestFlight
+        if: ${{ github.event.inputs.destination == 'testflight' || github.event.inputs.destination == '' || (github.event_name == 'push') }}
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcrun altool --upload-app \
+            --type ios \
+            --file build/ios/ipa/Runner.ipa \
+            --apiKey "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}" \
+            --apiIssuer "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}"
+
+      - name: Distribute via Firebase App Distribution
+        if: ${{ github.event.inputs.destination == 'firebase' }}
+        run: |
+          npm install -g firebase-tools
+          firebase appdistribution:distribute build/ios/ipa/Runner.ipa \
+            --app "${{ secrets.FIREBASE_APP_ID_IOS }}" \
+            --groups "internal-testers" \
+            --release-notes "$(git log -1 --pretty=%B)" \
+            --token "${{ secrets.FIREBASE_TOKEN }}"
+
+      # ── Archive IPA artifact ──────────────────────────────────────────────
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipa-${{ env.DEPLOY_ENV }}-${{ github.sha }}
+          path: build/ios/ipa/Runner.ipa
+          retention-days: 30
+
+      # ── Tag release ───────────────────────────────────────────────────────
+      - name: Create release tag
+        if: ${{ env.DEPLOY_ENV == 'production' }}
+        run: |
+          VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //')
+          git tag "ios/v${VERSION}-${{ github.run_number }}"
+          git push origin "ios/v${VERSION}-${{ github.run_number }}"
+
+      # ── Slack notification ────────────────────────────────────────────────
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '✅' || '❌' }} *iOS Deploy* (${{ env.DEPLOY_ENV }}, ${{ github.event.inputs.destination || 'testflight' }})",
+              "blocks": [{
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ job.status == 'success' && '✅' || '❌' }} *iOS Deploy* — `${{ env.DEPLOY_ENV }}` → `${{ github.event.inputs.destination || 'testflight' }}`\nBuild #${{ github.run_number }} | Branch: `${{ github.ref_name }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                }
+              }]
+            }

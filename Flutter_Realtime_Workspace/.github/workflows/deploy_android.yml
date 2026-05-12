@@ -1,0 +1,205 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Deploy Android — builds signed AAB and uploads to Play Store
+# Triggers: push to main/release/**, or manual dispatch
+# ──────────────────────────────────────────────────────────────────────────────
+name: Deploy Android
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+      track:
+        description: Play Store track
+        required: true
+        default: internal
+        type: choice
+        options: [internal, alpha, beta, production]
+      bump:
+        description: Version bump type (skip to keep current)
+        required: false
+        default: none
+        type: choice
+        options: [none, patch, minor, major]
+
+concurrency:
+  group: deploy-android-${{ github.ref }}
+  cancel-in-progress: false   # never cancel a deploy mid-flight
+
+env:
+  FLUTTER_VERSION: "3.24.0"
+  JAVA_VERSION: "17"
+  RUBY_VERSION: "3.3"
+
+jobs:
+  deploy:
+    name: Build & Deploy to Play Store
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history for version tags
+          token: ${{ secrets.GH_PAT }}  # PAT needed if bump commits back
+
+      # ── Toolchain ─────────────────────────────────────────────────────────
+      - name: Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Set up Ruby ${{ env.RUBY_VERSION }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      # ── Dependencies ──────────────────────────────────────────────────────
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # ── Signing ───────────────────────────────────────────────────────────
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode \
+            > android/teamspot.keystore
+
+      - name: Write key.properties
+        run: |
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=${{ github.workspace }}/android/teamspot.keystore
+          EOF
+
+      # ── Version bump (optional) ────────────────────────────────────────────
+      - name: Bump version
+        if: ${{ github.event.inputs.bump != 'none' && github.event.inputs.bump != '' }}
+        run: |
+          BUMP="${{ github.event.inputs.bump }}"
+          CURRENT=$(grep "^version:" pubspec.yaml | sed 's/version: //')
+          IFS='+' read -r NAME CODE <<< "$CURRENT"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$NAME"
+          NEW_CODE=$((CODE + 1))
+          case "$BUMP" in
+            major) NEW_NAME="$((MAJOR+1)).0.0" ;;
+            minor) NEW_NAME="${MAJOR}.$((MINOR+1)).0" ;;
+            patch) NEW_NAME="${MAJOR}.${MINOR}.$((PATCH+1))" ;;
+          esac
+          sed -i "s/^version: .*/version: ${NEW_NAME}+${NEW_CODE}/" pubspec.yaml
+          echo "NEW_VERSION=${NEW_NAME}+${NEW_CODE}" >> $GITHUB_ENV
+          git config user.email "ci@teamspot.app"
+          git config user.name "Teamspot CI"
+          git add pubspec.yaml
+          git commit -m "chore: bump version to ${NEW_NAME}+${NEW_CODE} [skip ci]"
+          git push
+
+      # ── Determine build number ─────────────────────────────────────────────
+      - name: Set build number
+        run: echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+
+      # ── Build AAB ─────────────────────────────────────────────────────────
+      - name: Determine environment
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          # Auto-promote push to main → production
+          if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" == "push" ]]; then
+            ENV="production"
+          fi
+          echo "DEPLOY_ENV=$ENV" >> $GITHUB_ENV
+
+      - name: Build App Bundle
+        run: |
+          flutter build appbundle --release \
+            --build-number=${{ env.BUILD_NUMBER }} \
+            --obfuscate \
+            --split-debug-info=build/debug-info/android \
+            --dart-define-from-file=dart_defines/${{ env.DEPLOY_ENV }}.env
+
+      # ── Upload debug symbols to Sentry ────────────────────────────────────
+      - name: Upload debug symbols to Sentry
+        if: ${{ env.DEPLOY_ENV == 'production' }}
+        uses: getsentry/sentry-symbolicator-action@v1
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      # ── Upload to Play Store ───────────────────────────────────────────────
+      - name: Determine Play Store track
+        run: |
+          TRACK="${{ github.event.inputs.track || 'internal' }}"
+          if [[ "${{ env.DEPLOY_ENV }}" == "production" && "${{ github.event_name }}" == "push" ]]; then
+            TRACK="internal"   # auto-push goes to internal; promote manually
+          fi
+          echo "PLAY_TRACK=$TRACK" >> $GITHUB_ENV
+
+      - name: Write Play Store service account key
+        run: |
+          echo '${{ secrets.GOOGLE_PLAY_JSON_KEY }}' > play-store-key.json
+
+      - name: Upload to Play Store (${{ env.PLAY_TRACK }})
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          packageName: com.teamspot.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ env.PLAY_TRACK }}
+          status: draft
+          inAppUpdatePriority: 2
+
+      # ── Archive AAB artifact ──────────────────────────────────────────────
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aab-${{ env.DEPLOY_ENV }}-${{ github.sha }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      # ── Tag release ───────────────────────────────────────────────────────
+      - name: Create release tag
+        if: ${{ env.DEPLOY_ENV == 'production' }}
+        run: |
+          VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //')
+          git tag "android/v${VERSION}-${{ github.run_number }}"
+          git push origin "android/v${VERSION}-${{ github.run_number }}"
+
+      # ── Slack notification ────────────────────────────────────────────────
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '✅' || '❌' }} *Android Deploy* (${{ env.DEPLOY_ENV }}, track: ${{ env.PLAY_TRACK }})",
+              "blocks": [{
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ job.status == 'success' && '✅' || '❌' }} *Android Deploy* — `${{ env.DEPLOY_ENV }}` → track `${{ env.PLAY_TRACK }}`\nBuild #${{ github.run_number }} | Branch: `${{ github.ref_name }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                }
+              }]
+            }
