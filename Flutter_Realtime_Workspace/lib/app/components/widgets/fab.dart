@@ -25,14 +25,14 @@ class SFab extends StatelessWidget {
         onPressed: onPressed,
         icon: Icon(icon),
         label: Text(label!),
-        backgroundColor: SColors.primary,
+        backgroundColor: TColors.primary,
         foregroundColor: Colors.white,
       );
     }
 
     return FloatingActionButton(
       onPressed: onPressed,
-      backgroundColor: SColors.primary,
+      backgroundColor: TColors.primary,
       foregroundColor: Colors.white,
       elevation: 4,
       child: Icon(icon),
@@ -68,7 +68,7 @@ class _SMeetingFabState extends State<SMeetingFab>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: SSizes.animNormal),
+      duration: const Duration(milliseconds: TSizes.animNormal),
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
   }
@@ -105,7 +105,7 @@ class _SMeetingFabState extends State<SMeetingFab>
                   widget.onScheduleMeeting?.call();
                 },
               ),
-              const SizedBox(height: SSizes.sm),
+              const SizedBox(height: TSizes.sm),
               _MiniAction(
                 label: 'Join',
                 icon: Icons.login,
@@ -114,7 +114,7 @@ class _SMeetingFabState extends State<SMeetingFab>
                   widget.onJoinMeeting?.call();
                 },
               ),
-              const SizedBox(height: SSizes.sm),
+              const SizedBox(height: TSizes.sm),
               _MiniAction(
                 label: 'New Meeting',
                 icon: Icons.videocam,
@@ -123,17 +123,17 @@ class _SMeetingFabState extends State<SMeetingFab>
                   widget.onNewMeeting?.call();
                 },
               ),
-              const SizedBox(height: SSizes.md),
+              const SizedBox(height: TSizes.md),
             ],
           ),
         ),
         FloatingActionButton(
           onPressed: _toggle,
-          backgroundColor: SColors.primary,
+          backgroundColor: TColors.primary,
           foregroundColor: Colors.white,
           child: AnimatedRotation(
             turns: _isOpen ? 0.125 : 0,
-            duration: const Duration(milliseconds: SSizes.animNormal),
+            duration: const Duration(milliseconds: TSizes.animNormal),
             child: const Icon(Icons.add, size: 28),
           ),
         ),
@@ -160,13 +160,13 @@ class _MiniAction extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Material(
-          color: isDark ? SColors.darkCard : SColors.lightCard,
-          borderRadius: BorderRadius.circular(SSizes.radiusSm),
+          color: isDark ? TColors.darkCard : TColors.lightCard,
+          borderRadius: BorderRadius.circular(TSizes.radiusSm),
           elevation: 2,
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: SSizes.sm,
-              vertical: SSizes.xs,
+              horizontal: TSizes.sm,
+              vertical: TSizes.xs,
             ),
             child: Text(
               label,
@@ -174,12 +174,12 @@ class _MiniAction extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: SSizes.sm),
+        const SizedBox(width: TSizes.sm),
         FloatingActionButton.small(
           heroTag: label,
           onPressed: onTap,
-          backgroundColor: isDark ? SColors.darkElevated : SColors.blue50,
-          foregroundColor: SColors.primary,
+          backgroundColor: isDark ? TColors.darkElevated : TColors.blue50,
+          foregroundColor: TColors.primary,
           elevation: 2,
           child: Icon(icon, size: 20),
         ),

@@ -8,7 +8,7 @@ class SPulsingDot extends StatefulWidget {
 
   const SPulsingDot({
     super.key,
-    this.color = SColors.error,
+    this.color = TColors.error,
     this.size = 10,
   });
 
@@ -86,7 +86,7 @@ class _STypingIndicatorState extends State<STypingIndicator>
       children: List.generate(3, (i) {
         return AnimatedBuilder(
           listenable: _ctrl,
-          builder: (_, _) {
+          builder: (_, __) {
             final delay = i * 0.2;
             final value = (_ctrl.value - delay).clamp(0.0, 1.0);
             final offset = -4 * (1 - (2 * value - 1).abs());
@@ -97,7 +97,7 @@ class _STypingIndicatorState extends State<STypingIndicator>
                 height: 6,
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
-                  color: isDark ? SColors.darkMuted : SColors.lightMuted,
+                  color: isDark ? TColors.darkMuted : TColors.lightMuted,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -133,7 +133,7 @@ class SPageSpinner extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(color: SColors.primary),
+        child: CircularProgressIndicator(color: TColors.primary),
       ),
     );
   }

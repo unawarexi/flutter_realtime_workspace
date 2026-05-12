@@ -29,7 +29,7 @@ class SAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize =>
-      Size.fromHeight(SSizes.appBarHeight + (bottom?.preferredSize.height ?? 0));
+      Size.fromHeight(TSizes.appBarHeight + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class SHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(SSizes.appBarHeight);
+  Size get preferredSize => const Size.fromHeight(TSizes.appBarHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +78,7 @@ class SHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             onTap: onAvatarTap,
             child: CircleAvatar(
               radius: 18,
-              backgroundColor: SColors.primary,
+              backgroundColor: TColors.primary,
               backgroundImage:
                   avatarUrl != null ? NetworkImage(avatarUrl!) : null,
               child: avatarUrl == null
@@ -92,7 +92,7 @@ class SHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   : null,
             ),
           ),
-          const SizedBox(width: SSizes.sm),
+          const SizedBox(width: TSizes.sm),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -101,8 +101,8 @@ class SHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark
-                      ? SColors.textDarkSecondary
-                      : SColors.textLightSecondary,
+                      ? TColors.textDarkSecondary
+                      : TColors.textLightSecondary,
                 ),
               ),
               Text(
@@ -121,7 +121,7 @@ class SHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onNotificationTap,
           icon: Icon(
             Icons.notifications_outlined,
-            color: isDark ? SColors.textDark : SColors.textLight,
+            color: isDark ? TColors.textDark : TColors.textLight,
           ),
         ),
       ],

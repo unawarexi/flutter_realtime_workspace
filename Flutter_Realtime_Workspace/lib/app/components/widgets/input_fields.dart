@@ -30,16 +30,16 @@ class _SPasswordFieldState extends State<SPasswordField> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDark ? SColors.darkBorder : SColors.lightBorder;
+    final borderColor = isDark ? TColors.darkBorder : TColors.lightBorder;
 
     return TextFormField(
       controller: widget.controller,
       obscureText: _obscure,
       validator: widget.validator,
       textInputAction: widget.textInputAction,
-      cursorColor: SColors.primary,
+      cursorColor: TColors.primary,
       style: TextStyle(
-        color: isDark ? SColors.textDark : SColors.textLight,
+        color: isDark ? TColors.textDark : TColors.textLight,
         fontSize: 15,
       ),
       decoration: InputDecoration(
@@ -47,32 +47,32 @@ class _SPasswordFieldState extends State<SPasswordField> {
         hintText: widget.hint,
         filled: true,
         fillColor: isDark
-            ? SColors.darkCard.withValues(alpha: 0.6)
-            : SColors.lightElevated.withValues(alpha: 0.5),
+            ? TColors.darkCard.withValues(alpha: 0.6)
+            : TColors.lightElevated.withValues(alpha: 0.5),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: SSizes.md,
-          vertical: SSizes.inputPadding,
+          horizontal: TSizes.md,
+          vertical: TSizes.inputPadding,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
           borderSide: BorderSide(color: borderColor, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
           borderSide: BorderSide(color: borderColor, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SSizes.radiusMd),
-          borderSide: BorderSide(color: SColors.primary.withValues(alpha: 0.5), width: 1.5),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
+          borderSide: BorderSide(color: TColors.primary.withValues(alpha: 0.5), width: 1.5),
         ),
         suffixIcon: CupertinoButton(
-          padding: const EdgeInsets.only(right: SSizes.sm),
+          padding: const EdgeInsets.only(right: TSizes.sm),
           minimumSize: Size.zero,
           onPressed: () => setState(() => _obscure = !_obscure),
           child: Icon(
             _obscure ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
             size: 20,
-            color: isDark ? SColors.darkMuted : SColors.lightMuted,
+            color: isDark ? TColors.darkMuted : TColors.lightMuted,
           ),
         ),
       ),
@@ -107,11 +107,11 @@ class SLabeledField extends StatelessWidget {
             if (isRequired)
               const Text(
                 ' *',
-                style: TextStyle(color: SColors.error),
+                style: TextStyle(color: TColors.error),
               ),
           ],
         ),
-        const SizedBox(height: SSizes.sm),
+        const SizedBox(height: TSizes.sm),
         child,
       ],
     );
@@ -141,7 +141,7 @@ class SOtpField extends StatelessWidget {
         return Container(
           width: 48,
           height: 56,
-          margin: EdgeInsets.only(right: i < length - 1 ? SSizes.sm : 0),
+          margin: EdgeInsets.only(right: i < length - 1 ? TSizes.sm : 0),
           child: TextFormField(
             controller: controllers[i],
             focusNode: focusNodes[i],
@@ -152,7 +152,7 @@ class SOtpField extends StatelessWidget {
             decoration: InputDecoration(
               counterText: '',
               filled: true,
-              fillColor: isDark ? SColors.darkCard : SColors.lightElevated,
+              fillColor: isDark ? TColors.darkCard : TColors.lightElevated,
             ),
             onChanged: (value) {
               if (value.isNotEmpty && i < length - 1) {

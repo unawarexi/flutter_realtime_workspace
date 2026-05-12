@@ -89,9 +89,9 @@ class SDateTimePicker {
       builder: (ctx) => Container(
         height: 320,
         decoration: BoxDecoration(
-          color: isDark ? SColors.darkSurface : SColors.lightSurface,
+          color: isDark ? TColors.darkSurface : TColors.lightSurface,
           borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(SSizes.radiusXl),
+            top: Radius.circular(TSizes.radiusXl),
           ),
           border: Border(
             top: BorderSide(
@@ -107,8 +107,8 @@ class SDateTimePicker {
             // Header with cancel/done
             Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: SSizes.pagePadding,
-                vertical: SSizes.sm,
+                horizontal: TSizes.pagePadding,
+                vertical: TSizes.sm,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -120,8 +120,8 @@ class SDateTimePicker {
                       'Cancel',
                       style: TextStyle(
                         color: isDark
-                            ? SColors.textDarkSecondary
-                            : SColors.textLightSecondary,
+                            ? TColors.textDarkSecondary
+                            : TColors.textLightSecondary,
                       ),
                     ),
                   ),
@@ -141,7 +141,7 @@ class SDateTimePicker {
                     child: const Text(
                       'Done',
                       style: TextStyle(
-                        color: SColors.primary,
+                        color: TColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -154,7 +154,7 @@ class SDateTimePicker {
               child: CupertinoTheme(
                 data: CupertinoThemeData(
                   brightness: isDark ? Brightness.dark : Brightness.light,
-                  primaryColor: SColors.primary,
+                  primaryColor: TColors.primary,
                 ),
                 child: CupertinoDatePicker(
                   mode: mode,
