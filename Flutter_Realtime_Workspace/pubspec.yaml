@@ -8,6 +8,7 @@ environment:
   sdk: ^3.5.2
 
 dependencies:
+  sentry_flutter: ^9.20.0
   flutter:
     sdk: flutter
 
@@ -38,6 +39,7 @@ dependencies:
   dio_smart_retry: ^7.0.1
   connectivity_plus: ^6.0.5
   http: ^1.2.0
+  flutter_callkit_incoming: ^3.0.0
 
   # --- NAVIGATION ---
   go_router: ^16.1.0
@@ -98,6 +100,7 @@ dependencies:
 
 
 dev_dependencies:
+  sentry_dart_plugin: ^3.3.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
@@ -159,3 +162,9 @@ flutter:
           weight: 800
 
 
+
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  project: flutter-workspace
+  org: unxcorp
