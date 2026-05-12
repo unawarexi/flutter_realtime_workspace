@@ -1,0 +1,19 @@
+# android/key.properties.example
+# ──────────────────────────────────────────────────────────────────────────────
+# Copy to android/key.properties and fill in real values.
+# NEVER commit key.properties — it is in .gitignore.
+#
+# To generate a keystore:
+#   keytool -genkeypair -v \
+#     -keystore android/teamspot.keystore \
+#     -storetype PKCS12 \
+#     -keyalg RSA -keysize 2048 \
+#     -validity 10000 \
+#     -alias teamspot \
+#     -dname "CN=Teamspot, OU=Engineering, O=Teamspot Inc, L=City, S=State, C=US"
+# ──────────────────────────────────────────────────────────────────────────────
+storePassword=REPLACE_ME
+keyPassword=REPLACE_ME
+keyAlias=teamspot
+# Absolute path or relative to android/ directory
+storeFile=teamspot.keystore
