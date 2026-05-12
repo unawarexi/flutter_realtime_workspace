@@ -1,1012 +1,704 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
-import 'package:flutter_realtime_workspace/core/utils/file_picker.dart';
-import 'package:flutter_realtime_workspace/store/user_provider.dart';
-import 'package:flutter_realtime_workspace/app/components/common/toast_alerts.dart';
-import 'package:flutter_realtime_workspace/shared/components/custom_bottom_navigiation.dart';
-import 'package:flutter_realtime_workspace/shared/styles/colors.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/app/components/shapes/bg_patterns.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/avatar_picker.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/s_dropdown.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/user_info_page_card.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/usecases/user_info_usecase.dart';
+import 'package:flutter_realtime_workspace/core/animations/screen_animations.dart';
+import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/icons.dart';
+import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
+import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
 
 enum UserInfoMode { create, join }
 
 class UserInformationScreen extends ConsumerStatefulWidget {
-  final UserInfoMode mode;
   const UserInformationScreen({super.key, required this.mode});
+  final UserInfoMode mode;
 
   @override
   ConsumerState<UserInformationScreen> createState() =>
       _UserInformationScreenState();
 }
 
-class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
+class _UserInformationScreenState extends ConsumerState<UserInformationScreen>
+    with SingleTickerProviderStateMixin {
+  // Animations
+  late final SlideUpFadeAnim _enterAnim;
+
+  // Form / paging
   final _formKey = GlobalKey<FormState>();
-  final PageController _pageController = PageController();
-
-  // Section 1: Basic Profile Information
-  final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _displayNameController = TextEditingController();
-  final TextEditingController _profilePictureController =
-      TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneNumberController = TextEditingController();
-
-  // Section 2: Workspace Role & Preferences
-  final TextEditingController _roleTitleController = TextEditingController();
-  final TextEditingController _departmentController = TextEditingController();
-  String? _workType; // <-- ensure this is String?
-  final TextEditingController _timezoneController = TextEditingController();
-  final TextEditingController _workingHoursStartController =
-      TextEditingController();
-  final TextEditingController _workingHoursEndController =
-      TextEditingController();
-
-  // Section 3: Company or Organization
-  final TextEditingController _companyNameController = TextEditingController();
-  final TextEditingController _companyWebsiteController =
-      TextEditingController();
-  final TextEditingController _industryController = TextEditingController();
-  String? _teamSize; // <-- ensure this is String?
-  final TextEditingController _officeLocationController =
-      TextEditingController();
-
-  // Section 4: Collaboration Details
-  final TextEditingController _inviteCodeController = TextEditingController();
-  final TextEditingController _teamProjectNameController =
-      TextEditingController();
-  String? _permissionsLevel; // <-- ensure this is String?
-
-  // Section 5: Optional Onboarding Enhancements
-  final TextEditingController _interestsSkillsController =
-      TextEditingController();
-  final TextEditingController _bioController = TextEditingController();
-  final TextEditingController _linkedInController = TextEditingController();
-  final TextEditingController _githubController = TextEditingController();
-
+  final _pageController = PageController();
   int _currentPage = 0;
-  File? _pickedImageFile;
-  bool _isUploadingImage = false;
+  bool _isLoading = false;
 
-  void _nextPage() {
-    // If on section 4 (index 3) and joining, validate invite code before moving to section 5
-    if (_currentPage == 3 && widget.mode == UserInfoMode.join) {
-      if (_inviteCodeController.text.trim().isEmpty) {
-        context.showToast(
-          "Invite code is required to join an organisation.",
-          type: ToastType.error,
-        );
-        // Optionally trigger validator for the field
-        _formKey.currentState?.validate();
-        return;
-      }
+  // Section 1: Basic Profile
+  final _fullName = TextEditingController();
+  final _displayName = TextEditingController();
+  final _profilePictureUrl = TextEditingController();
+  final _email = TextEditingController();
+  final _phone = TextEditingController();
+  File? _pickedImage;
+
+  // Section 2: Workspace Role
+  final _roleTitle = TextEditingController();
+  final _department = TextEditingController();
+  String? _workType;
+  final _timezone = TextEditingController();
+  final _workHoursStart = TextEditingController();
+  final _workHoursEnd = TextEditingController();
+
+  // Section 3: Company
+  final _companyName = TextEditingController();
+  final _companyWebsite = TextEditingController();
+  final _industry = TextEditingController();
+  String? _teamSize;
+  final _officeLocation = TextEditingController();
+
+  // Section 4: Collaboration
+  final _inviteCode = TextEditingController();
+  final _teamProject = TextEditingController();
+  String? _permissionsLevel;
+
+  // Section 5: About You
+  final _interests = TextEditingController();
+  final _bio = TextEditingController();
+  final _linkedIn = TextEditingController();
+  final _github = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _enterAnim = SlideUpFadeAnim(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+      beginOffset: const Offset(0, 0.08),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _enterAnim.dispose();
+    _pageController.dispose();
+    for (final c in _allControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  List<TextEditingController> get _allControllers => [
+        _fullName, _displayName, _profilePictureUrl, _email, _phone,
+        _roleTitle, _department, _timezone, _workHoursStart, _workHoursEnd,
+        _companyName, _companyWebsite, _industry, _officeLocation,
+        _inviteCode, _teamProject,
+        _interests, _bio, _linkedIn, _github,
+      ];
+
+  void _next() {
+    if (_currentPage == 3 &&
+        widget.mode == UserInfoMode.join &&
+        _inviteCode.text.trim().isEmpty) {
+      _formKey.currentState?.validate();
+      return;
     }
     if (_currentPage < 4) {
       setState(() => _currentPage++);
       _pageController.nextPage(
-          duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
-  void _previousPage() {
+  void _prev() {
     if (_currentPage > 0) {
       setState(() => _currentPage--);
       _pageController.previousPage(
-          duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
-    }
-  }
-
-  /// Build a clean user info payload for backend (no empty fields, proper nesting)
-  Map<String, dynamic> _buildUserInfoPayload() {
-    final Map<String, dynamic> data = {};
-
-    // Section 1: Basic Profile
-    if (_fullNameController.text.trim().isNotEmpty)
-      data['fullName'] = _fullNameController.text.trim();
-    if (_displayNameController.text.trim().isNotEmpty)
-      data['displayName'] = _displayNameController.text.trim();
-    if (_profilePictureController.text.trim().isNotEmpty)
-      data['profilePicture'] = _profilePictureController.text.trim();
-    if (_emailController.text.trim().isNotEmpty)
-      data['email'] = _emailController.text.trim();
-    if (_phoneNumberController.text.trim().isNotEmpty)
-      data['phoneNumber'] = _phoneNumberController.text.trim();
-
-    // Section 2: Workspace Role & Preferences
-    if (_roleTitleController.text.trim().isNotEmpty)
-      data['roleTitle'] = _roleTitleController.text.trim();
-    if (_departmentController.text.trim().isNotEmpty)
-      data['department'] = _departmentController.text.trim();
-    if (_workType != null && _workType!.isNotEmpty)
-      data['workType'] = _workType;
-    if (_timezoneController.text.trim().isNotEmpty)
-      data['timezone'] = _timezoneController.text.trim();
-    if (_workingHoursStartController.text.trim().isNotEmpty ||
-        _workingHoursEndController.text.trim().isNotEmpty) {
-      final start = _workingHoursStartController.text.trim();
-      final end = _workingHoursEndController.text.trim();
-      if (start.isNotEmpty || end.isNotEmpty) {
-        data['workingHours'] = {};
-        if (start.isNotEmpty) data['workingHours']['start'] = start;
-        if (end.isNotEmpty) data['workingHours']['end'] = end;
-      }
-    }
-
-    // Section 3: Company/Organization
-    if (_companyNameController.text.trim().isNotEmpty)
-      data['companyName'] = _companyNameController.text.trim();
-    if (_companyWebsiteController.text.trim().isNotEmpty)
-      data['companyWebsite'] = _companyWebsiteController.text.trim();
-    if (_industryController.text.trim().isNotEmpty)
-      data['industry'] = _industryController.text.trim();
-    if (_teamSize != null && _teamSize!.isNotEmpty)
-      data['teamSize'] = _teamSize;
-    if (_officeLocationController.text.trim().isNotEmpty)
-      data['officeLocation'] = _officeLocationController.text.trim();
-
-    // Section 4: Collaboration
-    if (_inviteCodeController.text.trim().isNotEmpty)
-      data['inviteCode'] = _inviteCodeController.text.trim();
-    if (_teamProjectNameController.text.trim().isNotEmpty)
-      data['teamProjectName'] = _teamProjectNameController.text.trim();
-    if (_permissionsLevel != null && _permissionsLevel!.isNotEmpty)
-      data['permissionsLevel'] = _permissionsLevel;
-
-    // Section 5: Optional Onboarding
-    // Ensure interestsSkills is always a List<String> and not a string or repeated keys
-    final interestsSkillsList = _interestsSkillsController.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    if (interestsSkillsList.isNotEmpty) {
-      data['interestsSkills'] = interestsSkillsList;
-    }
-    if (_bioController.text.trim().isNotEmpty)
-      data['bio'] = _bioController.text.trim();
-
-    // Social links as nested object
-    final linkedIn = _linkedInController.text.trim();
-    final github = _githubController.text.trim();
-    if (linkedIn.isNotEmpty || github.isNotEmpty) {
-      data['socialLinks'] = {};
-      if (linkedIn.isNotEmpty) data['socialLinks']['linkedIn'] = linkedIn;
-      if (github.isNotEmpty) data['socialLinks']['github'] = github;
-    }
-
-    return data;
-  }
-
-//--------------------------- function to handle continue button press ---------------------------
-  Future<void> _onContinuePressed() async {
-    // If joining, validate invite code is not empty
-    if (widget.mode == UserInfoMode.join &&
-        (_inviteCodeController.text.trim().isEmpty)) {
-      context.showToast(
-        "Invite code is required to join an organisation.",
-        type: ToastType.error,
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOut,
       );
-      return;
     }
+  }
 
+  Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    // Build clean payload
-    final userInfoData = _buildUserInfoPayload();
-
-    print('[UserInformation] Sending data: $userInfoData');
-
-    // Use the picked image file if available
-    String? imagePath = _pickedImageFile?.path;
-
-    await ref
-        .read(userProvider.notifier)
-        .saveUserInfo(userInfoData, imagePath: imagePath);
-
-    final state = ref.read(userProvider);
-    if (state.error != null) {
-      context.showToast(
-        "Failed to save: ${state.error}",
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    // Optionally update controllers with returned data for consistency
-    if (state.userInfo != null) {
-      _profilePictureController.text = state.userInfo!['profilePicture'] ?? '';
-      // ...update other controllers if needed...
-    }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const BottomNavigationBarWidget()),
+    setState(() => _isLoading = true);
+    final payload = UserInfoUseCase.buildPayload(
+      fullName: _fullName.text,
+      displayName: _displayName.text,
+      profilePictureUrl: _profilePictureUrl.text,
+      email: _email.text,
+      phone: _phone.text,
+      roleTitle: _roleTitle.text,
+      department: _department.text,
+      workType: _workType,
+      timezone: _timezone.text,
+      workingHoursStart: _workHoursStart.text,
+      workingHoursEnd: _workHoursEnd.text,
+      companyName: _companyName.text,
+      companyWebsite: _companyWebsite.text,
+      industry: _industry.text,
+      teamSize: _teamSize,
+      officeLocation: _officeLocation.text,
+      inviteCode: _inviteCode.text,
+      teamProjectName: _teamProject.text,
+      permissionsLevel: _permissionsLevel,
+      interestsSkills: _interests.text,
+      bio: _bio.text,
+      linkedIn: _linkedIn.text,
+      github: _github.text,
     );
-  }
-
-  Future<void> _pickImage() async {
-    final pickedFile = await pickImageFromGallery(imageQuality: 80);
-    if (pickedFile != null) {
-      setState(() {
-        _pickedImageFile = pickedFile;
-      });
-      // await _uploadProfileImage();
-    }
+    await UserInfoUseCase.submit(
+      context: context,
+      ref: ref,
+      payload: payload,
+      imagePath: _pickedImage?.path,
+    );
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = THelperFunctions.isDarkMode(context);
-    final userInfoState = ref.watch(userProvider);
-
-    // Banner message and gradient based on mode and theme
-    final bool isJoin = widget.mode == UserInfoMode.join;
-    final String bannerText = isJoin
-        ? "🔑 Enter your invite code above. Your company name will be filled in automatically!"
-        : "🚀 No invite code needed. You're starting a new company. Once created, share your auto-generated invite code with employees to let them join!";
-    final Gradient bannerGradient = isDarkMode
-        ? const LinearGradient(
-            colors: [
-              TColors.blue900,
-              TColors.buttonPrimary,
-              TColors.cardColorDark
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          )
-        : const LinearGradient(
-            colors: [
-              TColors.backgroundDark,
-              TColors.accentBlue,
-              TColors.darkCard
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          );
+    final isDark = THelperFunctions.isDarkMode(context);
+    final isJoin = widget.mode == UserInfoMode.join;
+    final hPad = TResponsive.pagePadding(context);
 
     return Stack(
       children: [
         Scaffold(
-          backgroundColor:
-              isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,
-          resizeToAvoidBottomInset:
-              true, // Allow scaffold to resize for keyboard
-          body: SafeArea(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 18),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.arrow_back,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : TColors.backgroundDark),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor:
-                              isDarkMode ? TColors.cardColorDark : Colors.white,
-                          child: Icon(Icons.person,
-                              color: isDarkMode
-                                  ? TColors.lightBlue
-                                  : TColors.buttonPrimaryLight,
-                              size: 28),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          "Profile Setup",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: isDarkMode
-                                ? Colors.white
-                                : TColors.backgroundDark,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          "${_currentPage + 1}/5",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: isDarkMode
-                                ? TColors.textSecondaryDark
-                                : TColors.textTertiaryLight,
-                          ),
-                        ),
-                      ],
-                    ),
+          backgroundColor: isDark ? TColors.darkBg : TColors.lightBg,
+          resizeToAvoidBottomInset: true,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: TOrbFieldPainter(
+                    colors: [
+                      TColors.primary.withValues(alpha: 0.55),
+                      TColors.blue700.withValues(alpha: 0.35),
+                    ],
+                    orbCount: 3,
+                    isDark: isDark,
+                    seed: 7,
                   ),
-                  // Wrap the PageView in Expanded and SingleChildScrollView to avoid overflow
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom,
-                      ),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height *
-                            0.75, // Ensure enough height for PageView
-                        child: PageView(
-                          controller: _pageController,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            // Section 1: Basic Profile Information
-                            _modernInputCard(
-                              isDarkMode: isDarkMode,
-                              title: "Basic Profile",
-                              subtitle: "Let's start with your basic info.",
-                              child: Column(
-                                children: [
-                                  _modernTextField(
-                                    controller: _fullNameController,
-                                    label: "Full Name",
-                                    isDarkMode: isDarkMode,
-                                    validator: (v) => v == null || v.isEmpty
-                                        ? "Required"
-                                        : null,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _displayNameController,
-                                    label: "Display Name",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  // Profile Picture Picker
-                                  Row(
-                                    children: [
-                                      _pickedImageFile != null
-                                          ? CircleAvatar(
-                                              radius: 28,
-                                              backgroundImage:
-                                                  FileImage(_pickedImageFile!),
-                                            )
-                                          : (_profilePictureController
-                                                  .text.isNotEmpty
-                                              ? CircleAvatar(
-                                                  radius: 28,
-                                                  backgroundImage: NetworkImage(
-                                                      _profilePictureController
-                                                          .text),
-                                                )
-                                              : CircleAvatar(
-                                                  radius: 28,
-                                                  backgroundColor:
-                                                      Colors.grey[300],
-                                                  child: const Icon(
-                                                      Icons.person,
-                                                      color: Colors.white,
-                                                      size: 28),
-                                                )),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: ElevatedButton.icon(
-                                          onPressed: _isUploadingImage
-                                              ? null
-                                              : () async {
-                                                  if (_pickedImageFile !=
-                                                      null) {
-                                                    // Show bottom modal for change/remove
-                                                    showModalBottomSheet(
-                                                      context: context,
-                                                      shape:
-                                                          const RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.vertical(
-                                                                top: Radius
-                                                                    .circular(
-                                                                        18)),
-                                                      ),
-                                                      builder: (context) {
-                                                        return SafeArea(
-                                                          child: Column(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              ListTile(
-                                                                leading: const Icon(
-                                                                    Icons
-                                                                        .photo_library),
-                                                                title: const Text(
-                                                                    "Select New Photo"),
-                                                                onTap:
-                                                                    () async {
-                                                                  Navigator.pop(
-                                                                      context);
-                                                                  await _pickImage();
-                                                                },
-                                                              ),
-                                                              ListTile(
-                                                                leading: const Icon(
-                                                                    Icons
-                                                                        .delete_outline,
-                                                                    color: Colors
-                                                                        .red),
-                                                                title: const Text(
-                                                                    "Remove Photo",
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .red)),
-                                                                onTap: () {
-                                                                  setState(() {
-                                                                    _pickedImageFile =
-                                                                        null;
-                                                                    _profilePictureController
-                                                                        .text = '';
-                                                                  });
-                                                                  Navigator.pop(
-                                                                      context);
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        );
-                                                      },
-                                                    );
-                                                  } else {
-                                                    await _pickImage();
-                                                  }
-                                                },
-                                          icon: const Icon(Icons.upload),
-                                          label: Text(
-                                            _isUploadingImage
-                                                ? "Uploading..."
-                                                : (_pickedImageFile != null
-                                                    ? "Change Photo"
-                                                    : "Select Photo"),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: isDarkMode
-                                                ? TColors.buttonPrimary
-                                                : TColors.buttonPrimaryLight,
-                                            foregroundColor: Colors.white,
-                                            elevation: 0,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 12),
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _profilePictureController,
-                                    label: "Profile Picture URL (optional)",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _emailController,
-                                    label: "Email",
-                                    isDarkMode: isDarkMode,
-                                    validator: (v) => v == null || v.isEmpty
-                                        ? "Required"
-                                        : null,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _phoneNumberController,
-                                    label: "Phone Number",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Section 2: Workspace Role & Preferences
-                            _modernInputCard(
-                              isDarkMode: isDarkMode,
-                              title: "Workspace Role",
-                              subtitle:
-                                  "Your role and preferences in the workspace.",
-                              child: Column(
-                                children: [
-                                  _modernTextField(
-                                    controller: _roleTitleController,
-                                    label:
-                                        "Role Title (e.g. Designer, Developer)",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _departmentController,
-                                    label: "Department",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernDropdown(
-                                    label: "Work Type",
-                                    value: _workType,
-                                    items: const [
-                                      "Full-time",
-                                      "Part-time",
-                                      "Freelancer",
-                                      "Intern"
-                                    ],
-                                    isDarkMode: isDarkMode,
-                                    onChanged: (val) =>
-                                        setState(() => _workType = val),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _timezoneController,
-                                    label: "Timezone",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _modernTextField(
-                                          controller:
-                                              _workingHoursStartController,
-                                          label: "Working Hours Start",
-                                          isDarkMode: isDarkMode,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: _modernTextField(
-                                          controller:
-                                              _workingHoursEndController,
-                                          label: "End",
-                                          isDarkMode: isDarkMode,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Section 3: Company or Organization
-                            _modernInputCard(
-                              isDarkMode: isDarkMode,
-                              title: "Company/Organization",
-                              subtitle: "Tell us about your company.",
-                              child: Column(
-                                children: [
-                                  _modernTextField(
-                                    controller: _companyNameController,
-                                    label: "Company Name",
-                                    isDarkMode: isDarkMode,
-                                    enabled: widget.mode != UserInfoMode.join,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _companyWebsiteController,
-                                    label: "Company Website",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _industryController,
-                                    label: "Industry",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernDropdown(
-                                    label: "Team Size",
-                                    value: _teamSize,
-                                    items: const [
-                                      "1-10",
-                                      "11-50",
-                                      "51-100",
-                                      "100+"
-                                    ],
-                                    isDarkMode: isDarkMode,
-                                    onChanged: (val) =>
-                                        setState(() => _teamSize = val),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _officeLocationController,
-                                    label: "Office Location",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Section 4: Collaboration Details
-                            _modernInputCard(
-                              isDarkMode: isDarkMode,
-                              title: "Collaboration",
-                              subtitle: "Team and permissions.",
-                              child: Column(
-                                children: [
-                                  _modernTextField(
-                                    controller: _inviteCodeController,
-                                    label: "Invite Code",
-                                    isDarkMode: isDarkMode,
-                                    enabled: widget.mode == UserInfoMode.join,
-                                    validator: widget.mode == UserInfoMode.join
-                                        ? (v) => (v == null || v.trim().isEmpty)
-                                            ? "Invite code is required"
-                                            : null
-                                        : null,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _teamProjectNameController,
-                                    label: "Team/Project Name",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  // Permissions Level Dropdown
-                                  _modernDropdown(
-                                    label: "Permissions Level",
-                                    value: _permissionsLevel,
-                                    items: const [
-                                      "admin",
-                                      "manager",
-                                      "employee",
-                                      "member"
-                                    ],
-                                    isDarkMode: isDarkMode,
-                                    onChanged: (val) =>
-                                        setState(() => _permissionsLevel = val),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Section 5: Optional Onboarding Enhancements
-                            _modernInputCard(
-                              isDarkMode: isDarkMode,
-                              title: "About You",
-                              subtitle: "Enhance your profile (optional).",
-                              child: Column(
-                                children: [
-                                  _modernTextField(
-                                    controller: _interestsSkillsController,
-                                    label: "Interests/Skills (comma separated)",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _bioController,
-                                    label: "Short Bio",
-                                    isDarkMode: isDarkMode,
-                                    maxLines: 2,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _linkedInController,
-                                    label: "LinkedIn URL",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _modernTextField(
-                                    controller: _githubController,
-                                    label: "GitHub URL",
-                                    isDarkMode: isDarkMode,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Removed Technical Metadata Section
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Navigation Buttons
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 18),
-                    child: Row(
-                      children: [
-                        if (_currentPage > 0)
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _previousPage,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: isDarkMode
-                                    ? TColors.buttonPrimary
-                                    : TColors.buttonPrimaryLight,
-                                side: BorderSide(
-                                  color: isDarkMode
-                                      ? TColors.buttonPrimary
-                                      : TColors.buttonPrimaryLight,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                              ),
-                              child: const Text("Previous",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w700)),
-                            ),
-                          ),
-                        if (_currentPage > 0) const SizedBox(width: 12),
-                        Expanded(
-                          child: _currentPage < 4
-                              ? ElevatedButton(
-                                  onPressed: _nextPage,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isDarkMode
-                                        ? TColors.buttonPrimary
-                                        : TColors.buttonPrimaryLight,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                  ),
-                                  child: const Text("Next",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w700)),
-                                )
-                              : ElevatedButton(
-                                  onPressed: userInfoState.isLoading
-                                      ? null
-                                      : _onContinuePressed,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isDarkMode
-                                        ? TColors.buttonPrimary
-                                        : TColors.buttonPrimaryLight,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                  ),
-                                  child: userInfoState.isLoading
-                                      ? const SizedBox(
-                                          height: 22,
-                                          width: 22,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white),
-                                        )
-                                      : const Text("Continue",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.w700)),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Banner at the bottom
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: bannerGradient,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDarkMode
-                                ? Colors.black.withOpacity(0.08)
-                                : Colors.grey.withOpacity(0.08),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 14),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Icon(
-                          //   isJoin ? Icons.info_outline : Icons.rocket_launch_outlined,
-                          //   color: isDarkMode ? Colors.white : Colors.white,
-                          //   size: 14,
-                          // ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              bannerText,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDarkMode ? Colors.white : Colors.white,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.1,
-                              ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              SafeArea(
+                child: FadeTransition(
+                  opacity: _enterAnim.fade,
+                  child: SlideTransition(
+                    position: _enterAnim.slide,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildHeader(isDark, hPad),
+                          _buildStepDots(isDark),
+                          Expanded(
+                            child: PageView(
+                              controller: _pageController,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: [
+                                _pageBasicProfile(isDark),
+                                _pageWorkspaceRole(isDark),
+                                _pageCompany(isDark, isJoin),
+                                _pageCollaboration(isDark),
+                                _pageAboutYou(isDark),
+                              ],
+                            ),
+                          ),
+                          _buildNavBar(isDark, hPad),
+                          _buildModeBanner(isDark, isJoin, hPad),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        if (userInfoState.isLoading)
+        if (_isLoading)
           Container(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.35),
             child: const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(color: TColors.primary),
             ),
           ),
       ],
     );
   }
 
-  Widget _modernInputCard({
-    required Widget child,
-    required bool isDarkMode,
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _buildHeader(bool isDark, double hPad) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.symmetric(horizontal: hPad, vertical: TSizes.sm),
+      child: Row(
         children: [
-          Text(title,
+          _IconBtn(
+            icon: TIcons.back,
+            isDark: isDark,
+            onTap: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: TSizes.sm),
+          TWidgetAnimations.scaleIn(
+            duration: const Duration(milliseconds: 340),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor:
+                  isDark ? TColors.darkCard : TColors.lightSurface,
+              child: Icon(TIcons.profile, color: TColors.primary, size: 22),
+            ),
+          ),
+          const SizedBox(width: TSizes.sm),
+          TWidgetAnimations.fadeIn(
+            duration: const Duration(milliseconds: 360),
+            child: Text(
+              'Profile Setup',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: isDarkMode ? Colors.white : TColors.backgroundDark,
-              )),
-          const SizedBox(height: 4),
-          Text(subtitle,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDarkMode
-                    ? TColors.textSecondaryDark
-                    : TColors.textTertiaryLight,
-                fontWeight: FontWeight.w500,
-              )),
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDarkMode ? TColors.cardColorDark : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isDarkMode ? TColors.borderDark : TColors.borderLight,
-                width: 1,
+                letterSpacing: -0.3,
+                color: isDark ? TColors.textDark : TColors.textLight,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isDarkMode ? Colors.black : Colors.grey)
-                      .withOpacity(0.04),
-                  blurRadius: 8,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
-            child: child,
+          ),
+          const Spacer(),
+          TWidgetAnimations.fadeIn(
+            duration: const Duration(milliseconds: 360),
+            child: _StepBadge(
+              current: _currentPage + 1,
+              total: 5,
+              isDark: isDark,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _modernTextField({
-    required TextEditingController controller,
-    required String label,
-    required bool isDarkMode,
-    String? Function(String?)? validator,
-    int maxLines = 1,
-    bool enabled = true, // <-- add this line
-  }) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      maxLines: maxLines,
-      enabled: enabled, // <-- add this line
-      style: TextStyle(
-        color: isDarkMode ? Colors.white : TColors.backgroundDark,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isDarkMode
-              ? TColors.textTertiaryLight
-              : TColors.textSecondaryDark,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-        filled: true,
-        fillColor:
-            isDarkMode ? TColors.backgroundDarkAlt : const Color(0xFFF8FAFC),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: isDarkMode ? TColors.borderDark : TColors.borderLight,
-            width: 1,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: isDarkMode ? TColors.borderDark : TColors.borderLight,
-            width: 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color:
-                isDarkMode ? TColors.buttonPrimary : TColors.buttonPrimaryLight,
-            width: 1.3,
-          ),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+  Widget _buildStepDots(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: TSizes.sm),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(5, (i) {
+          final active = i == _currentPage;
+          final done = i < _currentPage;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeInOut,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            width: active ? 20 : 6,
+            height: 6,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3),
+              color: (done || active)
+                  ? TColors.primary
+                  : (isDark ? TColors.darkBorder : TColors.lightBorder),
+            ),
+          );
+        }),
       ),
     );
   }
 
-  Widget _modernDropdown({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required bool isDarkMode,
-    required void Function(String?) onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isDarkMode
-              ? TColors.textTertiaryLight
-              : TColors.textSecondaryDark,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-        filled: true,
-        fillColor:
-            isDarkMode ? TColors.backgroundDarkAlt : const Color(0xFFF8FAFC),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: isDarkMode ? TColors.borderDark : TColors.borderLight,
-            width: 1,
+  Widget _buildNavBar(bool isDark, double hPad) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(hPad, TSizes.sm, hPad, TSizes.sm),
+      child: Row(
+        children: [
+          if (_currentPage > 0) ...[
+            Expanded(
+              child: TButton(
+                text: 'Previous',
+                variant: SButtonVariant.outline,
+                onPressed: _prev,
+              ),
+            ),
+            const SizedBox(width: TSizes.sm),
+          ],
+          Expanded(
+            child: _currentPage < 4
+                ? TButton(text: 'Next', onPressed: _next)
+                : TButton(
+                    text: 'Finish Setup',
+                    isLoading: _isLoading,
+                    onPressed: _isLoading ? null : _submit,
+                  ),
           ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: isDarkMode ? TColors.borderDark : TColors.borderLight,
-            width: 1,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeBanner(bool isDark, bool isJoin, double hPad) {
+    final text = isJoin
+        ? 'Enter your invite code. Your company info will be filled automatically.'
+        : 'You are creating a new workspace. Share your invite code with teammates.';
+    return TWidgetAnimations.fadeIn(
+      delay: const Duration(milliseconds: 200),
+      child: Container(
+        margin: EdgeInsets.fromLTRB(hPad, 0, hPad, TSizes.md),
+        padding: const EdgeInsets.symmetric(
+            vertical: TSizes.sm, horizontal: TSizes.md),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [TColors.blue900, TColors.primary, TColors.blue700],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
+          boxShadow: [
+            BoxShadow(
+              color: TColors.primary.withValues(alpha: 0.18),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        child: Row(
+          children: [
+            Icon(
+              isJoin
+                  ? Icons.group_add_outlined
+                  : Icons.rocket_launch_outlined,
+              color: Colors.white.withValues(alpha: 0.9),
+              size: TSizes.iconSm + 4,
+            ),
+            const SizedBox(width: TSizes.sm),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  height: 1.4,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
-      dropdownColor: isDarkMode ? TColors.backgroundDarkAlt : Colors.white,
-      style: TextStyle(
-        color: isDarkMode ? Colors.white : TColors.backgroundDark,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
+    );
+  }
+
+  Widget _pageBasicProfile(bool isDark) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: UserInfoPageCard(
+        title: 'Basic Profile',
+        subtitle: "Let's start with who you are.",
+        isDarkMode: isDark,
+        child: Column(
+          children: [
+            AvatarPicker(
+              pickedFile: _pickedImage,
+              networkUrl: _profilePictureUrl.text,
+              isDarkMode: isDark,
+              onImagePicked: (f) => setState(() => _pickedImage = f),
+            ),
+            const SizedBox(height: TSizes.md),
+            TInput(
+              controller: _fullName,
+              label: 'Full Name',
+              hint: 'e.g. Alex Johnson',
+              prefixIcon: TIcons.profile,
+              validator: (v) => UserInfoUseCase.requiredField(v, 'Full name'),
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _displayName,
+              label: 'Display Name',
+              hint: 'How others will see you',
+              prefixIcon: TIcons.profile,
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _email,
+              label: 'Email',
+              hint: 'work@company.com',
+              prefixIcon: TIcons.email,
+              keyboardType: TextInputType.emailAddress,
+              validator: (v) => UserInfoUseCase.requiredField(v, 'Email'),
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _phone,
+              label: 'Phone Number',
+              hint: 'Optional',
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
       ),
-      items: items
-          .map((e) => DropdownMenuItem<String>(
-                value: e,
-                child: Text(e),
-              ))
-          .toList(),
-      onChanged: (val) => onChanged(val), // <-- always pass string value
+    );
+  }
+
+  Widget _pageWorkspaceRole(bool isDark) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: UserInfoPageCard(
+        title: 'Workspace Role',
+        subtitle: 'Your role and work preferences.',
+        isDarkMode: isDark,
+        animDelay: const Duration(milliseconds: 40),
+        child: Column(
+          children: [
+            TInput(
+              controller: _roleTitle,
+              label: 'Role Title',
+              hint: 'e.g. Senior Designer',
+              prefixIcon: TIcons.invite,
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _department,
+              label: 'Department',
+              hint: 'e.g. Product',
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            SDropdown(
+              label: 'Work Type',
+              value: _workType,
+              items: const ['Full-time', 'Part-time', 'Freelancer', 'Intern'],
+              isDarkMode: isDark,
+              onChanged: (v) => setState(() => _workType = v),
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _timezone,
+              label: 'Timezone',
+              hint: 'e.g. UTC+1',
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            Row(
+              children: [
+                Expanded(
+                  child: TInput(
+                    controller: _workHoursStart,
+                    label: 'Hours Start',
+                    hint: '09:00',
+                  ),
+                ),
+                const SizedBox(width: TSizes.sm),
+                Expanded(
+                  child: TInput(
+                    controller: _workHoursEnd,
+                    label: 'Hours End',
+                    hint: '17:00',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pageCompany(bool isDark, bool isJoin) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: UserInfoPageCard(
+        title: 'Company',
+        subtitle: 'Your organisation details.',
+        isDarkMode: isDark,
+        animDelay: const Duration(milliseconds: 40),
+        child: Column(
+          children: [
+            TInput(
+              controller: _companyName,
+              label: 'Company Name',
+              hint: isJoin ? 'Auto-filled after joining' : 'Your company name',
+              enabled: !isJoin,
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _companyWebsite,
+              label: 'Website',
+              hint: 'https://company.com',
+              keyboardType: TextInputType.url,
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _industry,
+              label: 'Industry',
+              hint: 'e.g. SaaS, Fintech',
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            SDropdown(
+              label: 'Team Size',
+              value: _teamSize,
+              items: const ['1-10', '11-50', '51-100', '100+'],
+              isDarkMode: isDark,
+              onChanged: (v) => setState(() => _teamSize = v),
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _officeLocation,
+              label: 'Office Location',
+              hint: 'City, Country',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pageCollaboration(bool isDark) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: UserInfoPageCard(
+        title: 'Collaboration',
+        subtitle: 'Team access and permissions.',
+        isDarkMode: isDark,
+        animDelay: const Duration(milliseconds: 40),
+        child: Column(
+          children: [
+            if (widget.mode == UserInfoMode.join) ...[
+              TInput(
+                controller: _inviteCode,
+                label: 'Invite Code',
+                hint: 'Enter your team invite code',
+                prefixIcon: TIcons.invite,
+                validator: UserInfoUseCase.validateInviteCode,
+              ),
+              const SizedBox(height: TSizes.sm + 2),
+            ],
+            TInput(
+              controller: _teamProject,
+              label: 'Team / Project Name',
+              hint: 'e.g. Core Platform Team',
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            SDropdown(
+              label: 'Permissions Level',
+              value: _permissionsLevel,
+              items: const ['admin', 'manager', 'employee', 'member'],
+              isDarkMode: isDark,
+              onChanged: (v) => setState(() => _permissionsLevel = v),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pageAboutYou(bool isDark) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: UserInfoPageCard(
+        title: 'About You',
+        subtitle: 'A little extra detail, all optional.',
+        isDarkMode: isDark,
+        animDelay: const Duration(milliseconds: 40),
+        child: Column(
+          children: [
+            TInput(
+              controller: _interests,
+              label: 'Skills and Interests',
+              hint: 'Design, Figma, Swift, comma-separated',
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _bio,
+              label: 'Short Bio',
+              hint: 'A sentence about yourself',
+              maxLines: 3,
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _linkedIn,
+              label: 'LinkedIn',
+              hint: 'https://linkedin.com/in/you',
+              keyboardType: TextInputType.url,
+            ),
+            const SizedBox(height: TSizes.sm + 2),
+            TInput(
+              controller: _github,
+              label: 'GitHub',
+              hint: 'https://github.com/you',
+              keyboardType: TextInputType.url,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
+class _IconBtn extends StatelessWidget {
+  const _IconBtn({
+    required this.icon,
+    required this.isDark,
+    required this.onTap,
+  });
+  final IconData icon;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(TSizes.sm),
+        decoration: BoxDecoration(
+          color: isDark ? TColors.darkCard : TColors.lightSurface,
+          borderRadius: BorderRadius.circular(TSizes.radiusMd),
+          border: Border.all(
+            color: isDark ? TColors.darkBorder : TColors.lightBorder,
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: TSizes.iconSm + 2,
+          color: isDark ? TColors.textDark : TColors.textLight,
+        ),
+      ),
+    );
+  }
+}
+
+class _StepBadge extends StatelessWidget {
+  const _StepBadge({
+    required this.current,
+    required this.total,
+    required this.isDark,
+  });
+  final int current;
+  final int total;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: TSizes.sm + 2, vertical: 4),
+      decoration: BoxDecoration(
+        color: TColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(TSizes.radiusFull),
+        border: Border.all(color: TColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        '$current / $total',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: TColors.primary,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}

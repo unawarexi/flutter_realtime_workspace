@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/core/utils/formatters.dart';
-import 'package:flutter_realtime_workspace/shared/styles/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 
 class DateTimeTimezonePicker extends StatelessWidget {
   final DateTime selectedDate;

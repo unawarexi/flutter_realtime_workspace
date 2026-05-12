@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/shared/styles/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'widgets/select_participants_sheet.dart';
 import 'package:flutter_realtime_workspace/app/features/collaboration/presentation/widgets/date_timezone.dart';
 import 'package:flutter_realtime_workspace/app/features/collaboration/presentation/widgets/add_attachements.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/core/utils/constants/variables.dart';
-import 'package:flutter_realtime_workspace/core/animations/animation.dart';
-import 'package:flutter_realtime_workspace/app/features/collaboration/data/collaboration_repository.dart';
+import 'package:flutter_realtime_workspace/core/constants/variables.dart';
+import 'package:flutter_realtime_workspace/app/domain/repositories/collaboration_repository.dart';
 
 class ScheduleMeet extends StatefulWidget {
   const ScheduleMeet({super.key});
@@ -38,19 +37,29 @@ class _ScheduleMeetState extends State<ScheduleMeet>
 
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   bool _isSubmitting = false;
-  late final ScreenEnterAnimation _screenAnimation;
+  late final AnimationController _animController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
-    _screenAnimation = ScreenEnterAnimation(vsync: this);
-    _screenAnimation.start();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = CurvedAnimation(parent: _animController, curve: Curves.easeIn);
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _animController.forward();
     tzdata.initializeTimeZones();
   }
 
   @override
   void dispose() {
-    _screenAnimation.dispose();
+    _animController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
@@ -135,9 +144,9 @@ class _ScheduleMeetState extends State<ScheduleMeet>
           backgroundColor: isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,
           appBar: _buildAppBar(isDarkMode),
           body: FadeTransition(
-            opacity: _screenAnimation.fadeAnimation,
+            opacity: _fadeAnimation,
             child: SlideTransition(
-              position: _screenAnimation.slideAnimation,
+              position: _slideAnimation,
               child: Form(
                 key: _formKey,
                 child: CustomScrollView(

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
-import 'package:flutter_realtime_workspace/app/screens/dashboard.dart';
-import 'package:flutter_realtime_workspace/app/screens/home.dart';
-import 'package:flutter_realtime_workspace/app/screens/issues.dart';
-import 'package:flutter_realtime_workspace/app/screens/notifications.dart';
-import 'package:flutter_realtime_workspace/app/screens/project.dart';
+import 'package:flutter_realtime_workspace/app/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/home/presentation/home_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/issues/presentation/screens/issues_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/notification/presentation/screens/notification_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/project/presentation/project_home_screen.dart';
 
 
 class BottomNavigationBarWidget extends StatefulWidget {

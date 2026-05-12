@@ -1,33 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
+/// Auth screen "or" divider using shared tokens.
 class CustomDivider extends StatelessWidget {
-  const CustomDivider({super.key});
+  final String label;
+  const CustomDivider({super.key, this.label = 'or'});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.4,
-            child: const Divider(
-              thickness: 1,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark ? TColors.darkBorder : TColors.lightBorder;
+    final textColor = isDark ? TColors.darkMuted : TColors.lightMuted;
+
+    return Row(
+      children: [
+        Expanded(child: Divider(color: color, thickness: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: TSizes.sm),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: textColor,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const Text(
-            " or ",
-            style: TextStyle(color: Colors.blue),
-          ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.4,
-            child: const Divider(
-              thickness: 1,
-            ),
-          ),
-        ],
-      ),
+        ),
+        Expanded(child: Divider(color: color, thickness: 1)),
+      ],
     );
   }
 }

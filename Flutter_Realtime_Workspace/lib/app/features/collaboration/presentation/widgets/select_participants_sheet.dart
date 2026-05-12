@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_realtime_workspace/store/user_provider.dart';
-import 'package:flutter_realtime_workspace/shared/styles/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
 
 class SelectParticipantsSheet extends ConsumerStatefulWidget {
@@ -21,8 +21,7 @@ class _SelectParticipantsSheetState extends ConsumerState<SelectParticipantsShee
     super.initState();
     _selected = List<Map<String, String>>.from(widget.initiallySelected);
     // Fetch all users when the modal opens
-    Future.microtask(() async {
-      await ref.read(userProvider.notifier).fetchAllUsers();
+    Future.microtask(() {
       if (mounted) setState(() => _didFetch = true);
     });
   }
@@ -30,11 +29,16 @@ class _SelectParticipantsSheetState extends ConsumerState<SelectParticipantsShee
   @override
   Widget build(BuildContext context) {
     final isDarkMode = THelperFunctions.isDarkMode(context);
-    final userState = ref.watch(userProvider);
+    final usersAsync = ref.watch(allUsersProvider);
 
-    final users = (userState.userInfo?['users'] as List<dynamic>?)
-        ?.whereType<Map<String, dynamic>>()
-        .toList();
+    final users = usersAsync.whenOrNull(
+      data: (list) => list.map((u) => <String, dynamic>{
+        '_id': u.id,
+        'fullName': u.fullName,
+        'email': u.email,
+        'avatar': u.profilePicture,
+      }).toList(),
+    );
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
@@ -80,7 +84,7 @@ class _SelectParticipantsSheetState extends ConsumerState<SelectParticipantsShee
             ),
           ),
           const SizedBox(height: 12),
-          if (userState.isLoading || !_didFetch)
+          if (usersAsync.isLoading || !_didFetch)
             const Center(child: CircularProgressIndicator())
           else if (users == null || users.isEmpty)
             Padding(

@@ -47,7 +47,7 @@ void main() async {
   // Status bar style — handled per-screen by AppBar theme systemOverlayStyle
   // and AnnotatedRegion on non-AppBar screens.
 
-  final app = const ProviderScope(
+  const app = ProviderScope(
     child: TeamSpotApp(),
   );
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/app/features/notification/domain/models/notification.dart';
+import 'package:flutter_realtime_workspace/app/domain/models/notification_model.dart';
 
 class NotificationCard extends StatelessWidget {
 	const NotificationCard({super.key, required this.notification});

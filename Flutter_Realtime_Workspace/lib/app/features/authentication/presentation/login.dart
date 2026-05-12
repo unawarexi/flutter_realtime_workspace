@@ -1,140 +1,207 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/core/utils/constants/image_strings.dart';
-import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/data/onboarding_microsoft.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/onboarding_divider.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/data/onboarding_biometric.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/data/onboarding_github.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/data/onboarding_google.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/login_password_fields.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/presentation/signup_screen.dart';
-import 'package:flutter_realtime_workspace/shared/styles/colors.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/onboarding_divider.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/social_login_button.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/usecases/auth_usecase.dart';
+import 'package:flutter_realtime_workspace/app/components/shapes/bg_patterns.dart';
+import 'package:flutter_realtime_workspace/app/components/shapes/decorative_painters.dart';
+import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/icons.dart';
+import 'package:flutter_realtime_workspace/core/constants/image_strings.dart';
+import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
+import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
-
-
-class Authentication extends StatefulWidget {
+class Authentication extends ConsumerWidget {
   const Authentication({super.key});
 
   @override
-  State<Authentication> createState() => _AuthenticationState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hPad = TResponsive.pagePadding(context);
 
-class _AuthenticationState extends State<Authentication> {
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = THelperFunctions.isDarkMode(context);
-    // Set the status bar color based on the theme
     return Scaffold(
-      backgroundColor: isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-          
-                Center(
-                  child: Image.asset(
-                    height: 90,
-                    width: 150,
-                    isDarkMode ?  TImages.darkEmblem : TImages.lightEmblem,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Sign In Header
-                Text(
-                  "Login",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                    height: 1.1,
-                  ),
-                ),
-                  const SizedBox(height: 14),
-                Text(
-                  "Sign in to join the team",
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.2,
-                    color: isDarkMode 
-                        ? Colors.white.withOpacity(0.7)
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                //----------------------------------- Password Authentication
-                const PasswordAuthentication(),
-                const SizedBox(height: 14),
-
-                // Divider with image inside the "OR"
-                const CustomDivider(),
-
-                const SizedBox(height: 12),
-
-                // Social Sign-In Buttons in Row (Google, Facebook, GitHub)
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(child: GoogleAuthentication()),
-                    SizedBox(width: 8),
-                    Expanded(child: MicrosoftAuthentication()),
-                    SizedBox(width: 8),
-                    Expanded(child: GithubAuthentication()),
-                  ],
-                ),
-                const SizedBox(height: 50),
-
-                // Biometric Sign-In Button (no shadow, no rounded edges)
-                const Center(
-                  child: SizedBox(
-                    width: 340,
-                    child: BiometricAuthentication(
-                      showSettings: false,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-
-                // "Don't have an account? Sign Up" Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white70 : Colors.black54,
-                        fontSize: 12,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SignUp()),
-                        );
-                      },
-                      child: Text(
-                        "Sign Up",
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.lightBlueAccent : Colors.blueAccent,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
+      backgroundColor: isDark ? TColors.darkBg : TColors.lightBg,
+      body: Stack(
+        children: [
+          // Ambient background orbs
+          Positioned.fill(
+            child: CustomPaint(
+              painter: TOrbFieldPainter(
+                colors: [TColors.primary, TColors.blue700],
+                orbCount: 4,
+                isDark: isDark,
+                seed: 7,
+              ),
             ),
           ),
-        ),
+          // Subtle dot grid
+          Positioned.fill(
+            child: CustomPaint(
+              painter: TDotGridPainter(
+                dotColor: (isDark ? TColors.darkBorder : TColors.lightBorder)
+                    .withValues(alpha: 0.6),
+                spacing: 28,
+                dotRadius: 1.0,
+              ),
+            ),
+          ),
+          // Accent swoosh at top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: CustomPaint(
+              size: Size(TResponsive.width(context), 200),
+              painter: TBroadcastRingsPainter(
+                color: TColors.primary,
+                isDark: isDark,
+                corner: CornerPosition.topLeft,
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: TResponsive.maxContentWidth(context),
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: hPad,
+                    vertical: TSizes.lg,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Logo
+                      TWidgetAnimations.scaleIn(
+                        child: Center(
+                          child: Image.asset(
+                            isDark ? TImages.darkEmblem : TImages.lightEmblem,
+                            height: TResponsive.sp(context, 80,
+                                tabletSize: 96, desktopSize: 100),
+                            width: 150,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: TSizes.lg),
+                      // Heading
+                      TWidgetAnimations.slideUp(
+                        child: Text(
+                          'Welcome back',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? TColors.textDark
+                                    : TColors.textLight,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(height: TSizes.xs),
+                      TWidgetAnimations.fadeIn(
+                        delay: const Duration(milliseconds: 80),
+                        child: Text(
+                          'Sign in to continue to TeamSpot.',
+                          style: TextStyle(
+                            fontSize: TResponsive.sp(context, 13),
+                            color: isDark
+                                ? TColors.textSecondaryDark
+                                : TColors.textSecondaryLight,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: TSizes.lg),
+                      // Email + password form
+                      TWidgetAnimations.fadeIn(
+                        delay: const Duration(milliseconds: 120),
+                        child: const PasswordAuthentication(),
+                      ),
+                      const SizedBox(height: TSizes.md),
+                      TWidgetAnimations.fadeIn(
+                        delay: const Duration(milliseconds: 160),
+                        child: const CustomDivider(),
+                      ),
+                      const SizedBox(height: TSizes.md),
+                      // Social buttons
+                      TWidgetAnimations.fadeIn(
+                        delay: const Duration(milliseconds: 200),
+                        child: SocialLoginButton(
+                          label: 'Continue with Google',
+                          icon: const Icon(TIcons.google, size: 20),
+                          onPressed: () => AuthUseCase.signInWithGoogle(
+                            context: context,
+                            ref: ref,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: TSizes.sm),
+                      TWidgetAnimations.fadeIn(
+                        delay: const Duration(milliseconds: 230),
+                        child: SocialLoginButton(
+                          label: 'Continue with GitHub',
+                          icon: const Icon(TIcons.github, size: 20),
+                          onPressed: () => AuthUseCase.signInWithGithub(
+                            context: context,
+                            ref: ref,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: TSizes.sm),
+                      TWidgetAnimations.fadeIn(
+                        delay: const Duration(milliseconds: 260),
+                        child: SocialLoginButton(
+                          label: 'Microsoft  (Coming soon)',
+                          icon: const Icon(TIcons.microsoft, size: 20),
+                          onPressed: () {},
+                          disabled: true,
+                        ),
+                      ),
+                      const SizedBox(height: TSizes.xl),
+                      // Sign-up link
+                      TWidgetAnimations.fadeIn(
+                        delay: const Duration(milliseconds: 300),
+                        child: Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "Don't have an account?  ",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark
+                                      ? TColors.textSecondaryDark
+                                      : TColors.textSecondaryLight,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => context.go('/signup'),
+                                child: Text(
+                                  'Sign Up',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: TColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

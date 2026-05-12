@@ -1,32 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/core/services/auth_service.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/presentation/login.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/icons.dart';
+import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 
-class SignOutSection extends StatelessWidget {
+class SignOutSection extends ConsumerWidget {
   final bool isDarkMode;
   const SignOutSection({super.key, required this.isDarkMode});
 
   @override
-  Widget build(BuildContext context) {
-    const cardDark = Color(0xFF1E293B);
-    const cardLight = Color(0xFFFFFFFF);
-    const borderLight = Color(0xFFE2E8F0);
-    const borderDark = Color(0xFF334155);
-
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDarkMode ? cardDark : cardLight,
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? TColors.darkCard : TColors.lightSurface,
+        borderRadius: BorderRadius.circular(TSizes.radiusMd),
         border: Border.all(
-          color: isDarkMode ? borderDark : borderLight,
+          color: isDarkMode ? TColors.darkBorder : TColors.lightBorder,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isDarkMode
-                ? Colors.black.withOpacity(0.08)
-                : Colors.grey.withOpacity(0.04),
+                ? Colors.black.withValues(alpha: 0.08)
+                : Colors.grey.withValues(alpha: 0.04),
             blurRadius: 7,
             offset: const Offset(0, 3),
           ),
@@ -34,25 +33,22 @@ class SignOutSection extends StatelessWidget {
       ),
       child: ListTile(
         leading: const Icon(
-          Icons.logout_rounded,
-          color: Colors.redAccent,
-          size: 20,
+          TIcons.logout,
+          color: TColors.error,
+          size: TSizes.iconMd,
         ),
         title: const Text(
           'Sign Out',
           style: TextStyle(
-            color: Colors.redAccent,
+            color: TColors.error,
             fontWeight: FontWeight.bold,
             fontSize: 13,
           ),
         ),
         onTap: () async {
-          await AuthService.signOut();
+          await ref.read(currentUserProvider.notifier).signOut();
           if (context.mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const Authentication()),
-              (route) => false,
-            );
+            context.go('/login');
           }
         },
       ),

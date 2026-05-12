@@ -37,7 +37,7 @@ class TeamSpotApp extends ConsumerWidget {
             statusBarBrightness:
                 isDark ? Brightness.dark : Brightness.light,
             systemNavigationBarColor:
-                isDark ? SColors.darkBg : SColors.lightBg,
+                isDark ? TColors.darkBg : TColors.lightBg,
             systemNavigationBarIconBrightness:
                 isDark ? Brightness.light : Brightness.dark,
           ),

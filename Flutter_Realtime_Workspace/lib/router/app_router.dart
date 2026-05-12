@@ -1,13 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/app/features/notification/presentation/screens/notification_screen.dart';
+import 'package:flutter_realtime_workspace/core/services/storage_service.dart';
 import 'package:go_router/go_router.dart';
 
 // Screens
 import 'package:flutter_realtime_workspace/app/screens/splash/splash_screen.dart';
-import 'package:flutter_realtime_workspace/app/screens/onboarding/onboarding_screen.dart';
-import 'package:flutter_realtime_workspace/app/screens/home.dart';
-import 'package:flutter_realtime_workspace/app/screens/dashboard.dart';
-import 'package:flutter_realtime_workspace/app/screens/project.dart';
+import 'package:flutter_realtime_workspace/app/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/home/presentation/home_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/project/presentation/project_home_screen.dart';
 
 // Auth
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/login.dart';
@@ -23,26 +25,26 @@ import 'package:flutter_realtime_workspace/app/features/collaboration/presentati
 import 'package:flutter_realtime_workspace/app/features/collaboration/presentation/history_screen.dart';
 
 // Project Management
-import 'package:flutter_realtime_workspace/app/features/project_management/presentation/screens/create_project_screen.dart';
-import 'package:flutter_realtime_workspace/app/features/project_management/presentation/screens/create_task_screen.dart';
-import 'package:flutter_realtime_workspace/app/features/project_management/presentation/screens/project_more.dart';
-import 'package:flutter_realtime_workspace/app/features/project_management/presentation/screens/project_timeline_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/project/presentation/create_project_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/project/presentation/create_task_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/project/presentation/project_more.dart';
+import 'package:flutter_realtime_workspace/app/features/project/presentation/project_timeline_screen.dart';
 
 // Team Management
-import 'package:flutter_realtime_workspace/app/features/team_management/presentation/all_team.dart';
-import 'package:flutter_realtime_workspace/app/features/team_management/presentation/team_screen.dart';
-import 'package:flutter_realtime_workspace/app/features/team_management/presentation/widgets/create_team_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/team/presentation/all_team.dart';
+import 'package:flutter_realtime_workspace/app/features/team/presentation/team_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/team/presentation/widgets/create_team_screen.dart';
 
 // Account Management
-import 'package:flutter_realtime_workspace/app/features/account_management/presentation/account.dart';
-import 'package:flutter_realtime_workspace/app/features/account_management/presentation/settings.dart';
-import 'package:flutter_realtime_workspace/app/features/account_management/presentation/invite.dart';
-import 'package:flutter_realtime_workspace/app/features/account_management/presentation/feedback.dart' as acct_fb;
-import 'package:flutter_realtime_workspace/app/features/account_management/presentation/support.dart';
-import 'package:flutter_realtime_workspace/app/features/account_management/presentation/whats_new.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/account.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/settings.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/invite.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/feedback.dart' as acct_fb;
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/support.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/whats_new.dart';
 
 // Notifications
-import 'package:flutter_realtime_workspace/app/features/notification/presentation/notification_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/notification/presentation/screens/notification_screen.dart';
 
 // Workspaces
 import 'package:flutter_realtime_workspace/app/features/workspaces/presentation/screens/workspaces_screen.dart';
@@ -122,18 +124,21 @@ import 'package:flutter_realtime_workspace/app/features/billing/presentation/scr
 import 'package:flutter_realtime_workspace/app/features/billing/presentation/screens/subscription_screen.dart';
 
 // Dashboard Management
-import 'package:flutter_realtime_workspace/app/features/dashboard_management/default_dashboard.dart';
-import 'package:flutter_realtime_workspace/app/features/dashboard_management/starred_dashboards.dart';
-import 'package:flutter_realtime_workspace/app/features/dashboard_management/financial_overview_dashboard.dart';
+import 'package:flutter_realtime_workspace/app/features/dashboard/presentation/screens/default_dashboard.dart';
+import 'package:flutter_realtime_workspace/app/features/dashboard/presentation/screens/starred_dashboards.dart';
+import 'package:flutter_realtime_workspace/app/features/dashboard/presentation/screens/financial_overview_dashboard.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
-  navigatorKey: _rootNavigatorKey,
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/splash',
-  redirect: (context, state) {
-    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+  redirect: (context, state) async {
+    final firebaseLoggedIn = FirebaseAuth.instance.currentUser != null;
+    final backendToken = await SecureStorageService.getAccessToken();
+    final isLoggedIn =
+        firebaseLoggedIn || (backendToken != null && backendToken.isNotEmpty);
     final path = state.uri.path;
 
     final publicPaths = ['/splash', '/onboarding', '/login', '/signup', '/2fa', '/terms', '/privacy'];
@@ -146,7 +151,7 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/splash',
-      builder: (context, state) => const TeamSpotSplashScreen(),
+      builder: (context, state) => TeamSpotSplashScreen(nextScreen: const Home()),
     ),
     GoRoute(
       path: '/onboarding',
@@ -166,7 +171,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/user-info',
-      builder: (context, state) => const UserInformationScreen(),
+      builder: (context, state) => const UserInformationScreen(mode: UserInfoMode.create),
     ),
     GoRoute(
       path: '/terms',
@@ -188,9 +193,9 @@ final GoRouter appRouter = GoRouter(
           path: '/dashboard',
           builder: (context, state) => const DashboardScreen(),
           routes: [
-            GoRoute(path: 'default', builder: (c, s) => const DefaultDashboard()),
-            GoRoute(path: 'starred', builder: (c, s) => const StarredDashboard()),
-            GoRoute(path: 'financial', builder: (c, s) => const FinancialOverviewDashboard()),
+            GoRoute(path: 'default', builder: (c, s) => DefaultDashboard('default', title: 'Dashboard')),
+            GoRoute(path: 'starred', builder: (c, s) => const StarredDashboard(title: 'Starred')),
+            GoRoute(path: 'financial', builder: (c, s) => const FinancialOverviewDashboard(title: 'Financial Overview')),
           ],
         ),
         GoRoute(
@@ -200,7 +205,7 @@ final GoRouter appRouter = GoRouter(
             GoRoute(path: 'create', builder: (c, s) => const CreateWorkspaceScreen()),
             GoRoute(
               path: ':workspaceId',
-              builder: (c, s) => WorkspaceDetailScreen(workspaceId: s.pathParameters['workspaceId']!),
+              builder: (c, s) => const WorkspaceDetailScreen(),
             ),
           ],
         ),
@@ -210,11 +215,11 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: 'members',
-              builder: (c, s) => OrgMembersScreen(orgId: s.uri.queryParameters['orgId'] ?? ''),
+              builder: (c, s) => const OrgMembersScreen(),
             ),
             GoRoute(
               path: 'invite',
-              builder: (c, s) => org_invite.InviteScreen(orgId: s.uri.queryParameters['orgId'] ?? ''),
+              builder: (c, s) => const org_invite.InviteScreen(),
             ),
           ],
         ),
@@ -227,7 +232,7 @@ final GoRouter appRouter = GoRouter(
               path: ':projectId',
               builder: (c, s) => ProjectMore(),
               routes: [
-                GoRoute(path: 'timeline', builder: (c, s) => const ProjectTimelineScreen()),
+                GoRoute(path: 'timeline', builder: (c, s) => ProjectTimelineScreen(projectName: s.pathParameters['projectId'] ?? '')),
                 GoRoute(path: 'task/create', builder: (c, s) => const CreateTaskScreen()),
               ],
             ),
@@ -347,10 +352,10 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
         GoRoute(path: '/roles', builder: (c, s) => const RolesScreen()),
-        GoRoute(path: '/account', builder: (c, s) => const AccountScreen()),
-        GoRoute(path: '/settings', builder: (c, s) => const SettingsSection()),
+        GoRoute(path: '/account', builder: (c, s) => AccountScreen(userId: FirebaseAuth.instance.currentUser?.uid ?? '')),
+        GoRoute(path: '/settings', builder: (c, s) => const SettingsSection(isDarkMode: false)),
         GoRoute(path: '/account/invite', builder: (c, s) => const InviteScreen()),
-        GoRoute(path: '/support', builder: (c, s) => const SupportSection()),
+        GoRoute(path: '/support', builder: (c, s) => const SupportSection(isDarkMode: false)),
         GoRoute(path: '/whats-new', builder: (c, s) => const WhatsNewScreen()),
         GoRoute(path: '/account/feedback', builder: (c, s) => const acct_fb.FeedbackScreen()),
       ],
