@@ -28,7 +28,7 @@ void main() async {
     LocalStorageService.init(),
   ]);
 
-  // Initialize Google Sign-In (must be after Firebase.initializeApp)
+  // Initialize Google Sign-In (after Firebase.initializeApp)
   await GoogleSignInService.init();
 
   // FCM background handler + local notifications

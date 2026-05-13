@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/router/app_router.dart';
 import 'package:flutter_realtime_workspace/store/theme_provider.dart';
-import 'package:flutter_realtime_workspace/theme/theme.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/connectivity_toast.dart';
 
 class TeamSpotApp extends ConsumerWidget {
