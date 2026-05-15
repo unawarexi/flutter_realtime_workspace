@@ -1,9 +1,14 @@
 # ============================================================================
-# SpeakUp — .gitignore
+# Teamspot — .gitignore
 # ============================================================================
 
 # Dependencies
 node_modules/
+**/node_modules/
+# Root workspace package files (not part of backend)
+../node_modules/
+../package.json
+../package-lock.json
 
 
 # Environment variables
