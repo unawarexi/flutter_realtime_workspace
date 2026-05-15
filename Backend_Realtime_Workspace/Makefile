@@ -13,7 +13,9 @@
 
 APP_NAME        := teamspot-backend
 COMPOSE         := docker compose
-KAFKA_CONTAINER := teamspot-kafka
+KAFKA_HOME      := /usr/local/kafka
+KAFKA_BIN       := $(KAFKA_HOME)/bin
+KAFKA_CFG       := $(KAFKA_HOME)/config
 KAFKA_BOOTSTRAP := localhost:9092
 
 # Colors
@@ -102,72 +104,76 @@ redis-flush: ## Flush all Redis data
 redis-monitor: ## Monitor Redis commands
 	docker exec -it teamspot-redis redis-cli MONITOR
 
-# ── Kafka ────────────────────────────────────────────────────────────────────
-kafka-start: ## Start Kafka + Zookeeper containers
-	@if docker ps --format '{{.Names}}' | grep -q $(KAFKA_CONTAINER); then \
-		echo "$(YELLOW)⚠ Kafka already running$(RESET)"; \
+# ── Kafka (local install at /usr/local/kafka, KRaft mode — no Zookeeper) ──────
+kafka-start: ## Start local Kafka broker (KRaft mode)
+	@if nc -z localhost 9092 2>/dev/null; then \
+		echo "$(YELLOW)⚠ Kafka already running on $(KAFKA_BOOTSTRAP)$(RESET)"; \
 	else \
-		echo "$(CYAN)Starting Kafka + Zookeeper...$(RESET)"; \
-		$(COMPOSE) up -d zookeeper kafka; \
+		if [ ! -f /tmp/kraft-combined-logs/meta.properties ]; then \
+			echo "$(CYAN)Formatting KRaft storage (first run)...$(RESET)"; \
+			KAFKA_CLUSTER_ID=$$($(KAFKA_BIN)/kafka-storage.sh random-uuid); \
+			$(KAFKA_BIN)/kafka-storage.sh format --standalone -t $$KAFKA_CLUSTER_ID -c $(KAFKA_CFG)/server.properties; \
+		fi; \
+		echo "$(CYAN)Starting Kafka broker (KRaft)...$(RESET)"; \
+		$(KAFKA_BIN)/kafka-server-start.sh -daemon $(KAFKA_CFG)/server.properties; \
 		echo "$(CYAN)Waiting for Kafka to be ready...$(RESET)"; \
 		TRIES=0; \
 		while [ $$TRIES -lt 15 ]; do \
 			TRIES=$$((TRIES + 1)); \
 			sleep 2; \
-			if docker exec $(KAFKA_CONTAINER) kafka-broker-api-versions --bootstrap-server $(KAFKA_BOOTSTRAP) > /dev/null 2>&1; then \
+			if nc -z localhost 9092 2>/dev/null; then \
 				echo "$(GREEN)✓ Kafka ready on $(KAFKA_BOOTSTRAP) (took $$((TRIES * 2))s)$(RESET)"; \
 				break; \
 			fi; \
 			echo "$(YELLOW)  waiting... ($$((TRIES * 2))s)$(RESET)"; \
 		done; \
-		if ! docker exec $(KAFKA_CONTAINER) kafka-broker-api-versions --bootstrap-server $(KAFKA_BOOTSTRAP) > /dev/null 2>&1; then \
+		if ! nc -z localhost 9092 2>/dev/null; then \
 			echo "$(RED)✗ Kafka failed to start — check: make kafka-logs$(RESET)"; \
 		fi \
 	fi
 
-kafka-stop: ## Stop Kafka + Zookeeper containers
-	@echo "$(CYAN)Stopping Kafka + Zookeeper...$(RESET)"
-	$(COMPOSE) stop kafka zookeeper
+kafka-stop: ## Stop local Kafka broker
+	@echo "$(CYAN)Stopping Kafka...$(RESET)"
+	@$(KAFKA_BIN)/kafka-server-stop.sh 2>/dev/null || true
 	@echo "$(GREEN)✓ Kafka stopped$(RESET)"
 
-kafka-restart: ## Restart Kafka + Zookeeper containers
-	$(COMPOSE) restart zookeeper kafka
-	@echo "$(GREEN)✓ Kafka restarted$(RESET)"
+kafka-restart: kafka-stop kafka-start ## Restart local Kafka
 
-kafka-status: ## Check if Kafka container is running
-	@if docker ps --format '{{.Names}}' | grep -q $(KAFKA_CONTAINER); then \
-		echo "$(GREEN)✓ Kafka is running$(RESET)"; \
-		docker ps --filter name=$(KAFKA_CONTAINER) --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'; \
+kafka-status: ## Check if local Kafka is running
+	@if nc -z localhost 9092 2>/dev/null; then \
+		echo "$(GREEN)✓ Kafka is running on $(KAFKA_BOOTSTRAP)$(RESET)"; \
+		lsof -i :9092 -sTCP:LISTEN 2>/dev/null | head -5; \
 	else \
 		echo "$(RED)✗ Kafka is not running$(RESET)"; \
 	fi
 
-kafka-logs: ## Tail Kafka container logs
-	$(COMPOSE) logs -f --tail=100 kafka
+kafka-logs: ## Tail Kafka broker log
+	@tail -f /tmp/kafka-logs/server.log 2>/dev/null || \
+		tail -f $(KAFKA_HOME)/logs/server.log 2>/dev/null || \
+		echo "$(RED)Log file not found — check /tmp/kafka-logs/ or $(KAFKA_HOME)/logs/$(RESET)"
 
 kafka-topics: ## List all Kafka topics
-	docker exec $(KAFKA_CONTAINER) kafka-topics --bootstrap-server $(KAFKA_BOOTSTRAP) --list
+	$(KAFKA_BIN)/kafka-topics.sh --bootstrap-server $(KAFKA_BOOTSTRAP) --list
 
 kafka-create-topics: ## Create all required Kafka topics
-	node -e "import('./infrastructure/kafka/kafka.service.js').then(k => k.createTopics())"
+	node --input-type=module <<< "import { initKafka, createTopics } from './infrastructure/kafka/kafka.service.js'; await initKafka(); await createTopics(); process.exit(0);"
 
 kafka-describe: ## Describe a Kafka topic (usage: make kafka-describe topic=my.topic)
-	docker exec $(KAFKA_CONTAINER) kafka-topics --bootstrap-server $(KAFKA_BOOTSTRAP) --describe --topic $(topic)
+	$(KAFKA_BIN)/kafka-topics.sh --bootstrap-server $(KAFKA_BOOTSTRAP) --describe --topic $(topic)
 
 kafka-console: ## Consume messages from a topic (usage: make kafka-console topic=my.topic)
-	docker exec $(KAFKA_CONTAINER) kafka-console-consumer --bootstrap-server $(KAFKA_BOOTSTRAP) --topic $(topic) --from-beginning
+	$(KAFKA_BIN)/kafka-console-consumer.sh --bootstrap-server $(KAFKA_BOOTSTRAP) --topic $(topic) --from-beginning
 
-kafka-clean: ## Remove Kafka container and its volume (destructive — requires kafka-start again)
-	@echo "$(YELLOW)⚠ Removing Kafka container and data volume$(RESET)"
-	$(COMPOSE) stop kafka zookeeper
-	$(COMPOSE) rm -f kafka zookeeper
-	$(COMPOSE) down -v --remove-orphans
-	@echo "$(GREEN)✓ Kafka cleaned — run 'make kafka-start' to restart$(RESET)"
+kafka-clean: ## Delete Kafka log data (destructive — run kafka-stop first)
+	@echo "$(YELLOW)⚠ Removing Kafka + Zookeeper data directories$(RESET)"
+	@$(MAKE) kafka-stop 2>/dev/null || true
+	@rm -rf /tmp/kafka-logs /tmp/zookeeper
+	@echo "$(GREEN)✓ Kafka data cleaned — run 'make kafka-start' to restart$(RESET)"
 
 kafka-setup: kafka-start kafka-create-topics ## One-liner: start Kafka + create all topics
 	@echo "$(GREEN)✓ Kafka ready with all topics$(RESET)"
 
-kafka-ui: ## Open Kafka UI in browser
+kafka-ui: ## Open Kafka UI in browser (if running)
 	@open http://localhost:8080 2>/dev/null || echo "Kafka UI: http://localhost:8080"
 
 # ── RabbitMQ ─────────────────────────────────────────────────────────────────
