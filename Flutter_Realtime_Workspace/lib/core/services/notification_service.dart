@@ -61,6 +61,9 @@ class NotificationService {
 
   /// Initialize local notifications + FCM listeners + CallKit.
   Future<void> init() async {
+    // Skip all notification initialization on iOS/macOS (no developer account required)
+    if (Platform.isIOS || Platform.isMacOS) return;
+
     // --- Local notifications setup ---
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     // iOS/macOS local notification initialization is intentionally disabled.

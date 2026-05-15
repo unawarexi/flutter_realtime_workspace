@@ -84,6 +84,13 @@ build/debug-info/
 .env.local
 .env.*.local
 
+# Firebase config (contains API keys)
+firebase.json
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+firebase_app_id_file.json
+
 # Play Store service account
 play-store-key.json
 google-services-key.json

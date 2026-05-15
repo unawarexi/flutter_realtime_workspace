@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -31,8 +33,10 @@ void main() async {
   // Initialize Google Sign-In (after Firebase.initializeApp)
   await GoogleSignInService.init();
 
-  // FCM background handler + local notifications
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  // FCM background handler + local notifications (Android only — no developer account for iOS)
+  if (!Platform.isIOS && !Platform.isMacOS) {
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
   await NotificationService.instance.init();
 
   // Prune expired cache entries
