@@ -240,12 +240,17 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  const sep = "═".repeat(60);
+  log.error(`\n${sep}\nUNCAUGHT EXCEPTION — server will exit\nMessage : ${error.message}\nStack   :\n${error.stack ?? error}\n${sep}`);
   gracefulShutdown("uncaughtException");
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  const sep = "═".repeat(60);
+  const msg   = reason instanceof Error ? reason.message : String(reason);
+  const stack = reason instanceof Error ? (reason.stack ?? "(no stack)") : "(no stack)";
+  log.error(`\n${sep}\nUNHANDLED PROMISE REJECTION\nPromise : ${String(promise)}\nReason  : ${msg}\nStack   :\n${stack}\n${sep}`);
+  // Do NOT crash — log and continue so one bad async call doesn't bring down the server
 });
 
 // ============================================================================

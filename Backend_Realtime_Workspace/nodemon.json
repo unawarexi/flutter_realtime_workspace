@@ -1,0 +1,10 @@
+{
+  "watch": [".", "agent", "config", "core", "infrastructure", "middlewares", "modules", "workers"],
+  "ignore": ["node_modules", "*.test.js", "*.spec.js", "coverage", "logs"],
+  "ext": "js,json,mjs",
+  "exec": "node --inspect=0.0.0.0:9229 --enable-source-maps --stack-trace-limit=50 index.js",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 500
+}
