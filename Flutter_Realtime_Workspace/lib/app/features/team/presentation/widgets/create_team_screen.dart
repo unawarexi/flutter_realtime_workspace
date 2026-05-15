@@ -493,7 +493,7 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      teamState.error!,
+                      teamState.error!.toString(),
                       style: const TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),

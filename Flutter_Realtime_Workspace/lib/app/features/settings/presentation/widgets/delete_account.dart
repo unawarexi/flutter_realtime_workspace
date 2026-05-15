@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/app/components/common/toast_alerts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/store/user_provider.dart';
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter_realtime_workspace/core/services/storage_service.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/login.dart';
@@ -41,12 +40,8 @@ class _DeleteAccountState extends ConsumerState<DeleteAccount> {
     final confirmWord = widget.confirmWord;
     const borderDark = Color(0xFF334155);
     const borderLight = Color(0xFFE2E8F0);
-    const cardDark = Color(0xFF1E293B);
-    const cardLight = Color(0xFFFFFFFF);
     const textPrimary = Color(0xFF0F172A);
     const textSecondary = Color(0xFF64748B);
-    const lightBlue = Color(0xFF3B82F6);
-    const primaryBlue = Color(0xFF1E40AF);
 
     final canDelete = (_agreeTerms &&
         _agreeRecovery &&
@@ -169,7 +164,7 @@ class _DeleteAccountState extends ConsumerState<DeleteAccount> {
                 ),
                 const SizedBox(height: 10),
                 FutureBuilder<bool>(
-                  future: Future.value(StorageService.biometricEnabled),
+                  future: Future.value(LocalStorageService.biometricEnabled),
                   builder: (context, snap) {
                     if (snap.data == true && !_biometricSuccess) {
                       return SizedBox(
@@ -234,7 +229,7 @@ class _DeleteAccountState extends ConsumerState<DeleteAccount> {
                             try {
                               await ref
                                   .read(currentUserProvider.notifier)
-                                  .deleteUserInfo();
+                                  .deleteAccount();
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 Navigator.of(context).pushAndRemoveUntil(

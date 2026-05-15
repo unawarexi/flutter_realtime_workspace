@@ -1,5 +1,6 @@
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/app/domain/models/user_model.dart';
 import 'package:flutter_realtime_workspace/core/network/pull_refresh.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/sign_out.dart';

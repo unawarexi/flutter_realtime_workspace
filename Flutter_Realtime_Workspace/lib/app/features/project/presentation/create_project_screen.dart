@@ -274,7 +274,7 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen>
     final formData = _collectProjectFormData();
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(projectProvider.notifier).createProject(
+      await ref.read(projectFormProvider.notifier).createProject(
             formData,
             filePaths: _uploadedFile != null ? [_uploadedFile!.path] : null,
           );
@@ -298,7 +298,7 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen>
   Widget build(BuildContext context) {
     print('[CreateProjectScreen] build');
     final isDarkMode = THelperFunctions.isDarkMode(context);
-    final projectState = ref.watch(projectProvider);
+    final projectState = ref.watch(projectFormProvider);
 
     return Stack(
       children: [
@@ -441,7 +441,7 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen>
   }
 
   Widget _buildProjectForm(bool isDarkMode) {
-    final notifier = ref.read(projectProvider.notifier);
+    final notifier = ref.read(projectFormProvider.notifier);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -870,7 +870,7 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen>
   }
 
   Widget _buildCreateButton(bool isDarkMode) {
-    final projectState = ref.watch(projectProvider);
+    final projectState = ref.watch(projectFormProvider);
     return Container(
       width: double.infinity,
       height: 36, // reduced height

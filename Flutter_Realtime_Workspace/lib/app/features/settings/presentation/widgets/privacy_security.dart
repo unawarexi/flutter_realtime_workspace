@@ -1,6 +1,6 @@
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/domain/apis/referral_api.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/usecases/referral_usecase.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_realtime_workspace/store/user_provider.dart';
 
@@ -29,14 +29,11 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
       _regenerateSuccess = null;
     });
     try {
-      // Call backend via UserApi directly (since provider method is commented out)
-      final userInfo = ref.read(currentUserProvider).valueOrNull?.toJson();
-      // You may want to move this to provider for better state management
-      final api = await ReferralApi.regenerateInviteCode();
+      await ReferralUseCase.regenerateInviteCode(ref);
       setState(() {
         _regenerateSuccess = "Invite code regenerated!";
       });
-      // Optionally, refresh user info
+      // Refresh user profile so UI shows the new code
       await ref.read(userRepositoryProvider).getProfile();
     } catch (e) {
       setState(() {
@@ -56,10 +53,7 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
     const lightBlue = Color(0xFF3B82F6);
     const backgroundLight = Color(0xFFFAFBFC);
     const backgroundDark = Color(0xFF0F172A);
-    const cardLight = Color(0xFFFFFFFF);
-    const cardDark = Color(0xFF1E293B);
     const textPrimary = Color(0xFF0F172A);
-    const textSecondary = Color(0xFF64748B);
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 

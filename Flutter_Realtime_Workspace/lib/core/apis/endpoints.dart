@@ -32,7 +32,9 @@ class ApiEndpoints {
   static const deleteAccount = '/users/me';
   static const userProfile = '/users/me';
   static const userUploadPicture = '/users/me/upload-picture';
+  static const userRegenerateInviteCode = '/users/me/invite-code/regenerate';
   static const users = '/users';
+  static const usersSearch = '/users/search';
   static String userById(String id) => '/users/$id';
 
   // ──────────── Meetings ────────────
@@ -115,6 +117,7 @@ class ApiEndpoints {
 
   // ──────────── Projects ────────────
   static const projects = '/projects';
+  static const projectGenerateKey = '/projects/generate-key';
   static String project(String id) => '/projects/$id';
   static String projectStar(String id) => '/projects/$id/star';
   static String projectArchive(String id) => '/projects/$id/archive';
