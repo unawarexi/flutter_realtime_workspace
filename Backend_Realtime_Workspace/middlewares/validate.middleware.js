@@ -58,3 +58,6 @@ export function validateParams(schema) {
     next();
   };
 }
+
+// Alias: validate(schema) validates req.body — used by most route files
+export const validate = validateBody;

@@ -2,15 +2,15 @@ import express from 'express';
 import {createTeam, getUserTeams, searchTeams, getTeam, updateTeam, deleteTeam, inviteMember,
   acceptInvitation, updateMemberRole, removeMember, leaveTeam, transferOwnership, bulkUpdatePermissions,
   getTeamProjects, assignProject, getTeamAnalytics, getActivityFeed, updateIntegrations, checkPermissions
-} from './team.controller.js';
-import { firebaseAuthMiddleware } from '../middlewares/firebaseAuthMiddleware.js';
-import { validateTeamInput, validateInviteInput, validateMemberRoleUpdate } from '../middlewares/teamValidationMiddleware.js';
+} from '../teams/team.controller.js';
+import { authenticate } from '../../middlewares/auth.middleware.js';
+import { validateTeamInput, validateInviteInput, validateMemberRoleUpdate } from '../teams/team.validation.js';
 
 const router = express.Router();
 
 // Compose both middlewares into one array
 const teamMiddlewares = [
-  firebaseAuthMiddleware,
+  authenticate,
   (req, res, next) => {
     console.log(`[teamRoutes] ${req.method} ${req.originalUrl}`);
     next();

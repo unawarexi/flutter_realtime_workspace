@@ -24,3 +24,11 @@ export const inviteTeamMemberSchema = [
   body("role").optional().isIn(["admin", "manager", "member", "viewer", "guest"]),
   body("message").optional().isString().isLength({ max: 500 }),
 ];
+
+// Aliases for legacy team.routes.js imports
+export const validateTeamInput      = createTeamSchema;
+export const validateInviteInput    = inviteTeamMemberSchema;
+export const validateMemberRoleUpdate = [
+  param("id").isMongoId().withMessage("Invalid team ID"),
+  body("role").isIn(["admin", "manager", "member", "viewer", "guest"]).withMessage("Invalid role"),
+];

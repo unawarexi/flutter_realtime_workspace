@@ -1,7 +1,7 @@
 import {
     sendFCMToDevice, sendFCMToMultipleDevices, sendFCMToTopic, subscribeToTopic, unsubscribeFromTopic,
     validateFCMToken, NOTIFICATION_TYPES
-} from '../services/fcmServices.js';
+} from './fcm.service.js';
 
 /**
  * FCM Controller for Teamspot Workspace App

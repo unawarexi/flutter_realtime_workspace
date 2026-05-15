@@ -54,4 +54,11 @@ export function prefixedId(prefix) {
   return `${prefix}_${randomBytes(12).toString("hex")}`;
 }
 
-export default { uuid, shortCode, projectKey, meetingCode, prefixedId };
+/**
+ * Generate an invite code (12-char uppercase alphanumeric)
+ */
+export function generateInviteCode() {
+  return shortCode(12);
+}
+
+export default { uuid, shortCode, projectKey, meetingCode, prefixedId, generateInviteCode };

@@ -3,12 +3,12 @@ import {
   sendNotification, sendMultipleNotifications, sendTopicNotification, subscribeDevicesToTopic,
   unsubscribeDevicesFromTopic, validateToken, getNotificationTypes
 } from './fcm.controller.js';
-import { firebaseAuthMiddleware } from '../middlewares/firebaseAuthMiddleware.js';
+import { authenticate } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 
 // Notification endpoints
 router.post('/send', sendNotification);
