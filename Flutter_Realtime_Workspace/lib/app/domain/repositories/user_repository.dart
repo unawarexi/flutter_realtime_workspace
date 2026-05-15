@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_realtime_workspace/core/network/api_client.dart';
 import 'package:flutter_realtime_workspace/core/apis/endpoints.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/user_model.dart';
+import 'package:flutter_realtime_workspace/app/domain/models/referral_model.dart';
 
 class UserRepository {
   final _api = ApiClient.instance;
@@ -52,5 +53,11 @@ class UserRepository {
   Future<Map<String, dynamic>> getUserById(String userId) async {
     final res = await _api.get(ApiEndpoints.userById(userId));
     return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<ReferralModel> regenerateInviteCode() async {
+    final res = await _api.post(ApiEndpoints.userRegenerateInviteCode);
+    return ReferralModel.fromJson(
+        res.data['data'] as Map<String, dynamic>? ?? {});
   }
 }

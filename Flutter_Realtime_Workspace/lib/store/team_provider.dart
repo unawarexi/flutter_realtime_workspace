@@ -21,6 +21,9 @@ final teamNotifierProvider =
     StateNotifierProvider<TeamNotifier, AsyncValue<TeamModel?>>(
         (ref) => TeamNotifier(ref));
 
+/// Alias used in UI files.
+final teamProvider = teamNotifierProvider;
+
 class TeamNotifier extends StateNotifier<AsyncValue<TeamModel?>> {
   final Ref _ref;
   TeamNotifier(this._ref) : super(const AsyncValue.data(null));

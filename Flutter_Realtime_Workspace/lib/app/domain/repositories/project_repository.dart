@@ -24,6 +24,11 @@ class ProjectRepository {
     return ProjectModel.fromJson(res.data['data']);
   }
 
+  Future<String> generateKey() async {
+    final res = await _api.get(ApiEndpoints.projectGenerateKey);
+    return res.data['data']['key'] as String;
+  }
+
   Future<ProjectModel> updateProject(
       String id, Map<String, dynamic> body) async {
     final res = await _api.put(ApiEndpoints.project(id), data: body);

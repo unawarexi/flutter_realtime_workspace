@@ -29,7 +29,8 @@ class ProjectFormNotifier extends StateNotifier<AsyncValue<ProjectModel?>> {
   final Ref _ref;
   ProjectFormNotifier(this._ref) : super(const AsyncValue.data(null));
 
-  Future<ProjectModel> createProject(Map<String, dynamic> body) async {
+  Future<ProjectModel> createProject(Map<String, dynamic> body,
+      {List<String>? filePaths}) async {
     state = const AsyncValue.loading();
     try {
       final project =
@@ -40,6 +41,10 @@ class ProjectFormNotifier extends StateNotifier<AsyncValue<ProjectModel?>> {
       state = AsyncValue.error(e, st);
       rethrow;
     }
+  }
+
+  Future<String> fetchNewProjectKey() async {
+    return await _ref.read(projectRepositoryProvider).generateKey();
   }
 
   Future<ProjectModel> updateProject(
