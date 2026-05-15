@@ -4,7 +4,7 @@ import Project from "./models/project.model.js";
 import { AppError } from "../../core/errors/app-error.js";
 import { HttpStatus } from "../../config/constants.js";
 import { uploadBuffer, deleteFile } from "../../infrastructure/storage/cloudinary.service.js";
-import { generateProjectKey } from "../../core/utils/id-generator.js";
+import { projectKey } from "../../core/utils/id-generator.js";
 
 class ProjectRepository extends BaseRepository {
   constructor() {
@@ -22,9 +22,9 @@ class ProjectService extends BaseService {
   }
 
   async createProject(data, tenantId, userId, files = []) {
-    // Generate key (e.g., PROJ-001)
+    // Generate key (e.g., PRJ-001)
     const count = await this.repository.count({}, { tenantId });
-    const key = `PRJ-${String(count + 1).padStart(3, '0')}`;
+    const key = projectKey('PRJ', count + 1);
 
     const newProject = await this.repository.create({
       ...data,
@@ -50,6 +50,11 @@ class ProjectService extends BaseService {
     const project = await this.cachedFindById(id, { tenantId });
     if (!project) throw new AppError(HttpStatus.NOT_FOUND, "Project not found", "E3006");
     return project;
+  }
+
+  async generateProjectKey(tenantId) {
+    const count = await this.repository.count({}, { tenantId });
+    return projectKey('PRJ', count + 1);
   }
 
   async updateProject(id, updates, tenantId, userId) {

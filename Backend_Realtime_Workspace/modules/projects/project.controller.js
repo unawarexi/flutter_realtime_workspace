@@ -31,6 +31,12 @@ class ProjectController extends BaseController {
     return BaseController.sendSuccess(res, project, "Project retrieved");
   };
 
+  generateProjectKey = async (req, res) => {
+    const { tenantId } = BaseController.getContext(req);
+    const key = await projectService.generateProjectKey(tenantId);
+    return BaseController.sendSuccess(res, { key }, "Project key generated");
+  };
+
   updateProject = async (req, res) => {
     const { tenantId, userId } = BaseController.getContext(req);
     const project = await projectService.updateProject(req.params.id, req.body, tenantId, userId);

@@ -41,6 +41,17 @@ class UserController extends BaseController {
     const user = await userService.findById(req.params.id);
     return BaseController.sendSuccess(res, user, "User retrieved");
   };
+
+  regenerateInviteCode = async (req, res) => {
+    const data = await userService.regenerateInviteCode(req.user.uid);
+    return BaseController.sendSuccess(res, data, "Invite code regenerated");
+  };
+
+  searchUsers = async (req, res) => {
+    const { q } = req.query;
+    const users = await userService.searchUsers(q);
+    return BaseController.sendSuccess(res, users, "Users retrieved");
+  };
 }
 
 export const userController = new UserController();

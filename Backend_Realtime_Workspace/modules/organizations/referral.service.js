@@ -4,6 +4,7 @@
 // ============================================================================
 
 import crypto from "crypto";
+import { shortCode } from "../../core/utils/id-generator.js";
 import { createLogger } from "../../observability/logger.js";
 
 const log = createLogger("Referral");
@@ -12,10 +13,9 @@ const log = createLogger("Referral");
 // CODE GENERATION
 // ============================================================================
 
-/** Generate a referral code: WRK + 6 random alphanum + TST */
+/** Generate a referral code using the shared id-generator utility */
 export function generateReferralCode() {
-  const random = crypto.randomBytes(3).toString("hex").toUpperCase();
-  return `WRK${random}TST`;
+  return shortCode(8);
 }
 
 /** Set expiry for 7 days from now */

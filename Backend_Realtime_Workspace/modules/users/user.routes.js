@@ -32,6 +32,12 @@ router.post(
   asyncHandler(userController.uploadProfilePicture)
 );
 
+// Invite code regenerate
+router.post('/me/invite-code/regenerate', asyncHandler(userController.regenerateInviteCode));
+
+// Search users
+router.get('/search', asyncHandler(userController.searchUsers));
+
 // Admin / Internal use
 router.get('/', asyncHandler(userController.getAllUsers));
 router.get('/:id', asyncHandler(userController.getUserById));

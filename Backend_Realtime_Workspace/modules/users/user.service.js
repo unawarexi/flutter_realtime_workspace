@@ -56,6 +56,24 @@ class UserService extends BaseService {
     this.emit("user.deleted", { userId: user._id });
     return true;
   }
+
+  async regenerateInviteCode(firebaseUid) {
+    const { assignReferralCode } = await import('../organizations/referral.service.js');
+    const user = await this.getMyProfile(firebaseUid);
+    await assignReferralCode(user, { ignorePermissions: true });
+    return { inviteCode: user.inviteCode, inviteCodeExpiry: user.inviteCodeExpiry };
+  }
+
+  async searchUsers(query) {
+    const filter = query
+      ? { $or: [
+          { email: { $regex: query, $options: 'i' } },
+          { fullName: { $regex: query, $options: 'i' } },
+          { inviteCode: query },
+        ]}
+      : {};
+    return this.findAll(filter);
+  }
 }
 
 export const userService = new UserService();

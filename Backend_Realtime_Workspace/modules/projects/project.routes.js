@@ -32,6 +32,7 @@ router.post(
 );
 
 router.get('/', asyncHandler(projectController.getProjects));
+router.get('/generate-key', asyncHandler(projectController.generateProjectKey));
 router.get('/:id', asyncHandler(projectController.getProjectById));
 
 router.put(
