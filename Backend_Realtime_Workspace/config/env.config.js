@@ -135,7 +135,16 @@ export const env = {
   STRIPE_PUBLISHABLE_KEY: getEnvString("STRIPE_PUBLISHABLE_KEY", ""),
 
   // --------------------------------------------------------------------------
-  // AI — LLM Providers
+  // AI — OpenRouter (unified gateway to 200+ models)
+  // https://openrouter.ai — set this to use any model via one API key.
+  // OPENROUTER_MODEL examples: "openai/gpt-4o", "anthropic/claude-sonnet-4",
+  //   "google/gemini-2.0-flash", "meta-llama/llama-3.1-70b-instruct:free"
+  // --------------------------------------------------------------------------
+  OPENROUTER_API_KEY: getEnvString("OPENROUTER_API_KEY", ""),
+  OPENROUTER_MODEL: getEnvString("OPENROUTER_MODEL", "openai/gpt-4o"),
+
+  // --------------------------------------------------------------------------
+  // AI — LLM Providers (direct — used when OPENROUTER_API_KEY is not set)
   // --------------------------------------------------------------------------
   OPENAI_API_KEY: getEnvString("OPENAI_API_KEY", ""),
   ANTHROPIC_API_KEY: getEnvString("ANTHROPIC_API_KEY", ""),
@@ -143,7 +152,7 @@ export const env = {
   HUGGINGFACE_API_KEY: getEnvString("HUGGINGFACE_API_KEY", ""),
 
   // --------------------------------------------------------------------------
-  // AI — Embedding Providers
+  // AI — Embedding Providers (Cohere is the fallback after OpenAI)
   // --------------------------------------------------------------------------
   COHERE_API_KEY: getEnvString("COHERE_API_KEY", ""),
 
@@ -154,19 +163,10 @@ export const env = {
   AI_INTERNAL_API_KEY: getEnvString("AI_INTERNAL_API_KEY", ""),
 
   // --------------------------------------------------------------------------
-  // Vector Database (Qdrant or Pinecone)
+  // Vector Database — Qdrant
   // --------------------------------------------------------------------------
   QDRANT_URL: getEnvString("QDRANT_URL", "http://localhost:6333"),
   QDRANT_API_KEY: getEnvString("QDRANT_API_KEY", ""),
-  PINECONE_API_KEY: getEnvString("PINECONE_API_KEY", ""),
-  PINECONE_INDEX: getEnvString("PINECONE_INDEX", ""),
-
-  // --------------------------------------------------------------------------
-  // OpenSearch / Elasticsearch
-  // --------------------------------------------------------------------------
-  OPENSEARCH_URL: getEnvString("OPENSEARCH_URL", "http://localhost:9200"),
-  OPENSEARCH_USERNAME: getEnvString("OPENSEARCH_USERNAME", ""),
-  OPENSEARCH_PASSWORD: getEnvString("OPENSEARCH_PASSWORD", ""),
 
   // --------------------------------------------------------------------------
   // Observability

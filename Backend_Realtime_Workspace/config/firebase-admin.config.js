@@ -1,39 +1,27 @@
 import admin from "firebase-admin";
-import { createRequire } from "module";
+import { env } from "./env.config.js";
 
 /**
- * Load Firebase service account credentials.
- *
- * Production (Render):  reads from FIREBASE_SERVICE_ACCOUNT env var
- *   → Set this on Render as a single env var containing the full JSON string.
- *
- * Local development:    reads the JSON file from disk (gitignored).
+ * Load Firebase service account credentials from env.config.js.
+ * FIREBASE_SERVICE_ACCOUNT must be the full service-account JSON as a single-line string.
  */
 function getServiceAccount() {
-  // 1. Try environment variable first (production / Render)
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    try {
-      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    } catch (err) {
-      console.error(
-        "[Firebase Admin] Failed to parse FIREBASE_SERVICE_ACCOUNT env var:",
-        err.message,
-      );
-      throw new Error(
-        "FIREBASE_SERVICE_ACCOUNT env var is not valid JSON. " +
-          "Make sure you pasted the entire service account JSON.",
-      );
-    }
-  }
-
-  // 2. Fall back to local JSON file (development)
-  try {
-    const require = createRequire(import.meta.url);
-    return require("./flutter-realtime-workspace-firebase-adminsdk-i8fiv-ee91027b1e.json");
-  } catch {
+  if (!env.FIREBASE_SERVICE_ACCOUNT) {
     throw new Error(
-      "Firebase service account not found. " +
-        "Set FIREBASE_SERVICE_ACCOUNT env var or place the JSON file in config/.",
+      "FIREBASE_SERVICE_ACCOUNT is not set. " +
+        "Add the full service-account JSON as a single-line string in .env.",
+    );
+  }
+  try {
+    return JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
+  } catch (err) {
+    console.error(
+      "[Firebase Admin] Failed to parse FIREBASE_SERVICE_ACCOUNT:",
+      err.message,
+    );
+    throw new Error(
+      "FIREBASE_SERVICE_ACCOUNT is not valid JSON. " +
+        "Make sure you pasted the entire service account JSON as a single line.",
     );
   }
 }
