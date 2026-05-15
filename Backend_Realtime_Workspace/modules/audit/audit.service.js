@@ -8,6 +8,7 @@ import BaseRepository from "../../core/base/base.repository.js";
 import AuditLog from "./models/audit-log.model.js";
 import { forbidden, badRequest } from "../../core/errors/app-error.js";
 import { createRequire } from "module";
+import { dispatchExportJob } from "../../infrastructure/pdf/document-job.service.js";
 
 const require = createRequire(import.meta.url);
 const { Parser } = require("json2csv");
@@ -90,6 +91,52 @@ class AuditService extends BaseService {
 
     const parser = new Parser();
     return parser.parse(flat);
+  }
+
+  // ── Async distributed export (CSV / XLSX / PDF) via job queue ────────────────
+  async queueExport({ tenantId, from, to, category, format = "csv", userId }) {
+    const filter = { tenantId };
+    if (category) filter.category = category;
+    if (from || to) {
+      filter.timestamp = {};
+      if (from) filter.timestamp.$gte = new Date(from);
+      if (to)   filter.timestamp.$lte = new Date(to);
+    }
+
+    const logs = await this.repository.model.find(filter).sort({ timestamp: -1 }).limit(10000).lean();
+    const rows = logs.map(l => ({
+      date:         l.timestamp || l.createdAt,
+      action:       l.action,
+      category:     l.category,
+      severity:     l.severity || "info",
+      actorId:      l.actor?.userId,
+      actorEmail:   l.actor?.email,
+      actorRole:    l.actor?.role,
+      resourceType: l.resourceType,
+      resourceId:   l.resourceId,
+      status:       l.status,
+      ip:           l.actor?.ip,
+    }));
+
+    const columns = [
+      { key: "date",         header: "Date" },
+      { key: "action",       header: "Action" },
+      { key: "category",     header: "Category" },
+      { key: "severity",     header: "Severity" },
+      { key: "actorId",      header: "Actor ID" },
+      { key: "actorEmail",   header: "Actor Email" },
+      { key: "actorRole",    header: "Role" },
+      { key: "resourceType", header: "Resource Type" },
+      { key: "resourceId",   header: "Resource ID" },
+      { key: "status",       header: "Status" },
+      { key: "ip",           header: "IP" },
+    ];
+
+    return dispatchExportJob(
+      format,
+      { data: rows, columns, title: "Audit Log Export" },
+      { tenantId, userId, source: "audit" },
+    );
   }
 }
 
