@@ -11,6 +11,7 @@ import { publishToQueue } from "../../infrastructure/rabbitmq/rabbitmq.service.j
 import { emitToUser } from "../../infrastructure/websocket/websocket.service.js";
 import { uploadBuffer, deleteFile } from "../../infrastructure/storage/cloudinary.service.js";
 import { KafkaTopics, RabbitQueues, SocketEvents } from "../../config/constants.js";
+import { dispatchParseJob, dispatchRenderJob } from "../../infrastructure/pdf/document-job.service.js";
 import path from "path";
 
 const EXT_TYPE_MAP = {
@@ -84,8 +85,8 @@ class DocumentService extends BaseService {
       docType,
     });
 
-    // RabbitMQ — AI RAG ingestion (index document content for search)
-    await publishToQueue(RabbitQueues.AI_RAG_INGEST, {
+    // RabbitMQ — AI RAG ingestion (via document job service — tracked + cached)
+    await dispatchParseJob({
       documentId: newDoc._id.toString(),
       tenantId,
       orgId,
@@ -93,16 +94,14 @@ class DocumentService extends BaseService {
       filename: file.originalname,
       mimeType: file.mimetype,
       docType,
-    });
+    }, { userId });
 
     // RabbitMQ — PDF preview render (only for PDFs and Office docs)
     if (["pdf", "docx", "xlsx", "pptx"].includes(docType)) {
-      await publishToQueue(RabbitQueues.PDF_RENDER, {
-        documentId: newDoc._id.toString(),
-        tenantId,
-        url: uploadResult.url,
-        docType,
-      });
+      await dispatchRenderJob(
+        { templateName: "pdf-base", data: { DOCUMENT_TITLE: data.title || file.originalname, DOCUMENT_SUBTITLE: `${docType.toUpperCase()} Document` } },
+        { tenantId, userId, documentId: newDoc._id.toString(), label: "preview" },
+      );
     }
 
     // Audit

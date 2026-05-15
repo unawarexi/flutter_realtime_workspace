@@ -51,6 +51,16 @@ export async function initWorkers() {
     consumeQueue("teamspot.analytics.aggregate", processAnalytics);
     log.info("Analytics worker started");
 
+    // ── Document Worker ──
+    const { handleRenderJob, handleParseJob, handleExportJob } = await import("./document.worker.js");
+    consumeQueue("teamspot.pdf.render",    handleRenderJob);
+    consumeQueue("teamspot.document.parse", handleParseJob);
+    consumeQueue("teamspot.analytics",     handleExportJob);
+    consumeQueue("teamspot.audit",         (msg) => {
+      if (msg?.data?.type === "export") return handleExportJob(msg);
+    });
+    log.info("Document worker started");
+
     log.success("All workers initialized");
   } catch (err) {
     log.warn("Workers initialization failed — background jobs disabled", { error: err.message });

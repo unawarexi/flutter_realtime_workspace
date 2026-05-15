@@ -297,6 +297,7 @@ export const KafkaTopics = {
   STORAGE_EVENTS:     "teamspot.storage.events",
   AI_TASKS:           "teamspot.ai.tasks",
   AI_RESULTS:         "teamspot.ai.results",
+  DOCUMENT_EVENTS:    "teamspot.document.events",
 };
 
 // ============================================================================
@@ -309,10 +310,12 @@ export const RabbitQueues = {
   AI_EMBEDDING:     "teamspot.ai.embedding",
   AI_RAG_INGEST:    "teamspot.ai.rag_ingest",
   AI_AGENT_TASK:    "teamspot.ai.agent_task",
-  PDF_RENDER:       "teamspot.pdf.render",
-  ANALYTICS:        "teamspot.analytics",
-  CLEANUP:          "teamspot.cleanup",
-  AUDIT:            "teamspot.audit",
+  PDF_RENDER:         "teamspot.pdf.render",
+  DOCUMENT_PARSE:     "teamspot.document.parse",
+  DOCUMENT_EXPORT:    "teamspot.document.export",
+  ANALYTICS:          "teamspot.analytics",
+  CLEANUP:            "teamspot.cleanup",
+  AUDIT:              "teamspot.audit",
 };
 
 // ============================================================================
@@ -323,6 +326,22 @@ export const Pagination = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 20,
   MAX_LIMIT: 100,
+};
+
+// Alias used by modules
+export const PaginationDefaults = Pagination;
+
+// ============================================================================
+// ROLES
+// ============================================================================
+
+export const Roles = {
+  SUPER_ADMIN: "super_admin",
+  ORG_OWNER:   "org_owner",
+  ORG_ADMIN:   "org_admin",
+  MANAGER:     "manager",
+  MEMBER:      "member",
+  GUEST:       "guest",
 };
 
 // ============================================================================
@@ -359,6 +378,8 @@ export default {
   KafkaTopics,
   RabbitQueues,
   Pagination,
+  PaginationDefaults,
+  Roles,
   Headers,
   AppLinks,
 };
