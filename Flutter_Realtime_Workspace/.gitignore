@@ -94,3 +94,4 @@ firebase_app_id_file.json
 # Play Store service account
 play-store-key.json
 google-services-key.json
+android/build/
