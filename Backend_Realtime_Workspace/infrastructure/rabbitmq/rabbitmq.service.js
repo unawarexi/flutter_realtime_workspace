@@ -46,7 +46,10 @@ export async function initRabbitMQ() {
 }
 
 export async function publishToQueue(queueName, payload, options = {}) {
-  if (!channel) throw new Error("RabbitMQ not initialized");
+  if (!channel) {
+    log.warn("RabbitMQ not available — message dropped", { queueName, payload });
+    return;
+  }
 
   const message = Buffer.from(JSON.stringify({
     id: crypto.randomUUID(),
@@ -61,7 +64,10 @@ export async function publishToQueue(queueName, payload, options = {}) {
 }
 
 export async function publishDelayed(queueName, payload, delayMs) {
-  if (!channel) throw new Error("RabbitMQ not initialized");
+  if (!channel) {
+    log.warn("RabbitMQ not available — delayed message dropped", { queueName });
+    return;
+  }
 
   const delayedQueue = `${queueName}.delayed.${delayMs}`;
   await channel.assertQueue(delayedQueue, {
@@ -83,7 +89,10 @@ export async function publishDelayed(queueName, payload, delayMs) {
 }
 
 export function consumeQueue(queueName, handler) {
-  if (!channel) throw new Error("RabbitMQ not initialized");
+  if (!channel) {
+    log.warn("RabbitMQ not available — consumer not registered", { queueName });
+    return;
+  }
 
   channel.consume(queueName, async (msg) => {
     if (!msg) return;

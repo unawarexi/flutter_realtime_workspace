@@ -7,6 +7,7 @@ import { Kafka, logLevel } from "kafkajs";
 import { env } from "../../config/env.config.js";
 import { KafkaTopics } from "../../config/constants.js";
 import { createLogger } from "../../observability/logger.js";
+import { retryWithBackoff } from "../../core/utils/retry.js";
 
 const log = createLogger("Kafka");
 
@@ -38,7 +39,11 @@ export async function initKafka() {
   producer = kafka.producer();
   consumer = kafka.consumer({ groupId: env.KAFKA_GROUP_ID });
 
-  await producer.connect();
+  await retryWithBackoff(() => producer.connect(), {
+    label: "Kafka producer connect",
+    maxRetries: 5,
+    baseDelay: 1000,
+  });
   isConnected = true;
   log.success("Kafka producer connected", { brokers, clientId: env.KAFKA_CLIENT_ID });
   return { kafka, producer, consumer };
@@ -111,6 +116,11 @@ export async function healthCheck() {
   return { connected: isConnected, brokers: cluster.brokers.length, topics };
 }
 
+export function getKafkaInstance() {
+  if (!kafka) throw new Error("Kafka not initialized. Call initKafka() first.");
+  return kafka;
+}
+
 export async function disconnectKafka() {
   if (producer) await producer.disconnect();
   if (consumer) await consumer.disconnect();
@@ -119,6 +129,6 @@ export async function disconnectKafka() {
 }
 
 export default {
-  initKafka, publishEvent, publishBatch, subscribeToTopics,
+  initKafka, getKafkaInstance, publishEvent, publishBatch, subscribeToTopics,
   createTopics, healthCheck, disconnectKafka,
 };

@@ -3,9 +3,9 @@
 // Consumes AI result events and broadcasts via WebSocket to relevant users
 // ============================================================================
 
-import { Kafka, logLevel } from "kafkajs";
 import { env } from "../../config/env.config.js";
 import { KafkaTopics, SocketEvents } from "../../config/constants.js";
+import { getKafkaInstance } from "../../infrastructure/kafka/kafka.service.js";
 import { emitToUser, emitToWorkspace, emitToChannel } from "../../infrastructure/websocket/websocket.service.js";
 import { createLogger } from "../../observability/logger.js";
 import { retryWithBackoff } from "../../core/utils/retry.js";
@@ -60,31 +60,18 @@ async function handleAIResult(payload) {
 // ============================================================================
 
 export async function initAIConsumer() {
-  const brokers = env.KAFKA_BROKERS.split(",").map((b) => b.trim());
+  const kafka = getKafkaInstance();
 
-  const config = {
-    clientId: `${env.KAFKA_CLIENT_ID}-ai-consumer`,
-    brokers,
-    logLevel: logLevel.WARN,
-    retry: { initialRetryTime: 300, retries: 10 },
-  };
-
-  if (env.KAFKA_SSL) config.ssl = true;
-  if (env.KAFKA_SASL_USERNAME && env.KAFKA_SASL_PASSWORD) {
-    config.sasl = {
-      mechanism: "plain",
-      username: env.KAFKA_SASL_USERNAME,
-      password: env.KAFKA_SASL_PASSWORD,
-    };
-  }
-
-  const kafka = new Kafka(config);
   consumer = kafka.consumer({
     groupId: `${env.KAFKA_GROUP_ID}-ai-relay`,
     retry: { initialRetryTime: 500, retries: 15 },
   });
 
-  await retryWithBackoff(() => consumer.connect(), { label: "AI consumer connect" });
+  await retryWithBackoff(() => consumer.connect(), {
+    label: "AI consumer connect",
+    maxRetries: 5,
+    baseDelay: 1000,
+  });
 
   // Subscribe to AI result topic
   await consumer.subscribe({ topic: KafkaTopics.AI_RESULTS, fromBeginning: false });

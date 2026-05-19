@@ -6,6 +6,7 @@
 import Redis from "ioredis";
 import { env } from "../../config/env.config.js";
 import { createLogger } from "../../observability/logger.js";
+import { createRetryStrategy } from "../../core/utils/retry.js";
 
 const log = createLogger("Redis");
 
@@ -19,13 +20,20 @@ let isConnected = false;
 
 function createRedisClient(name = "main") {
   const commonOptions = {
-    maxRetriesPerRequest: 3,
-    retryStrategy(times) {
-      if (times > 10) return null;
-      return Math.min(times * 200, 5000);
-    },
+    // null = don't reject pending commands with MaxRetriesPerRequestError;
+    // we handle availability via retryStrategy instead.
+    maxRetriesPerRequest: null,
+    retryStrategy: createRetryStrategy({
+      maxRetries: 3,
+      baseDelay: 500,
+      maxDelay: 2000,
+      label: `Redis [${name}]`,
+    }),
     lazyConnect: true,
     enableReadyCheck: true,
+    // Suppress automatic reconnect after we explicitly disconnect
+    autoResubscribe: false,
+    autoResendUnfulfilledCommands: false,
   };
 
   const redis = env.REDIS_URL
@@ -40,7 +48,9 @@ function createRedisClient(name = "main") {
 
   redis.on("connect", () => log.info(`Redis [${name}] connected`));
   redis.on("ready", () => log.success(`Redis [${name}] ready`));
-  redis.on("error", (err) => log.error(`Redis [${name}] error`, { error: err }));
+  // Swallow errors here — they are already logged; unhandled 'error' events
+  // on EventEmitters crash the process, so this listener must exist.
+  redis.on("error", (err) => log.error(`Redis [${name}] error`, {}));
   redis.on("close", () => {
     log.warn(`Redis [${name}] connection closed`);
     if (name === "main") isConnected = false;
@@ -55,11 +65,21 @@ export async function initRedis() {
   client = createRedisClient("main");
   subscriber = createRedisClient("subscriber");
 
-  await Promise.all([client.connect(), subscriber.connect()]);
-  isConnected = true;
-
-  log.success("Redis initialized (main + subscriber)");
-  return client;
+  try {
+    await Promise.all([client.connect(), subscriber.connect()]);
+    isConnected = true;
+    log.success("Redis initialized (main + subscriber)");
+    return client;
+  } catch (err) {
+    // Destroy both clients immediately so ioredis stops all background
+    // reconnection attempts (which would otherwise generate unhandled
+    // MaxRetriesPerRequestError rejections that crash the server).
+    client.disconnect();
+    subscriber.disconnect();
+    client = null;
+    subscriber = null;
+    throw err;
+  }
 }
 
 // ============================================================================
@@ -67,13 +87,11 @@ export async function initRedis() {
 // ============================================================================
 
 export function getRedisClient() {
-  if (!client) throw new Error("Redis not initialized. Call initRedis() first.");
-  return client;
+  return client; // null when Redis is unavailable — callers must guard
 }
 
 export function getRedisSubscriber() {
-  if (!subscriber) throw new Error("Redis subscriber not initialized.");
-  return subscriber;
+  return subscriber; // null when Redis is unavailable — callers must guard
 }
 
 export function getIsConnected() {
