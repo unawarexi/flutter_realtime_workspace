@@ -1,0 +1,11 @@
+# IDE
+.vscode/
+
+# Error logs
+errors.md
+
+# Sentry wizard artifact
+sentry-wizard
+
+# Skill/agent docs
+skills.md

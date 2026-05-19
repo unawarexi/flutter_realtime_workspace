@@ -64,3 +64,9 @@ terraform/.terraform.lock.hcl
 .cache/
 
 /generated/prisma
+
+# Error logs
+errors.md
+
+# Skill/agent docs
+skills.md

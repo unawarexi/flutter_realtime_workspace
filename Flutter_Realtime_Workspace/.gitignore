@@ -12,6 +12,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+sentry-wizard/
 
 
 # IntelliJ related
@@ -95,3 +96,15 @@ firebase_app_id_file.json
 play-store-key.json
 google-services-key.json
 android/build/
+
+# IDE
+.vscode/
+
+# Error logs
+errors.md
+
+# Sentry wizard artifact
+sentry-wizard
+
+# Skill/agent docs
+skills.md
