@@ -32,17 +32,17 @@ class TColors {
   // ── Text colors ────────────────────────────────────────────────────────────
   static const Color textPrimaryLight = Color(0xFF1A202C);
   static const Color textPrimaryDark = Color(0xFFF8FAFC);
-  static const Color textSecondaryLight = Color(0xFF718096);
+  static const Color textSecondaryLight = Color(0xFF475569);
   static const Color textSecondaryDark = Color(0xFF94A3B8);
-  static const Color textTertiaryLight = Color(0xFF64748B);
+  static const Color textTertiaryLight = Color(0xFF4A5568);
   static const Color textTertiaryDark = Color(0xFF64748B);
 
   // Text aliases used across widgets
-  static const Color textLight = Color(0xFF718096);
+  static const Color textLight = Color(0xFF2D3748);
   static const Color textDark = Color(0xFF94A3B8);
-  static const Color textLightSecondary = Color(0xFF718096);
+  static const Color textLightSecondary = Color(0xFF475569);
   static const Color textDarkSecondary = Color(0xFF94A3B8);
-  static const Color textLightTertiary = Color(0xFF64748B);
+  static const Color textLightTertiary = Color(0xFF4A5568);
   static const Color textDarkTertiary = Color(0xFF64748B);
 
   // ── Background colors ──────────────────────────────────────────────────────
@@ -57,9 +57,9 @@ class TColors {
   static const Color darkSurface = Color(0xFF1E293B);
   static const Color lightElevated = Color(0xFFF1F5F9);
   static const Color darkElevated = Color(0xFF334155);
-  static const Color lightHover = Color(0xFFE2E8F0);
+  static const Color lightHover = Color(0xFFCBD5E0);
   static const Color darkHover = Color(0xFF475569);
-  static const Color lightMuted = Color(0xFFA0AEC0);
+  static const Color lightMuted = Color(0xFF64748B);
   static const Color darkMuted = Color(0xFF64748B);
 
   // Compatibility aliases
@@ -77,9 +77,9 @@ class TColors {
   static const Color buttonPrimaryLight = Color(0xFF3B82F6);
 
   // ── Border colors ──────────────────────────────────────────────────────────
-  static const Color borderLight = Color(0xFFE2E8F0);
+  static const Color borderLight = Color(0xFFCBD5E0);
   static const Color borderDark = Color(0xFF334155);
-  static const Color lightBorder = Color(0xFFE2E8F0);
+  static const Color lightBorder = Color(0xFFCBD5E0);
   static const Color darkBorder = Color(0xFF334155);
 
   // ── Status colors ──────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ class TColors {
   static const Color quickActionYellow = Color(0xFFF59E0B);
 
   // ── Misc text aliases ──────────────────────────────────────────────────────
-  static const Color tertiaryLight = Color(0xFF64748B);
+  static const Color tertiaryLight = Color(0xFF4A5568);
   static const Color secondaryDark = Color(0xFF94A3B8);
   static const Color darkText = Color(0xFF0F172A);
 }

@@ -70,14 +70,14 @@ class TInput extends StatelessWidget {
       cursorColor: TColors.primary,
       style: TextStyle(
         color: isDark ? TColors.textDark : TColors.textLight,
-        fontSize: 15,
+        fontSize: 14,
       ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         errorText: errorText,
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: isDark ? TColors.darkMuted : TColors.lightMuted)
+            ? Icon(prefixIcon, size: 18, color: isDark ? TColors.darkMuted : TColors.lightMuted)
             : null,
         suffixIcon: suffix,
         filled: true,
@@ -86,11 +86,11 @@ class TInput extends StatelessWidget {
             : TColors.lightElevated.withValues(alpha: 0.5),
         hintStyle: TextStyle(
           color: isDark ? TColors.darkMuted : TColors.lightMuted,
-          fontSize: 15,
+          fontSize: 14,
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: TSizes.md,
-          vertical: TSizes.inputPadding,
+          vertical: 10,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(TSizes.radiusMd),

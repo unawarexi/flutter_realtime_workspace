@@ -220,3 +220,80 @@ class StaggeredCascadeAnim {
   void forward() => controller.forward();
   void dispose() => controller.dispose();
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Onboarding & Splash additions
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Onboarding page content transition: fade + slight slide from right + scale-up.
+/// Call [reset] then [forward] on each page change to replay the entrance.
+class OnboardingPageAnim {
+  late final AnimationController controller;
+  late final Animation<double> fade;
+  late final Animation<Offset> slide;
+  late final Animation<double> scale;
+
+  OnboardingPageAnim({
+    required TickerProvider vsync,
+    Duration duration = const Duration(milliseconds: 560),
+  }) {
+    controller = AnimationController(vsync: vsync, duration: duration);
+    fade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+      ),
+    );
+    slide = Tween<Offset>(
+      begin: const Offset(0.07, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeOutCubic));
+    scale = Tween<double>(begin: 0.94, end: 1.0).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeOutCubic),
+    );
+  }
+
+  void forward() => controller.forward();
+  void reset() => controller.reset();
+  void dispose() => controller.dispose();
+}
+
+/// Continuous radar-sweep rotation (0 → 1, repeating).
+/// Used by: Splash screen animated radar rings.
+class RadarSweepAnim {
+  late final AnimationController controller;
+  late final Animation<double> value;
+
+  RadarSweepAnim({
+    required TickerProvider vsync,
+    Duration duration = const Duration(milliseconds: 2000),
+  }) {
+    controller = AnimationController(vsync: vsync, duration: duration);
+    value = Tween<double>(begin: 0.0, end: 1.0).animate(controller);
+  }
+
+  void repeat() => controller.repeat();
+  void dispose() => controller.dispose();
+}
+
+/// Oscillating pulse (begin ↔ end, reverse-repeating).
+/// Used by: Splash screen pulse ring around the logo emblem.
+class OscillatePulseAnim {
+  late final AnimationController controller;
+  late final Animation<double> value;
+
+  OscillatePulseAnim({
+    required TickerProvider vsync,
+    Duration duration = const Duration(milliseconds: 1500),
+    double begin = 0.8,
+    double end = 1.2,
+  }) {
+    controller = AnimationController(vsync: vsync, duration: duration);
+    value = Tween<double>(begin: begin, end: end).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
+    );
+  }
+
+  void repeat() => controller.repeat(reverse: true);
+  void dispose() => controller.dispose();
+}

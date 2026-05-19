@@ -1,13 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/app/features/notification/presentation/screens/notification_screen.dart';
 import 'package:flutter_realtime_workspace/core/services/storage_service.dart';
 import 'package:go_router/go_router.dart';
 
 // Screens
+import 'package:flutter_realtime_workspace/app/bottom_navigation.dart';
 import 'package:flutter_realtime_workspace/app/screens/splash/splash_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/onboarding/presentation/onboarding_screen.dart';
-import 'package:flutter_realtime_workspace/app/features/home/presentation/home_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/project/presentation/project_home_screen.dart';
 
@@ -15,7 +14,11 @@ import 'package:flutter_realtime_workspace/app/features/project/presentation/pro
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/login.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/signup_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/2fa_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/forgot_password.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/reset_password.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/email_verification_success.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/user_information.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/options_screen.dart';
 
 // Collaboration
 import 'package:flutter_realtime_workspace/app/features/collaboration/presentation/chat_screen.dart';
@@ -109,8 +112,8 @@ import 'package:flutter_realtime_workspace/app/features/feedback/presentation/sc
 import 'package:flutter_realtime_workspace/app/features/identity/presentation/screens/roles_screen.dart';
 
 // Legal
-import 'package:flutter_realtime_workspace/app/features/legal/presentation/screens/terms_screen.dart';
-import 'package:flutter_realtime_workspace/app/features/legal/presentation/screens/privacy_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/legal/presentation/terms_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/legal/presentation/privacy_screen.dart';
 
 // AI
 import 'package:flutter_realtime_workspace/app/features/ai/presentation/screens/ai_assistant_screen.dart';
@@ -139,19 +142,41 @@ final GoRouter appRouter = GoRouter(
     final backendToken = await SecureStorageService.getAccessToken();
     final isLoggedIn =
         firebaseLoggedIn || (backendToken != null && backendToken.isNotEmpty);
+    final hasSeenOnboarding = LocalStorageService.hasSeenOnboarding;
     final path = state.uri.path;
 
-    final publicPaths = ['/splash', '/onboarding', '/login', '/signup', '/2fa', '/terms', '/privacy'];
+    // Splash is always allowed — it decides where to go after its animation
+    if (path == '/splash') return null;
+
+    final publicPaths = [
+      '/onboarding', '/login', '/signup', '/2fa', '/terms', '/privacy',
+      '/forgot-password', '/reset-password', '/verify-email-success',
+      '/options', '/user-info',
+    ];
     final isPublic = publicPaths.any((p) => path.startsWith(p));
 
-    if (!isLoggedIn && !isPublic) return '/login';
-    if (isLoggedIn && path == '/login') return '/home';
+    if (!isLoggedIn) {
+      // First-time user: show onboarding before login
+      if (!hasSeenOnboarding && !path.startsWith('/onboarding')) {
+        return '/onboarding';
+      }
+      // Not on a public page: send to login
+      if (!isPublic) return '/login';
+      return null;
+    }
+
+    // Already logged in: bounce away from auth/onboarding screens
+    if (path == '/login' ||
+        path == '/onboarding' ||
+        path.startsWith('/signup')) {
+      return '/home';
+    }
     return null;
   },
   routes: [
     GoRoute(
       path: '/splash',
-      builder: (context, state) => TeamSpotSplashScreen(nextScreen: const Home()),
+      builder: (context, state) => const TeamSpotSplashScreen(),
     ),
     GoRoute(
       path: '/onboarding',
@@ -170,8 +195,34 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const TwoFAScreen(),
     ),
     GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) {
+        final token = state.uri.queryParameters['token'];
+        return ResetPasswordScreen(token: token);
+      },
+    ),
+    GoRoute(
+      path: '/verify-email-success',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, String?>?;
+        return EmailVerificationSuccessScreen(
+          nextRoute: extra?['nextRoute'],
+          title: extra?['title'],
+          message: extra?['message'],
+        );
+      },
+    ),
+    GoRoute(
       path: '/user-info',
       builder: (context, state) => const UserInformationScreen(mode: UserInfoMode.create),
+    ),
+    GoRoute(
+      path: '/options',
+      builder: (context, state) => const OrganisationOptionsScreen(),
     ),
     GoRoute(
       path: '/terms',
@@ -187,13 +238,13 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/home',
-          builder: (context, state) => const Home(),
+          builder: (context, state) => const BottomNavigationBarWidget(),
         ),
         GoRoute(
           path: '/dashboard',
           builder: (context, state) => const DashboardScreen(),
           routes: [
-            GoRoute(path: 'default', builder: (c, s) => DefaultDashboard('default', title: 'Dashboard')),
+            GoRoute(path: 'default', builder: (c, s) => const DefaultDashboard('default', title: 'Dashboard')),
             GoRoute(path: 'starred', builder: (c, s) => const StarredDashboard(title: 'Starred')),
             GoRoute(path: 'financial', builder: (c, s) => const FinancialOverviewDashboard(title: 'Financial Overview')),
           ],
@@ -230,7 +281,7 @@ final GoRouter appRouter = GoRouter(
             GoRoute(path: 'create', builder: (c, s) => const CreateProjectScreen()),
             GoRoute(
               path: ':projectId',
-              builder: (c, s) => ProjectMore(),
+              builder: (c, s) => const ProjectMore(),
               routes: [
                 GoRoute(path: 'timeline', builder: (c, s) => ProjectTimelineScreen(projectName: s.pathParameters['projectId'] ?? '')),
                 GoRoute(path: 'task/create', builder: (c, s) => const CreateTaskScreen()),
