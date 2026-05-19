@@ -49,14 +49,31 @@ const twoFaTempKey    = (token)             => `2fatemp:${token}`;
 const rateLimitKey    = (action, id)        => `ratelimit:${action}:${id}`;
 
 // ── Redis helpers ─────────────────────────────────────────────────────────────
-async function redis() { return getRedisClient(); }
+// All helpers guard against null client (Redis unavailable in dev / after
+// failed connection). Reads return null/[], writes/deletes are no-ops so the
+// server stays functional, but rate-limiting and session features degrade.
 
-async function rGet(k)           { const r = await redis(); const v = await r.get(k); return v ? JSON.parse(v) : null; }
-async function rSet(k, v, ttl)   { const r = await redis(); await r.set(k, JSON.stringify(v), "EX", ttl); }
-async function rDel(k)           { const r = await redis(); await r.del(k); }
-async function rKeys(pattern)    { const r = await redis(); return r.keys(pattern); }
-async function rIncrEx(k, ttl)   {
-  const r = await redis();
+function redis() { return getRedisClient(); }
+
+async function rGet(k) {
+  const r = redis(); if (!r) return null;
+  const v = await r.get(k); return v ? JSON.parse(v) : null;
+}
+async function rSet(k, v, ttl) {
+  const r = redis(); if (!r) return;
+  await r.set(k, JSON.stringify(v), "EX", ttl);
+}
+async function rDel(k) {
+  const r = redis(); if (!r) return;
+  await r.del(k);
+}
+async function rKeys(pattern) {
+  const r = redis(); if (!r) return [];
+  return r.keys(pattern);
+}
+async function rIncrEx(k, ttl) {
+  const r = redis();
+  if (!r) { log.warn("Redis unavailable — skipping rate-limit check", { key: k }); return 0; }
   const n = await r.incr(k);
   if (n === 1) await r.expire(k, ttl);
   return n;
@@ -106,9 +123,11 @@ async function createSession(user, deviceInfo = {}) {
 // ============================================================================
 // REGISTER (email/password)
 // ============================================================================
-export async function register({ email, password, fullName, inviteCode, timezone = "UTC", ip }) {
+export async function register({ email, password, fullName, inviteCode, termsAccepted, timezone = "UTC", ip }) {
   // Rate limit registrations per IP
   await checkBruteForce("register", ip || email, 20, 3600);
+
+  if (!termsAccepted) throw badRequest("You must accept the Terms of Service and Privacy Policy to register.");
 
   const existing = await User.findOne({ email }).lean();
   if (existing) throw conflict("An account with this email already exists");
@@ -123,6 +142,7 @@ export async function register({ email, password, fullName, inviteCode, timezone
     displayName: fullName,
     timezone,
     status: "pending", // until email verified
+    termsAcceptedAt: termsAccepted ? new Date() : undefined,
     inviteCode: generateInviteCode(),
     usedInviteCode: inviteCode,
     profileCompletion: 0,

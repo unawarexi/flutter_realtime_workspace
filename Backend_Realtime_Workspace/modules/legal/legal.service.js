@@ -6,13 +6,20 @@
 import { termsOfService } from "../../core/data/terms-of-service.js";
 import { privacyPolicy } from "../../core/data/privacy.js";
 
+function mapSections(sections = []) {
+  return sections.map((s) => ({
+    title: s.heading ?? s.title ?? "",
+    content: s.body ?? s.content ?? "",
+  }));
+}
+
 export function getTermsOfService() {
   return {
     title: termsOfService.title,
     effectiveDate: termsOfService.effectiveDate,
     lastUpdated: termsOfService.lastUpdated,
     version: termsOfService.version,
-    sections: termsOfService.sections,
+    sections: mapSections(termsOfService.sections),
   };
 }
 
@@ -22,7 +29,7 @@ export function getPrivacyPolicy() {
     effectiveDate: privacyPolicy.effectiveDate,
     lastUpdated: privacyPolicy.lastUpdated,
     version: privacyPolicy.version,
-    sections: privacyPolicy.sections,
+    sections: mapSections(privacyPolicy.sections),
   };
 }
 

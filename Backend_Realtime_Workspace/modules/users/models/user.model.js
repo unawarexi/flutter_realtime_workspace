@@ -104,6 +104,9 @@ const userSchema = new mongoose.Schema(
     lockedUntil: { type: Date },
     fcmTokens: [{ type: String }],
 
+    // ── Legal Consent ─────────────────────────────────────────────────────
+    termsAcceptedAt: { type: Date },
+
     // ── Status ────────────────────────────────────────────────────────────
     status: {
       type: String,

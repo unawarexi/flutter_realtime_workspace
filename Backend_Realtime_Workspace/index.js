@@ -34,6 +34,7 @@ import { tenantMiddleware } from "./core/auth/tenant.middleware.js";
 // Infrastructure
 import { initRedis, disconnectRedis, healthCheck as redisHealthCheck } from "./infrastructure/redis/redis.service.js";
 import { initKafka, disconnectKafka, healthCheck as kafkaHealthCheck } from "./infrastructure/kafka/kafka.service.js";
+import { initRabbitMQ, disconnectRabbitMQ, healthCheck as rabbitHealthCheck } from "./infrastructure/rabbitmq/rabbitmq.service.js";
 import { initWebSocket, disconnectWebSocket } from "./infrastructure/websocket/websocket.service.js";
 import { initCloudinary } from "./infrastructure/storage/cloudinary.service.js";
 import { verifyMailer } from "./infrastructure/mailer/mailer.service.js";
@@ -122,25 +123,6 @@ app.get(API, (_req, res) => {
 });
 
 // ============================================================================
-// SENTRY ERROR HANDLER (must be after routes, before custom error handler)
-// ============================================================================
-
-setupSentryExpress(app);
-
-// ============================================================================
-// 404 + GLOBAL ERROR HANDLER
-// ============================================================================
-
-app.use((_req, res) => {
-  res.status(HttpStatus.NOT_FOUND).json({
-    success: false,
-    message: "Route not found",
-  });
-});
-
-app.use(globalErrorHandler);
-
-// ============================================================================
 // SERVER STARTUP
 // ============================================================================
 
@@ -182,6 +164,15 @@ async function startServer() {
     initWebSocket(server);
     log.info("WebSocket initialized");
 
+    // ── RabbitMQ ──
+    try {
+      await initRabbitMQ();
+      registerHealthChecker("rabbitmq", rabbitHealthCheck);
+      log.info("RabbitMQ connected");
+    } catch (err) {
+      log.warn("RabbitMQ connection failed — email queuing disabled", { error: err.message });
+    }
+
     // ── LiveKit ──
     initLiveKit();
 
@@ -191,8 +182,18 @@ async function startServer() {
     // ── Register all module routes ──
     const registeredModules = await registerModules(app, API);
 
-    // Re-add 404 and error handler after dynamic routes
-    // (Express processes middleware in order, so we need to ensure these are last)
+    // Error handlers must be registered AFTER all routes
+    // (Express processes middleware in order)
+    setupSentryExpress(app);
+
+    app.use((_req, res) => {
+      res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        message: "Route not found",
+      });
+    });
+
+    app.use(globalErrorHandler);
 
     // ── SMTP verification (non-blocking) ──
     verifyMailer().catch((err) => log.warn("SMTP verification failed", { error: err.message }));
@@ -230,6 +231,7 @@ async function gracefulShutdown(signal) {
   try { await disconnectDB(); log.info("Database disconnected"); } catch {}
   try { await disconnectRedis(); log.info("Redis disconnected"); } catch {}
   try { await disconnectKafka(); log.info("Kafka disconnected"); } catch {}
+  try { await disconnectRabbitMQ(); log.info("RabbitMQ disconnected"); } catch {}
   try { await disconnectWebSocket(); log.info("WebSocket disconnected"); } catch {}
 
   log.info("Graceful shutdown completed");
