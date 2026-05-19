@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 // Screens
 import 'package:flutter_realtime_workspace/app/bottom_navigation.dart';
 import 'package:flutter_realtime_workspace/app/screens/splash/splash_screen.dart';
-import 'package:flutter_realtime_workspace/app/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:flutter_realtime_workspace/app/screens/onboarding/onboarding_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/project/presentation/project_home_screen.dart';
 
