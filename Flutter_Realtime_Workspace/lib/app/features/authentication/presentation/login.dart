@@ -81,14 +81,14 @@ class Authentication extends ConsumerWidget {
                         child: Center(
                           child: Image.asset(
                             isDark ? TImages.darkEmblem : TImages.lightEmblem,
-                            height: TResponsive.sp(context, 80,
-                                tabletSize: 96, desktopSize: 100),
-                            width: 150,
+                            height: TResponsive.sp(context, 60,
+                                tabletSize: 80, desktopSize: 96),
+                            width: 130,
                             fit: BoxFit.contain,
                           ),
                         ),
                       ),
-                      const SizedBox(height: TSizes.lg),
+                      const SizedBox(height: TSizes.md),
                       // Heading
                       TWidgetAnimations.slideUp(
                         child: Text(
@@ -134,7 +134,8 @@ class Authentication extends ConsumerWidget {
                         delay: const Duration(milliseconds: 200),
                         child: SocialLoginButton(
                           label: 'Continue with Google',
-                          icon: const Icon(TIcons.google, size: 20),
+                          icon: Image.asset(TImages.googleIcon,
+                              width: 20, height: 20),
                           onPressed: () => AuthUseCase.signInWithGoogle(
                             context: context,
                             ref: ref,
@@ -146,7 +147,8 @@ class Authentication extends ConsumerWidget {
                         delay: const Duration(milliseconds: 230),
                         child: SocialLoginButton(
                           label: 'Continue with GitHub',
-                          icon: const Icon(TIcons.github, size: 20),
+                          icon: Image.asset(TImages.githubIcon,
+                              width: 20, height: 20),
                           onPressed: () => AuthUseCase.signInWithGithub(
                             context: context,
                             ref: ref,

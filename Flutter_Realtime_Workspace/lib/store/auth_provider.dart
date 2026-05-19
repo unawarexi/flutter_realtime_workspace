@@ -113,13 +113,14 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   Future<void> signUpWithEmailPassword(
     String email,
     String password,
-    String fullName,
-  ) async {
+    String fullName, {
+    bool termsAccepted = false,
+  }) async {
     state = const AsyncValue.loading();
     try {
       await _ref
           .read(authRepositoryProvider)
-          .signUpWithEmailPassword(email, password, fullName);
+          .signUpWithEmailPassword(email, password, fullName, termsAccepted: termsAccepted);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -156,25 +157,53 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     state = const AsyncValue.data(null);
   }
 
+  /// Verify 2FA code after login. Completes the auth session.
+  Future<void> verify2FA({
+    required String tempToken,
+    required String otp,
+    required String method,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final session = await _ref.read(authRepositoryProvider).verify2FA(
+            tempToken: tempToken,
+            otp: otp,
+            method: method,
+          );
+      if (session.user != null) {
+        state = AsyncValue.data(session.user);
+        _registerFcmToken();
+        _connectWebSocket(session.user!);
+      } else {
+        state = const AsyncValue.data(null);
+      }
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
   void setUser(UserModel user) => state = AsyncValue.data(user);
 
   /// Register FCM token with the backend for push notifications.
   Future<void> _registerFcmToken() async {
+    if (!Platform.isAndroid) return;
+
     try {
       final token = await NotificationService.instance.getToken();
       if (token != null) {
         await _ref.read(userRepositoryProvider).registerDevice(
-              fcmToken: token,
-              platform: Platform.isIOS ? 'ios' : 'android',
-            );
+          fcmToken: token,
+          platform: 'android',
+        );
       }
       // Listen for token refresh and re-register automatically
       NotificationService.instance.onTokenRefresh.listen((newToken) async {
         try {
           await _ref.read(userRepositoryProvider).registerDevice(
-                fcmToken: newToken,
-                platform: Platform.isIOS ? 'ios' : 'android',
-              );
+            fcmToken: newToken,
+            platform: 'android',
+          );
         } catch (e) {
           debugPrint('FCM token refresh registration failed: $e');
         }

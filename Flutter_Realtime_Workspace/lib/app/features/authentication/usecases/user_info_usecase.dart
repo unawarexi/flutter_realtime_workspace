@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/app/bottom_navigation.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/components/common/toast_alerts.dart';
 import 'package:flutter_realtime_workspace/store/user_provider.dart';
 
@@ -40,13 +40,14 @@ class UserInfoUseCase {
     required String timezone,
     required String workingHoursStart,
     required String workingHoursEnd,
-    // Section 3
+    // Section 3 — Organisation
     required String companyName,
     required String companyWebsite,
     required String industry,
     required String? teamSize,
     required String officeLocation,
-    // Section 4
+    required String orgSlug,
+    // Section 4 — Workspace / Join
     required String inviteCode,
     required String teamProjectName,
     required String? permissionsLevel,
@@ -87,14 +88,15 @@ class UserInfoUseCase {
       };
     }
 
-    // Section 3
+    // Section 3 — Organisation
     add('companyName', companyName.trim());
+    add('orgSlug', orgSlug.trim());
     add('companyWebsite', companyWebsite.trim());
     add('industry', industry.trim());
     addOptional('teamSize', teamSize);
     add('officeLocation', officeLocation.trim());
 
-    // Section 4
+    // Section 4 — Workspace / Join
     add('inviteCode', inviteCode.trim());
     add('teamProjectName', teamProjectName.trim());
     addOptional('permissionsLevel', permissionsLevel);
@@ -138,10 +140,7 @@ class UserInfoUseCase {
         bio: payload['bio'] as String?,
       );
       if (!context.mounted) return false;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const BottomNavigationBarWidget()),
-      );
+      context.go('/home');
       return true;
     } catch (e) {
       if (!context.mounted) return false;

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_event.dart';
@@ -9,12 +11,23 @@ import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_realtime_workspace/firebase_options.dart';
 import 'package:flutter_realtime_workspace/router/app_router.dart';
+import 'package:flutter/widgets.dart';
 
 /// Top-level handler for background FCM messages (must be top-level function).
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await NotificationService.instance._handleRemoteMessage(message);
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (_) {
+    // Firebase may already be initialized in some app lifecycles.
+  }
+  await NotificationService.instance.handleBackgroundRemoteMessage(message);
 }
 
 class NotificationService {
@@ -143,6 +156,15 @@ class NotificationService {
     }
 
     // All other notifications → local notification with appropriate channel
+    await _showLocalNotification(message);
+  }
+
+  /// Background isolate-safe handler.
+  ///
+  /// Keep this minimal: some plugins/channels (for example CallKit event
+  /// streams) are not safe to use from background isolates on all devices.
+  Future<void> handleBackgroundRemoteMessage(RemoteMessage message) async {
+    if (!Platform.isAndroid) return;
     await _showLocalNotification(message);
   }
 

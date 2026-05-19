@@ -21,8 +21,9 @@ class AuthRepository {
   Future<void> signUpWithEmailPassword(
     String email,
     String password,
-    String fullName,
-  ) async {
+    String fullName, {
+    bool termsAccepted = false,
+  }) async {
     try {
       await _api.post(
         ApiEndpoints.authRegister,
@@ -30,6 +31,7 @@ class AuthRepository {
           'email': email.trim(),
           'password': password,
           'fullName': fullName.trim(),
+          'termsAccepted': termsAccepted,
         },
       );
     } catch (e) {
@@ -167,5 +169,56 @@ class AuthRepository {
       HiveService.clearBox(HiveService.schedule),
       HiveService.clearBox(HiveService.settings),
     ]);
+  }
+
+  /// Send password reset email.
+  Future<void> forgotPassword(String email) async {
+    await _api.post(
+      ApiEndpoints.authForgotPassword,
+      data: {'email': email.trim()},
+    );
+  }
+
+  /// Reset password using token received in email.
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await _api.post(
+      ApiEndpoints.authResetPassword,
+      data: {'token': token, 'newPassword': newPassword},
+    );
+  }
+
+  /// Verify 2FA code (email OTP or TOTP) after login.
+  Future<AuthSessionModel> verify2FA({
+    required String tempToken,
+    required String otp,
+    required String method,
+  }) async {
+    final endpoint = method == 'totp'
+        ? ApiEndpoints.auth2faTotpVerify
+        : ApiEndpoints.auth2faEmailVerify;
+    final field = method == 'totp' ? 'totp' : 'otp';
+    final res = await _api.post(endpoint, data: {
+      'token': tempToken,
+      field: otp,
+    });
+    final session = AuthSessionModel.fromJson(res.data['data']);
+    await _persistSession(session);
+    return session;
+  }
+
+  /// Resend 2FA email code using tempToken.
+  Future<void> resend2FACode(String tempToken) async {
+    await _api.post(ApiEndpoints.auth2faEmailSend, data: {'token': tempToken});
+  }
+
+  /// Resend email verification.
+  Future<void> resendVerification(String email) async {
+    await _api.post(
+      ApiEndpoints.authResendVerification,
+      data: {'email': email.trim()},
+    );
   }
 }

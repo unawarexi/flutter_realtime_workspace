@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/usecases/auth_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/icons.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
@@ -60,7 +62,7 @@ class _PasswordAuthenticationState
               validator: AuthUseCase.validateEmail,
             ),
           ),
-          const SizedBox(height: TSizes.sm + 4),
+          const SizedBox(height: TSizes.sm),
           TWidgetAnimations.fadeIn(
             duration: const Duration(milliseconds: 300),
             child: TInput(
@@ -75,6 +77,26 @@ class _PasswordAuthenticationState
                 icon: Icon(
                   _obscure ? TIcons.passwordHidden : TIcons.passwordVisible,
                   size: 18,
+                ),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => context.push('/forgot-password'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 4, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Forgot Password?',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: TColors.primary,
                 ),
               ),
             ),

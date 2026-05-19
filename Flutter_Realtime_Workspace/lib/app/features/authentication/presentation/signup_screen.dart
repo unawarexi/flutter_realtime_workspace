@@ -5,6 +5,8 @@ import 'package:flutter_realtime_workspace/app/components/shapes/bg_patterns.dar
 import 'package:flutter_realtime_workspace/app/components/shapes/decorative_painters.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/onboarding_divider.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/social_login_button.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/usecases/auth_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
@@ -30,6 +32,7 @@ class _SignUpState extends ConsumerState<SignUp> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _loading = false;
+  bool _termsAccepted = false;
 
   @override
   void dispose() {
@@ -42,6 +45,15 @@ class _SignUpState extends ConsumerState<SignUp> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!_termsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please accept the Terms of Service and Privacy Policy to continue.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     setState(() => _loading = true);
     await AuthUseCase.signUpWithEmailPassword(
       context: context,
@@ -49,6 +61,7 @@ class _SignUpState extends ConsumerState<SignUp> {
       fullName: _nameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
+      termsAccepted: _termsAccepted,
     );
     if (mounted) setState(() => _loading = false);
   }
@@ -122,14 +135,14 @@ class _SignUpState extends ConsumerState<SignUp> {
                               isDark
                                   ? TImages.darkEmblem
                                   : TImages.lightEmblem,
-                              height: TResponsive.sp(context, 80,
-                                  tabletSize: 96),
-                              width: 150,
+                              height: TResponsive.sp(context, 60,
+                                  tabletSize: 80),
+                              width: 130,
                               fit: BoxFit.contain,
                             ),
                           ),
                         ),
-                        const SizedBox(height: TSizes.lg),
+                        const SizedBox(height: TSizes.md),
                         TWidgetAnimations.slideUp(
                           child: Text(
                             'Create Account',
@@ -157,7 +170,7 @@ class _SignUpState extends ConsumerState<SignUp> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: TSizes.lg),
+                        const SizedBox(height: TSizes.md),
                         // Full name
                         TWidgetAnimations.fadeIn(
                           delay: const Duration(milliseconds: 80),
@@ -169,7 +182,7 @@ class _SignUpState extends ConsumerState<SignUp> {
                             validator: AuthUseCase.validateFullName,
                           ),
                         ),
-                        const SizedBox(height: TSizes.sm + 4),
+                        const SizedBox(height: TSizes.sm),
                         // Email
                         TWidgetAnimations.fadeIn(
                           delay: const Duration(milliseconds: 110),
@@ -182,7 +195,7 @@ class _SignUpState extends ConsumerState<SignUp> {
                             validator: AuthUseCase.validateEmail,
                           ),
                         ),
-                        const SizedBox(height: TSizes.sm + 4),
+                        const SizedBox(height: TSizes.sm),
                         // Password
                         TWidgetAnimations.fadeIn(
                           delay: const Duration(milliseconds: 140),
@@ -205,7 +218,7 @@ class _SignUpState extends ConsumerState<SignUp> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: TSizes.sm + 4),
+                        const SizedBox(height: TSizes.sm),
                         // Confirm password
                         TWidgetAnimations.fadeIn(
                           delay: const Duration(milliseconds: 170),
@@ -236,6 +249,76 @@ class _SignUpState extends ConsumerState<SignUp> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: TSizes.md),
+                        // Terms & Privacy checkbox
+                        TWidgetAnimations.fadeIn(
+                          delay: const Duration(milliseconds: 185),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: _termsAccepted,
+                                  onChanged: (v) =>
+                                      setState(() => _termsAccepted = v ?? false),
+                                  activeColor: TColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Wrap(
+                                  children: [
+                                    Text(
+                                      'I agree to the ',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark
+                                            ? TColors.textSecondaryDark
+                                            : TColors.textSecondaryLight,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () => context.push('/terms'),
+                                      child: const Text(
+                                        'Terms of Service',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: TColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      ' and ',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark
+                                            ? TColors.textSecondaryDark
+                                            : TColors.textSecondaryLight,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () => context.push('/privacy'),
+                                      child: const Text(
+                                        'Privacy Policy',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: TColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: TSizes.lg),
                         TWidgetAnimations.fadeIn(
                           delay: const Duration(milliseconds: 200),
@@ -244,6 +327,39 @@ class _SignUpState extends ConsumerState<SignUp> {
                             onPressed: _loading ? null : _submit,
                             isLoading: _loading,
                             prefixIcon: TIcons.invite,
+                          ),
+                        ),
+                        const SizedBox(height: TSizes.md),
+                        // Divider
+                        TWidgetAnimations.fadeIn(
+                          delay: const Duration(milliseconds: 215),
+                          child: const CustomDivider(),
+                        ),
+                        const SizedBox(height: TSizes.md),
+                        // Social sign-up buttons
+                        TWidgetAnimations.fadeIn(
+                          delay: const Duration(milliseconds: 230),
+                          child: SocialLoginButton(
+                            label: 'Sign up with Google',
+                            icon: Image.asset(TImages.googleIcon,
+                                width: 20, height: 20),
+                            onPressed: () => AuthUseCase.signInWithGoogle(
+                              context: context,
+                              ref: ref,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: TSizes.sm),
+                        TWidgetAnimations.fadeIn(
+                          delay: const Duration(milliseconds: 250),
+                          child: SocialLoginButton(
+                            label: 'Sign up with GitHub',
+                            icon: Image.asset(TImages.githubIcon,
+                                width: 20, height: 20),
+                            onPressed: () => AuthUseCase.signInWithGithub(
+                              context: context,
+                              ref: ref,
+                            ),
                           ),
                         ),
                         const SizedBox(height: TSizes.xl),
