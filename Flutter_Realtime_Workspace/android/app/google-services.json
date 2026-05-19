@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:869338390823:android:4bcfe3e94225b7a4244902",
         "android_client_info": {
-          "package_name": "com.example.flutterRealtimeWorkspace"
+          "package_name": "com.teamspot.app"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "869338390823-tujtuhsp1lcr3ufp21o2ltul56lcuuuv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.flutterRealtimeWorkspace",
+            "package_name": "com.teamspot.app",
             "certificate_hash": "6583962bd5cf6c39452c9024550b403c70e1a360"
           }
         },

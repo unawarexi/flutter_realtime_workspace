@@ -59,6 +59,9 @@ dependencies:
   google_maps_flutter: ^2.9.0
   geolocator: ^13.0.1
 
+  # --- VIDEO ---
+  video_player: ^2.9.2
+
   # --- UI / DESIGN ---
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.2
@@ -139,8 +142,8 @@ flutter:
     - assets/logo/
     # - assets/icons/
     - assets/images/
-    - assets/lotties/projectGIF.gif
     - assets/icons/
+    - assets/videos/
    
   fonts:
     - family: Poppins
