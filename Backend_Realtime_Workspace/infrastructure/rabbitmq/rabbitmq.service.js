@@ -7,6 +7,7 @@ import amqplib from "amqplib";
 import { env } from "../../config/env.config.js";
 import { RabbitQueues as QueueNames } from "../../config/constants.js";
 import { createLogger } from "../../observability/logger.js";
+import { getRedisClient } from "../redis/redis.service.js";
 
 const log = createLogger("RabbitMQ");
 
@@ -99,6 +100,25 @@ export function consumeQueue(queueName, handler) {
 
     try {
       const payload = JSON.parse(msg.content.toString());
+
+      // ── Idempotency guard (Redis setnx, 24h TTL) ──────────────────────────
+      // Every message has a unique id (set in publishToQueue).
+      // If we've already processed it, skip silently to prevent duplicate side-effects
+      // on redelivery (e.g. RabbitMQ nack + requeue or broker restart).
+      const msgId = payload.id;
+      if (msgId) {
+        const redis = getRedisClient();
+        if (redis) {
+          const idempotencyKey = `idempotency:rabbitmq:${queueName}:${msgId}`;
+          const isNew = await redis.set(idempotencyKey, "1", "EX", 86400, "NX");
+          if (!isNew) {
+            log.info("Duplicate message skipped", { queueName, msgId });
+            channel.ack(msg);
+            return;
+          }
+        }
+      }
+
       await handler(payload);
       channel.ack(msg);
     } catch (err) {

@@ -8,6 +8,7 @@ import { env } from "../../config/env.config.js";
 import { KafkaTopics } from "../../config/constants.js";
 import { createLogger } from "../../observability/logger.js";
 import { retryWithBackoff } from "../../core/utils/retry.js";
+import { getRedisClient } from "../redis/redis.service.js";
 
 const log = createLogger("Kafka");
 
@@ -85,6 +86,24 @@ export async function subscribeToTopics(topics, handler) {
       try {
         const key = message.key?.toString();
         const value = JSON.parse(message.value.toString());
+
+        // ── Idempotency guard (Redis setnx, 24h TTL) ──────────────────────
+        // Kafka guarantees at-least-once delivery. The eventId field (a ULID
+        // set by publishEvent callers via event-contracts) lets us deduplicate
+        // redeliveries without processing the same event twice.
+        const eventId = value?.eventId || value?.id;
+        if (eventId) {
+          const redis = getRedisClient();
+          if (redis) {
+            const idempotencyKey = `idempotency:kafka:${topic}:${eventId}`;
+            const isNew = await redis.set(idempotencyKey, "1", "EX", 86400, "NX");
+            if (!isNew) {
+              log.info("Duplicate Kafka event skipped", { topic, eventId });
+              return;
+            }
+          }
+        }
+
         await handler({ topic, partition, key, value, timestamp: message.timestamp, headers: message.headers });
       } catch (err) {
         log.error("Kafka message processing error", { error: err, topic });
