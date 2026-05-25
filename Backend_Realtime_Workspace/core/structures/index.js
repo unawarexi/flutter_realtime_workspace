@@ -195,4 +195,94 @@ export class Trie {
   }
 }
 
-export default { LRUCache, PriorityQueue, SlidingWindow, BloomFilter, Trie };
+// ── Circuit Breaker ──────────────────────────────────────────────────────────
+/**
+ * Circuit Breaker — prevents cascading failures when a dependency degrades.
+ *
+ * States:
+ *   CLOSED   → normal; requests flow through; failures are counted
+ *   OPEN     → dependency is down; requests fail fast without calling fn
+ *   HALF_OPEN → probe state; one request allowed through to test recovery
+ *
+ * @example
+ *   const breaker = new CircuitBreaker({ failureThreshold: 5, recoveryMs: 10000 });
+ *   const result  = await breaker.call(() => kafkaProducer.send(...));
+ */
+export class CircuitBreaker {
+  /**
+   * @param {Object} opts
+   * @param {number} [opts.failureThreshold=5]  — consecutive failures to open
+   * @param {number} [opts.successThreshold=2]  — consecutive successes to close from half-open
+   * @param {number} [opts.recoveryMs=10000]    — ms to wait in OPEN before probing
+   * @param {string} [opts.name="service"]
+   */
+  constructor({ failureThreshold = 5, successThreshold = 2, recoveryMs = 10000, name = "service" } = {}) {
+    this.failureThreshold = failureThreshold;
+    this.successThreshold = successThreshold;
+    this.recoveryMs = recoveryMs;
+    this.name = name;
+
+    this._state = "CLOSED"; // CLOSED | OPEN | HALF_OPEN
+    this._failureCount = 0;
+    this._successCount = 0;
+    this._openedAt = null;
+  }
+
+  get state() { return this._state; }
+
+  /**
+   * Execute fn through the circuit breaker.
+   * @param {Function} fn — async function to protect
+   * @returns {Promise<*>}
+   * @throws {Error} immediately when circuit is OPEN
+   */
+  async call(fn) {
+    if (this._state === "OPEN") {
+      const elapsed = Date.now() - this._openedAt;
+      if (elapsed >= this.recoveryMs) {
+        this._state = "HALF_OPEN";
+        this._successCount = 0;
+      } else {
+        throw new Error(`CircuitBreaker[${this.name}] is OPEN — failing fast (recovers in ${Math.round((this.recoveryMs - elapsed) / 1000)}s)`);
+      }
+    }
+
+    try {
+      const result = await fn();
+      this._onSuccess();
+      return result;
+    } catch (err) {
+      this._onFailure();
+      throw err;
+    }
+  }
+
+  _onSuccess() {
+    this._failureCount = 0;
+    if (this._state === "HALF_OPEN") {
+      this._successCount++;
+      if (this._successCount >= this.successThreshold) {
+        this._state = "CLOSED";
+        this._successCount = 0;
+      }
+    }
+  }
+
+  _onFailure() {
+    this._failureCount++;
+    if (this._state === "HALF_OPEN" || this._failureCount >= this.failureThreshold) {
+      this._state = "OPEN";
+      this._openedAt = Date.now();
+      this._failureCount = 0;
+    }
+  }
+
+  reset() {
+    this._state = "CLOSED";
+    this._failureCount = 0;
+    this._successCount = 0;
+    this._openedAt = null;
+  }
+}
+
+export default { LRUCache, PriorityQueue, SlidingWindow, BloomFilter, Trie, CircuitBreaker };
