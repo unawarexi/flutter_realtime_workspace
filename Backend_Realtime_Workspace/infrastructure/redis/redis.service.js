@@ -132,16 +132,32 @@ export async function deleteCachePattern(pattern) {
 }
 
 // ============================================================================
-// RATE LIMIT HELPER
+// RATE LIMIT HELPER — Sliding Window (Redis Sorted Set)
 // ============================================================================
+// Uses a sorted set where each member is a unique request timestamp token and
+// its score is the Unix timestamp in ms.  On every call we:
+//   1. Remove entries older than the window  → ZREMRANGEBYSCORE
+//   2. Add the current request               → ZADD
+//   3. Count remaining entries               → ZCARD
+//   4. Reset the key TTL                     → PEXPIRE
+// This gives a true sliding window (no 2× burst at boundary like fixed-window).
+// O(log n) per call where n = requests in current window.
 
 export async function checkRateLimit(identifier, limit, windowMs) {
   const key = `ratelimit:${identifier}`;
-  const current = await client.incr(key);
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  // Unique member: timestamp + random suffix prevents collisions in the same ms
+  const member = `${now}:${Math.random().toString(36).slice(2, 8)}`;
 
-  if (current === 1) {
-    await client.pexpire(key, windowMs);
-  }
+  const pipeline = client.pipeline();
+  pipeline.zremrangebyscore(key, 0, windowStart); // evict expired
+  pipeline.zadd(key, now, member);                // record this request
+  pipeline.zcard(key);                            // count in window
+  pipeline.pexpire(key, windowMs);                // auto-cleanup
+
+  const results = await pipeline.exec();
+  const current = results[2][1]; // zcard result
 
   return {
     allowed: current <= limit,
