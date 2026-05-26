@@ -1,50 +1,56 @@
 # ============================================================================
 # TeamSpot — Docker Compose
-# Development environment: MongoDB, Redis, Kafka, RabbitMQ, LiveKit
+# Primary dev runtime — `make dev` uses this.
+#
+# Cloud services (MongoDB Atlas, Redis Cloud, LiveKit, Qdrant) connect via
+# credentials in .env — no local containers needed for them.
+# Only Kafka + RabbitMQ run locally so the API can reach them on the Docker
+# internal network (kafka:29092, rabbitmq:5672).
+#
+# Usage:
+#   make dev          → docker compose up --build  (hot-reload)
+#   make dev-tools    → adds Kafka UI + Mongo Express
+#   make dev-local    → run API on host (nodemon), local Kafka+RabbitMQ
 # ============================================================================
 
 services:
-  # ── MongoDB (Primary database) ──────────────────────────────────────────
-  mongodb:
-    image: mongo:7.0
-    container_name: teamspot-mongodb
+
+  # ── API (Node.js — hot-reload in dev) ─────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development           # hot-reload stage; use 'production' for prod build
+    container_name: teamspot-api
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "3000:3000"
+    env_file: .env                  # loads all cloud credentials
     environment:
-      MONGO_INITDB_ROOT_USERNAME: teamspot
-      MONGO_INITDB_ROOT_PASSWORD: teamspot_dev_password
-      MONGO_INITDB_DATABASE: teamspot_dev
-    volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
+      # Override localhost references → Docker service hostnames
+      KAFKA_BROKERS: kafka:29092
+      RABBITMQ_URL: amqp://teamspot:teamspot0000@rabbitmq:5672
+      PORT: "3000"
+      HOST: 0.0.0.0
+      NODE_ENV: development
+    depends_on:
+      kafka:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
       timeout: 5s
-      retries: 5
+      start_period: 45s
+      retries: 3
+    volumes:
+      - .:/app                      # mount source for hot-reload
+      - /app/node_modules           # preserve container node_modules
     networks:
       - teamspot-network
 
-  # ── Redis (Cache, pub/sub, sessions) ─────────────────────────────────────
-  redis:
-    image: redis:7.2-alpine
-    container_name: teamspot-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - teamspot-network
-
-  # ── Zookeeper (Kafka dependency) ─────────────────────────────────────────
+  # ── Zookeeper (Kafka dependency) ──────────────────────────────────────────
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: teamspot-zookeeper
@@ -54,19 +60,27 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/2181' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - teamspot-network
 
-  # ── Kafka (Event streaming) ─────────────────────────────────────────────
+  # ── Kafka (Event streaming) ────────────────────────────────────────────────
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: teamspot-kafka
     restart: unless-stopped
     ports:
-      - "9092:9092"
-      - "29092:29092"
+      - "9092:9092"     # host access (local tools / make kafka-topics)
+      - "29092:29092"   # internal Docker network
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -74,30 +88,36 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_NUM_PARTITIONS: 3
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null | head -1"]
       interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 30s
     networks:
       - teamspot-network
 
-  # ── RabbitMQ (Task queues) ──────────────────────────────────────────────
+  # ── RabbitMQ (Task queues + AI workers) ───────────────────────────────────
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     container_name: teamspot-rabbitmq
     restart: unless-stopped
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI → http://localhost:15672 (teamspot/teamspot0000)
     environment:
       RABBITMQ_DEFAULT_USER: teamspot
-      RABBITMQ_DEFAULT_PASS: teamspot_dev_password
+      RABBITMQ_DEFAULT_PASS: teamspot0000
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -105,23 +125,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     networks:
       - teamspot-network
 
-  # ── LiveKit (Video/Voice) ───────────────────────────────────────────────
-  livekit:
-    image: livekit/livekit-server:latest
-    container_name: teamspot-livekit
-    restart: unless-stopped
-    ports:
-      - "7880:7880"
-      - "7881:7881"
-      - "7882:7882/udp"
-    command: --dev --bind 0.0.0.0
-    networks:
-      - teamspot-network
-
-  # ── Kafka UI (Development only) ─────────────────────────────────────────
+  # ── Kafka UI — http://localhost:8080 ──────────────────────────────────────
+  # Connects via internal Docker network (kafka:29092) — always starts with dev
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: teamspot-kafka-ui
@@ -129,45 +138,42 @@ services:
     ports:
       - "8080:8080"
     environment:
-      KAFKA_CLUSTERS_0_NAME: teamspot-dev
+      KAFKA_CLUSTERS_0_NAME: teamspot-local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      DYNAMIC_CONFIG_ENABLED: "true"
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - teamspot-network
-    profiles:
-      - dev-tools
 
-  # ── Mongo Express (Development only) ────────────────────────────────────
+  # ── Mongo Express — http://localhost:8081 (dev-tools profile) ─────────────
+  # Browses MongoDB Atlas data locally.  Start with: make dev-tools
   mongo-express:
-    image: mongo-express:latest
+    image: mongo-express:1.0.2-20
     container_name: teamspot-mongo-express
     restart: unless-stopped
     ports:
       - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: teamspot
-      ME_CONFIG_MONGODB_ADMINPASSWORD: teamspot_dev_password
-      ME_CONFIG_MONGODB_URL: mongodb://teamspot:teamspot_dev_password@mongodb:27017/
+      ME_CONFIG_MONGODB_URL: "${MONGO_URI}"
       ME_CONFIG_BASICAUTH: "false"
-    depends_on:
-      - mongodb
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_SITE_BASEURL: "/"
     networks:
       - teamspot-network
     profiles:
       - dev-tools
 
-# ── Volumes ─────────────────────────────────────────────────────────────────
+# ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
-  mongodb_data:
-  mongodb_config:
-  redis_data:
   zookeeper_data:
+  zookeeper_log:
   kafka_data:
   rabbitmq_data:
 
-# ── Networks ────────────────────────────────────────────────────────────────
+# ── Networks ──────────────────────────────────────────────────────────────────
 networks:
   teamspot-network:
     driver: bridge
