@@ -1,40 +1,44 @@
-
 # ============================================================================
-# VoteSecure — Example Terraform Variables
-# Copy this to terraform.tfvars and fill in your actual values
+# TeamSpot — Example Terraform Variables
+# Copy this to terraform.tfvars and fill in actual values.
 # DO NOT commit terraform.tfvars to version control!
 # ============================================================================
 
 # General
 environment  = "production"
-project_name = "votesecure"
+project_name = "teamspot"
 
 # AWS
 aws_region         = "us-east-1"
 vpc_cidr           = "10.0.0.0/16"
 availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
 
-# EKS
-cluster_name        = "votesecure-cluster"
+# EKS cluster
+cluster_name        = "teamspot-cluster"
 cluster_version     = "1.29"
 node_instance_types = ["t3.medium", "t3.large"]
 node_min_size       = 3
 node_max_size       = 10
 node_desired_size   = 3
 
-# RDS PostgreSQL
+# RDS (MongoDB / DocumentDB)
 db_instance_class        = "db.t3.medium"
 db_allocated_storage     = 50
 db_max_allocated_storage = 200
-db_name                  = "votesecure"
-db_username              = "votesecure_admin"
-db_password              = "CHANGE_ME_USE_STRONG_PASSWORD"
+db_name                  = "teamspot"
+db_username              = "teamspot_admin"
+db_password              = "CHANGE_ME_USE_STRONG_PASSWORD_MIN_16_CHARS"
+
+# Note: production MongoDB = Atlas (cloud), not RDS.
+# RDS vars are kept for optional self-hosted deployments.
 
 # ElastiCache Redis
+# Note: production Redis = RedisLabs cloud. These vars apply to self-hosted EKS
+# deployments only.
 redis_node_type       = "cache.t3.medium"
 redis_num_cache_nodes = 2
 
 # Cloudflare
-cloudflare_api_token = "your-cloudflare-api-token"
-cloudflare_zone_id   = "your-cloudflare-zone-id"
-domain_name          = "votesecure.app"
+cloudflare_api_token = "CHANGE_ME_cloudflare_api_token"
+cloudflare_zone_id   = "CHANGE_ME_cloudflare_zone_id"
+domain_name          = "teamspot.io"
