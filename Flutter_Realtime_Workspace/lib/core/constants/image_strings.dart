@@ -16,4 +16,7 @@ class TImages {
   // ──────────────── AUTH ────────────────
   static const String googleIcon = '$_basePath/google.webp';
   static const String githubIcon = '$_basePath/github.webp';
+
+  // onboarding video
+  static const String onboardingVideo = 'assets/videos/onboarding_video.mp4';
 }

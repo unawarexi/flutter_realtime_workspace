@@ -41,7 +41,7 @@ class OnboardingBottomBar extends StatelessWidget {
         TSizes.pagePadding,
         TSizes.sm,
         TSizes.pagePadding,
-        TSizes.lg + TSizes.sm,
+        MediaQuery.of(context).padding.bottom + TSizes.sm,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -49,9 +49,10 @@ class OnboardingBottomBar extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             bgBase.withValues(alpha: 0.0),
-            bgBase.withValues(alpha: 0.97),
+            bgBase.withValues(alpha: 0.88),
+            bgBase,
           ],
-          stops: const [0.0, 0.32],
+          stops: const [0.0, 0.48, 1.0],
         ),
       ),
       child: Column(
@@ -138,7 +139,6 @@ class _AccentButton extends StatelessWidget {
     final darker = Color.lerp(accentColor, Colors.black, 0.18)!;
 
     return Container(
-      height: TSizes.buttonHeightMd,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(TSizes.radiusMd),
         gradient: LinearGradient(
@@ -160,13 +160,17 @@ class _AccentButton extends StatelessWidget {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           elevation: 0,
+          minimumSize: Size(double.infinity, TSizes.buttonHeightMd),
+          padding: EdgeInsets.symmetric(
+            horizontal: TSizes.md,
+            vertical: TSizes.sm,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(TSizes.radiusMd),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label,

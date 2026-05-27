@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
-import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
 /// Content displayed on a single onboarding page — hero image/icon,
@@ -21,9 +20,10 @@ class OnboardingPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = data['color'] as Color;
-    final titleColor = isDarkMode ? Colors.white : TColors.textPrimaryLight;
-    final descColor =
-        isDarkMode ? const Color(0xFFCBD5E0) : TColors.textTertiaryLight;
+    final titleColor = isDarkMode ? Colors.white : const Color(0xFF0F172A);
+    final descColor = isDarkMode
+        ? Colors.white.withValues(alpha: 0.85)
+        : const Color(0xFF374151);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -74,6 +74,14 @@ class OnboardingPageContent extends StatelessWidget {
                       color: titleColor,
                       height: 1.2,
                       letterSpacing: -0.3,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(
+                              alpha: isDarkMode ? 0.50 : 0.12),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -89,12 +97,22 @@ class OnboardingPageContent extends StatelessWidget {
                       vertical: TSizes.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.13),
+                      color: isDarkMode
+                          ? accent.withValues(alpha: 0.22)
+                          : Colors.white.withValues(alpha: 0.90),
                       borderRadius:
                           BorderRadius.circular(TSizes.radiusFull),
                       border: Border.all(
-                        color: accent.withValues(alpha: 0.28),
+                        color: accent.withValues(
+                            alpha: isDarkMode ? 0.50 : 0.38),
+                        width: 1.5,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.20),
+                          blurRadius: 14,
+                        ),
+                      ],
                     ),
                     child: Text(
                       data['subtitle'] as String,
@@ -287,51 +305,80 @@ class _FeatureChips extends StatelessWidget {
   Widget build(BuildContext context) {
     if (features.isEmpty) return const SizedBox.shrink();
 
-    final chipVPad = compact ? TSizes.xs : TSizes.sm;
-    final iconSz = compact ? TSizes.iconSm : TSizes.iconSm + 2.0;
-
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: features.map((f) {
-        return Container(
-          margin: EdgeInsets.symmetric(horizontal: TSizes.xs + 1),
-          padding: EdgeInsets.symmetric(
-            horizontal: TSizes.sm + 2,
-            vertical: chipVPad,
-          ),
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? Colors.white.withValues(alpha: 0.07)
-                : accentColor.withValues(alpha: 0.07),
-            borderRadius: BorderRadius.circular(TSizes.radiusMd),
-            border: Border.all(
-              color: isDarkMode
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : accentColor.withValues(alpha: 0.16),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                f['icon'] as IconData,
-                size: iconSz,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: features.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final f = entry.value;
+        // Middle card is scaled down to create a "hollow" concave effect
+        final isMiddle = idx == 1 && features.length == 3;
+        final scale = isMiddle ? 0.82 : 1.0;
+
+        return Expanded(
+          child: Transform.scale(
+            scale: scale,
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: TSizes.xs),
+              padding: EdgeInsets.symmetric(
+                horizontal: TSizes.sm,
+                vertical: compact ? TSizes.sm + 2 : TSizes.md + 2,
+              ),
+              decoration: BoxDecoration(
                 color: isDarkMode
-                    ? Colors.white.withValues(alpha: 0.80)
-                    : accentColor,
-              ),
-              SizedBox(height: TSizes.xs),
-              Text(
-                f['text'] as String,
-                style: TextStyle(
-                  fontSize: TSizes.fontSizeXS,
-                  fontWeight: FontWeight.w600,
+                    ? Colors.white.withValues(alpha: isMiddle ? 0.05 : 0.13)
+                    : (isMiddle
+                        ? accentColor.withValues(alpha: 0.07)
+                        : Colors.white.withValues(alpha: 0.88)),
+                borderRadius: BorderRadius.circular(TSizes.radiusMd + 2),
+                border: Border.all(
                   color: isDarkMode
-                      ? Colors.white.withValues(alpha: 0.68)
-                      : accentColor.withValues(alpha: 0.88),
+                      ? Colors.white
+                          .withValues(alpha: isMiddle ? 0.10 : 0.24)
+                      : accentColor
+                          .withValues(alpha: isMiddle ? 0.20 : 0.35),
+                  width: 1.4,
                 ),
+                boxShadow: isMiddle
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: accentColor
+                              .withValues(alpha: isDarkMode ? 0.18 : 0.14),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    f['icon'] as IconData,
+                    size: compact ? 26 : 30,
+                    color: isDarkMode
+                        ? Colors.white.withValues(
+                            alpha: isMiddle ? 0.50 : 0.92)
+                        : accentColor.withValues(
+                            alpha: isMiddle ? 0.55 : 1.0),
+                  ),
+                  SizedBox(height: TSizes.xs + 2),
+                  Text(
+                    f['text'] as String,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isDarkMode
+                          ? Colors.white.withValues(
+                              alpha: isMiddle ? 0.45 : 0.90)
+                          : accentColor.withValues(
+                              alpha: isMiddle ? 0.55 : 0.95),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       }).toList(),

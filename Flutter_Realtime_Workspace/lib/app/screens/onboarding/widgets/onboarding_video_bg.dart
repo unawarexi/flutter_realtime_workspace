@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter_realtime_workspace/core/constants/image_strings.dart';
 
 /// Full-screen looping muted video background.
 ///
-/// Tries to load `assets/videos/onboarding_bg.mp4`. If the asset is absent
+/// Tries to load `assets/videos/onboarding_video.mp4`. If the asset is absent
 /// or fails to initialise, falls back to [_AnimatedGradientFallback].
 ///
 /// Drop `onboarding_bg.mp4` into `assets/videos/` to activate the video.
@@ -34,7 +35,7 @@ class _OnboardingVideoBgState extends State<OnboardingVideoBg> {
   Future<void> _initVideo() async {
     try {
       final ctrl = VideoPlayerController.asset(
-        'assets/videos/onboarding_bg.mp4',
+        TImages.onboardingVideo,
       );
       await ctrl.initialize();
       if (!mounted) {

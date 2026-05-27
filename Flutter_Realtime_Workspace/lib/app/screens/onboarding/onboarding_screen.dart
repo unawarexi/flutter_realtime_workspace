@@ -65,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       'subtitle': 'Data-Driven Productivity',
       'description':
           'Get insights into team performance, project efficiency, and productivity metrics to optimize your workspace.',
-      'color': const Color(0xFF7C3AED),
+      'color': const Color(0xFF0891B2),
     },
   ];
 
@@ -161,6 +161,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
           // Layer 3 — content
           SafeArea(
+            bottom: false,
             child: FadeTransition(
               opacity: _entryAnim.fade,
               child: SlideTransition(
