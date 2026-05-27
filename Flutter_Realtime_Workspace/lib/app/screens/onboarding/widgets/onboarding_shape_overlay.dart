@@ -33,14 +33,14 @@ class OnboardingShapeOverlay extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: isDarkMode
                     ? [
-                        const Color(0xFF0F172A).withValues(alpha: 0.52),
-                        const Color(0xFF0A0E1A).withValues(alpha: 0.24),
-                        const Color(0xFF0F172A).withValues(alpha: 0.70),
+                        const Color(0xFF0A0E1A).withValues(alpha: 0.80),
+                        const Color(0xFF0A0E1A).withValues(alpha: 0.52),
+                        const Color(0xFF0A0E1A).withValues(alpha: 0.90),
                       ]
                     : [
-                        const Color(0xFFF8FAFC).withValues(alpha: 0.62),
-                        const Color(0xFFEFF6FF).withValues(alpha: 0.34),
-                        const Color(0xFFF8FAFC).withValues(alpha: 0.76),
+                        const Color(0xFFFFFFFF).withValues(alpha: 0.75),
+                        const Color(0xFFFFFFFF).withValues(alpha: 0.52),
+                        const Color(0xFFFFFFFF).withValues(alpha: 0.85),
                       ],
                 stops: const [0.0, 0.45, 1.0],
               ),
