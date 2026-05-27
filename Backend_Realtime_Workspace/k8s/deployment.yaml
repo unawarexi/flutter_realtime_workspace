@@ -28,7 +28,7 @@ spec:
         version: v1
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "5000"
+        prometheus.io/port: "3000"
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: teamspot-api
@@ -48,7 +48,7 @@ spec:
 
           ports:
             - name: http
-              containerPort: 5000
+              containerPort: 3000
               protocol: TCP
 
           # Environment from ConfigMap
@@ -58,11 +58,11 @@ spec:
 
           # Environment from Secrets
           env:
-            - name: DATABASE_URL
+            - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
                   name: teamspot-api-secrets
-                  key: DATABASE_URL
+                  key: MONGO_URI
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
@@ -153,6 +153,76 @@ spec:
                 secretKeyRef:
                   name: teamspot-api-secrets
                   key: SMTP_FROM
+            - name: SMTP_SECURE
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: SMTP_SECURE
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: REDIS_PASSWORD
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: REDIS_PORT
+            - name: LIVEKIT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: LIVEKIT_HOST
+            - name: GOOGLE_AI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: GOOGLE_AI_API_KEY
+            - name: HUGGINGFACE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: HUGGINGFACE_API_KEY
+            - name: COHERE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: COHERE_API_KEY
+            - name: QDRANT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: QDRANT_URL
+            - name: QDRANT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: QDRANT_API_KEY
+            - name: FIREBASE_SERVICE_ACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: FIREBASE_SERVICE_ACCOUNT
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: OPENROUTER_API_KEY
+            - name: OPENROUTER_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: OPENROUTER_MODEL
+            - name: STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: teamspot-api-secrets
+                  key: STRIPE_PUBLISHABLE_KEY
 
           # Resource limits
           resources:
