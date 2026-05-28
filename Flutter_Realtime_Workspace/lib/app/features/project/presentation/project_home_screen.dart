@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
+import 'package:flutter_realtime_workspace/core/utils/permission_helper.dart';
+import 'package:flutter_realtime_workspace/app/domain/models/project_model.dart';
 import 'package:flutter_realtime_workspace/app/features/project/presentation/create_project_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/project/presentation/project_timeline_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/project/usecases/project_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
+import 'package:flutter_realtime_workspace/store/project_provider.dart';
+import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 
-class ProjectHome extends StatefulWidget {
+class ProjectHome extends ConsumerStatefulWidget {
   const ProjectHome({super.key});
 
   @override
-  State<ProjectHome> createState() => _ProjectHomeState();
+  ConsumerState<ProjectHome> createState() => _ProjectHomeState();
 }
 
-class _ProjectHomeState extends State<ProjectHome>
+class _ProjectHomeState extends ConsumerState<ProjectHome>
     with TickerProviderStateMixin {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -408,32 +414,46 @@ class _ProjectHomeState extends State<ProjectHome>
   }
 
   Widget _buildQuickStats(bool isDarkMode) {
+    final workspaceId = ref.read(currentUserProvider).valueOrNull?.workspaceIds.isNotEmpty == true
+        ? ref.read(currentUserProvider).valueOrNull!.workspaceIds.first
+        : null;
+    final projectsAsync = ref.watch(projectsProvider(workspaceId));
+
+    final projects = projectsAsync.valueOrNull ?? [];
+    final activeCount = projects.where((p) => p.status == 'active').length;
+    final completedCount = projects.where((p) => p.completed).length;
+    final memberCount = projects.fold<Set<String>>({}, (s, p) {
+      s.addAll(p.members);
+      s.addAll(p.collaborators);
+      return s;
+    }).length;
+
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             title: 'Active Projects',
-            value: '12',
+            value: '$activeCount',
             icon: Icons.folder_open,
             color: const Color(0xFF3B82F6),
             isDarkMode: isDarkMode,
           ),
         ),
-        const SizedBox(width: 8), // reduced spacing
+        const SizedBox(width: 8),
         Expanded(
           child: _buildStatCard(
             title: 'Completed',
-            value: '8',
+            value: '$completedCount',
             icon: Icons.check_circle,
             color: const Color(0xFF10B981),
             isDarkMode: isDarkMode,
           ),
         ),
-        const SizedBox(width: 8), // reduced spacing
+        const SizedBox(width: 8),
         Expanded(
           child: _buildStatCard(
             title: 'Team Members',
-            value: '24',
+            value: '$memberCount',
             icon: Icons.people,
             color: const Color(0xFF8B5CF6),
             isDarkMode: isDarkMode,
@@ -602,155 +622,169 @@ class _ProjectHomeState extends State<ProjectHome>
   }
 
   Widget _buildProjectList(bool isDarkMode) {
-    final projects = [
-      {
-        'name': 'Project Alpha',
-        'date': '14 Sep 2024',
-        'status': 'In Progress',
-        'members': 5,
-        'progress': 0.75,
-      },
-      {
-        'name': 'Project Beta',
-        'date': '12 Sep 2024',
-        'status': 'Review',
-        'members': 3,
-        'progress': 0.90,
-      },
-      {
-        'name': 'Project Gamma',
-        'date': '10 Sep 2024',
-        'status': 'Planning',
-        'members': 8,
-        'progress': 0.25,
-      },
-    ];
+    final workspaceId = ref.read(currentUserProvider).valueOrNull?.workspaceIds.isNotEmpty == true
+        ? ref.read(currentUserProvider).valueOrNull!.workspaceIds.first
+        : null;
+    final projectsAsync = ref.watch(projectsProvider(workspaceId));
 
-    return Column(
-      children: projects.map((project) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8), // reduced spacing
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProjectTimelineScreen(
-                    projectName: project['name']! as String,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(10), // reduced padding
-              decoration: BoxDecoration(
-                color: isDarkMode 
-                    ? TColors.cardColorDark.withOpacity(0.8)
-                    : TColors.cardColorLight,
-                borderRadius: BorderRadius.circular(10), // reduced radius
-                border: Border.all(
-                  color: isDarkMode 
-                      ? TColors.borderDark
-                      : TColors.borderLight,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDarkMode 
-                        ? Colors.black.withOpacity(0.08)
-                        : Colors.grey.withOpacity(0.03),
-                    blurRadius: 5, // reduced blur
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6), // reduced padding
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E40AF).withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(6), // reduced radius
-                        ),
-                        child: const Icon(
-                          Icons.folder_open,
-                          color: Color(0xFF1E40AF),
-                          size: 14, // reduced icon size
-                        ),
-                      ),
-                      const SizedBox(width: 8), // reduced spacing
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              project['name']! as String,
-                              style: TextStyle(
-                                fontSize: 12, // reduced font size
-                                fontWeight: FontWeight.bold,
-                                color: isDarkMode ? Colors.white : TColors.cardColorDark,
-                              ),
-                            ),
-                            const SizedBox(height: 2), // reduced spacing
-                            Text(
-                              'Last modified: ${project['date']}',
-                              style: TextStyle(
-                                fontSize: 9, // reduced font size
-                                color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      _buildStatusBadge(project['status']! as String, isDarkMode),
-                    ],
-                  ),
-                  const SizedBox(height: 6), // reduced spacing
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 12, // reduced icon size
-                        color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight,
-                      ),
-                      const SizedBox(width: 2), // reduced spacing
-                      Text(
-                        '${project['members']} members',
-                        style: TextStyle(
-                          fontSize: 9, // reduced font size
-                          color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${((project['progress']! as double) * 100).toInt()}% complete',
-                        style: TextStyle(
-                          fontSize: 9, // reduced font size
-                          fontWeight: FontWeight.w500,
-                          color: isDarkMode ? Colors.white70 : TColors.cardColorDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4), // reduced spacing
-                  LinearProgressIndicator(
-                    value: project['progress']! as double,
-                    backgroundColor: isDarkMode 
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
-                    minHeight: 2, // reduced height
-                  ),
-                ],
-              ),
+    return projectsAsync.when(
+      loading: () => const Center(child: Padding(
+        padding: EdgeInsets.all(20),
+        child: CircularProgressIndicator(strokeWidth: 2),
+      )),
+      error: (e, _) => Center(child: Text('Failed to load', style: TextStyle(
+        fontSize: 11, color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight))),
+      data: (allProjects) {
+        List<ProjectModel> projects;
+        switch (_selectedFilter) {
+          case 'Recent':
+            projects = ProjectUseCase.filterRecent(allProjects);
+            break;
+          case 'Starred':
+            projects = ProjectUseCase.filterStarred(allProjects);
+            break;
+          case 'Archived':
+            projects = ProjectUseCase.filterArchived(allProjects);
+            break;
+          default:
+            projects = allProjects.where((p) => !p.archived).toList();
+        }
+
+        // Apply search filter
+        if (_searchController.text.trim().isNotEmpty) {
+          projects = ProjectUseCase.searchProjects(projects, _searchController.text.trim());
+        }
+
+        if (projects.isEmpty) {
+          return Center(child: Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              children: [
+                Icon(Icons.folder_off_outlined, size: 36,
+                  color: isDarkMode ? Colors.white30 : TColors.lightMuted),
+                const SizedBox(height: 8),
+                Text('No projects found', style: TextStyle(fontSize: 12,
+                  color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight)),
+              ],
             ),
-          ),
+          ));
+        }
+
+        return Column(
+          children: projects.map((project) {
+            final statusLabel = ProjectUseCase.statusLabel(project.status);
+            final memberCount = project.members.length + project.collaborators.length;
+            final progressPct = (project.progress * 100).toInt();
+            final lastMod = _timeAgo(project.updatedAt);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => ProjectTimelineScreen(projectName: project.name),
+                  ));
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? TColors.cardColorDark.withOpacity(0.8)
+                        : TColors.cardColorLight,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDarkMode ? TColors.borderDark : TColors.borderLight, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDarkMode
+                            ? Colors.black.withOpacity(0.08)
+                            : Colors.grey.withOpacity(0.03),
+                        blurRadius: 5, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Color(int.tryParse(project.color?.replaceFirst('#','0xFF') ?? '') ?? 0xFF1E40AF).withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(6)),
+                            child: Icon(Icons.folder_open,
+                              color: Color(int.tryParse(project.color?.replaceFirst('#','0xFF') ?? '') ?? 0xFF1E40AF), size: 14),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(project.name, style: TextStyle(fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkMode ? Colors.white : TColors.cardColorDark)),
+                                const SizedBox(height: 2),
+                                Text('Updated $lastMod', style: TextStyle(fontSize: 9,
+                                  color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight)),
+                              ],
+                            ),
+                          ),
+                          _buildStatusBadge(statusLabel, isDarkMode),
+                          if (project.starred)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 4),
+                              child: Icon(Icons.star_rounded, size: 14,
+                                color: TColors.yellow),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.people_outline, size: 12,
+                            color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight),
+                          const SizedBox(width: 2),
+                          Text('$memberCount members', style: TextStyle(fontSize: 9,
+                            color: isDarkMode ? Colors.white60 : TColors.textTertiaryLight)),
+                          if (project.priority == 'high' || project.priority == 'critical') ...[  
+                            const SizedBox(width: 8),
+                            Icon(Icons.flag_rounded, size: 10,
+                              color: project.priority == 'critical' ? TColors.error : TColors.warning),
+                            const SizedBox(width: 2),
+                            Text(ProjectUseCase.priorityLabel(project.priority),
+                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600,
+                                color: project.priority == 'critical' ? TColors.error : TColors.warning)),
+                          ],
+                          const Spacer(),
+                          Text('$progressPct% complete', style: TextStyle(fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: isDarkMode ? Colors.white70 : TColors.cardColorDark)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      LinearProgressIndicator(
+                        value: project.progress,
+                        backgroundColor: isDarkMode
+                            ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                        minHeight: 2),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
+  }
+
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()}mo ago';
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    return '${diff.inMinutes}m ago';
   }
 
   Widget _buildStatusBadge(String status, bool isDarkMode) {
@@ -791,36 +825,32 @@ class _ProjectHomeState extends State<ProjectHome>
   }
 
   Widget _buildModernFAB(bool isDarkMode) {
+    final role = ref.read(currentUserProvider).valueOrNull?.permissionsLevel ?? 'guest';
+    if (!PermissionHelper.canCreate(role, 'project')) {
+      return const SizedBox.shrink();
+    }
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10), // reduced radius
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF1E40AF).withOpacity(0.18),
-            blurRadius: 10, // reduced blur
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CreateProjectScreen(),
-            ),
-          );
+          Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const CreateProjectScreen()));
         },
         backgroundColor: const Color(0xFF1E40AF),
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10), // reduced radius
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 18, // reduced icon size
-        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 18),
       ),
     );
   }
