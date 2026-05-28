@@ -147,9 +147,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         children: [
           // Layer 1 — video background (animated gradient fallback)
           Positioned.fill(
-            child: OnboardingVideoBg(
-              isDarkMode: isDarkMode,
-              accentColor: accentColor,
+            child: IgnorePointer(
+              child: OnboardingVideoBg(
+                isDarkMode: isDarkMode,
+                accentColor: accentColor,
+              ),
             ),
           ),
 

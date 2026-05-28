@@ -73,18 +73,6 @@ class OnboardingBottomBar extends StatelessWidget {
             ),
           ),
 
-          SizedBox(height: TSizes.xs),
-
-          // ── Progress counter ───────────────────────────────────────────────
-          Text(
-            '${currentPage + 1} / $pageCount',
-            style: TextStyle(
-              fontSize: TSizes.fontSizeSM,
-              color: (isDarkMode ? Colors.white : TColors.textSecondaryLight)
-                  .withValues(alpha: 0.50),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
 
           SizedBox(height: TSizes.md),
 

@@ -22,7 +22,8 @@ class OnboardingShapeOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    return Positioned.fill(
+    return IgnorePointer(
+      child: Positioned.fill(
       child: Stack(
         children: [
           // ── 1. Base theme-tinted gradient overlay ─────────────────────────
@@ -138,6 +139,7 @@ class OnboardingShapeOverlay extends StatelessWidget {
             ),
         ],
       ),
+    ),
     );
   }
 }

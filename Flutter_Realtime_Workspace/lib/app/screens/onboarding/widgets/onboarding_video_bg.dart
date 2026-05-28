@@ -64,13 +64,15 @@ class _OnboardingVideoBgState extends State<OnboardingVideoBg> {
   @override
   Widget build(BuildContext context) {
     if (_videoReady && _ctrl != null) {
-      return SizedBox.expand(
-        child: FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: _ctrl!.value.size.width,
-            height: _ctrl!.value.size.height,
-            child: VideoPlayer(_ctrl!),
+      return RepaintBoundary(
+        child: SizedBox.expand(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: _ctrl!.value.size.width,
+              height: _ctrl!.value.size.height,
+              child: VideoPlayer(_ctrl!),
+            ),
           ),
         ),
       );

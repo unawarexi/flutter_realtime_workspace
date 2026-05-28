@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
@@ -22,138 +20,117 @@ class OnboardingPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = data['color'] as Color;
-    final titleColor = isDarkMode ? Colors.white : const Color(0xFF0F172A);
-    final descColor = isDarkMode
-        ? Colors.white.withValues(alpha: 0.85)
-        : const Color(0xFF374151);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final h = constraints.maxHeight;
-        // Three tiers based on available height
         final isXSmall = h < 440;
         final isSmall = h < 580;
 
-        final imageSize = isXSmall ? 96.0 : isSmall ? 120.0 : 148.0;
-        final titleFont = isXSmall ? 20.0 : isSmall ? 22.0 : 24.0;
-        final descFont = isXSmall ? 12.0 : 13.0;
-        final topGap = isXSmall ? TSizes.xs : isSmall ? TSizes.sm : TSizes.md;
-        final midGap = isXSmall ? TSizes.xs : isSmall ? TSizes.sm : TSizes.md;
-        final descGap = isXSmall ? TSizes.xs : TSizes.sm;
+        final heroSize = isXSmall ? 88.0 : isSmall ? 108.0 : 124.0;
+        final titleFont = isXSmall ? 22.0 : isSmall ? 24.0 : 26.0;
+        final descFont = isXSmall ? 12.0 : 13.5;
+        final vGap = isXSmall ? 8.0 : isSmall ? 12.0 : 16.0;
 
         return SingleChildScrollView(
-          // Allow scrolling on very small devices as a safety net
           physics: const ClampingScrollPhysics(),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: TSizes.lg),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: topGap),
+                SizedBox(height: vGap),
 
-                // ── Hero visual ──────────────────────────────────────────────
-                TWidgetAnimations.scaleIn(
-                  child: _HeroVisual(
-                    imagePath: data['image'] as String?,
-                    icon: data['icon'] as IconData?,
-                    accentColor: accent,
-                    imageSize: imageSize,
-                    isDarkMode: isDarkMode,
-                  ),
-                ),
-
-                SizedBox(height: midGap),
-
-                // ── Title ────────────────────────────────────────────────────
-                TWidgetAnimations.slideUp(
-                  offsetY: 16,
-                  child: Text(
-                    data['title'] as String,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: titleFont,
-                      fontWeight: FontWeight.w800,
-                      color: titleColor,
-                      height: 1.2,
-                      letterSpacing: -0.3,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(
-                              alpha: isDarkMode ? 0.50 : 0.12),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                // ── Hero with concentric glow rings ──────────────────────────
+                Center(
+                  child: TWidgetAnimations.scaleIn(
+                    child: _HeroVisual(
+                      imagePath: data['image'] as String?,
+                      icon: data['icon'] as IconData?,
+                      accentColor: accent,
+                      imageSize: heroSize,
+                      isDarkMode: isDarkMode,
                     ),
                   ),
                 ),
 
-                SizedBox(height: TSizes.xs + 2),
+                SizedBox(height: vGap),
 
-                // ── Subtitle pill ────────────────────────────────────────────
+                // ── Accent bar + Title ────────────────────────────────────────
+                TWidgetAnimations.slideUp(
+                  offsetY: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [accent, accent.withValues(alpha: 0.35)],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        data['title'] as String,
+                        style: TextStyle(
+                          fontSize: titleFont,
+                          fontWeight: FontWeight.w900,
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                          height: 1.15,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                // ── Subtitle ─────────────────────────────────────────────────
                 TWidgetAnimations.fadeIn(
                   delay: const Duration(milliseconds: 60),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: TSizes.md,
-                      vertical: TSizes.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? accent.withValues(alpha: 0.22)
-                          : Colors.white.withValues(alpha: 0.90),
-                      borderRadius:
-                          BorderRadius.circular(TSizes.radiusFull),
-                      border: Border.all(
-                        color: accent.withValues(
-                            alpha: isDarkMode ? 0.50 : 0.38),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.20),
-                          blurRadius: 14,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      data['subtitle'] as String,
-                      style: TextStyle(
-                        fontSize: TSizes.fontSizeXS + 1,
-                        fontWeight: FontWeight.w700,
-                        color: accent,
-                        letterSpacing: 0.5,
-                      ),
+                  child: Text(
+                    data['subtitle'] as String,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: accent,
+                      letterSpacing: 0.8,
                     ),
                   ),
                 ),
 
-                SizedBox(height: descGap),
+                SizedBox(height: isXSmall ? 8.0 : 10.0),
 
                 // ── Description ──────────────────────────────────────────────
                 TWidgetAnimations.fadeIn(
                   delay: const Duration(milliseconds: 100),
                   child: Text(
                     data['description'] as String,
-                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: descFont,
-                      color: descColor,
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.78)
+                          : const Color(0xFF374151),
                       height: 1.55,
                     ),
                   ),
                 ),
 
-                SizedBox(height: midGap),
+                SizedBox(height: vGap),
 
-                // ── Feature chips ────────────────────────────────────────────
+                // ── Feature pills ─────────────────────────────────────────────
                 TWidgetAnimations.fadeIn(
                   delay: const Duration(milliseconds: 140),
                   child: _FeatureChips(
                     features: _featuresFor(data['title'] as String),
                     accentColor: accent,
                     isDarkMode: isDarkMode,
-                    compact: isSmall,
                   ),
                 ),
 
@@ -223,36 +200,79 @@ class _HeroVisual extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: imageSize,
-      height: imageSize,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(TSizes.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: isDarkMode ? 0.28 : 0.15),
-            blurRadius: 28,
-            spreadRadius: 4,
+    final ringPad = imageSize * 0.22;
+    final outerSize = imageSize + ringPad * 2;
+    final midSize = imageSize + ringPad;
+
+    return SizedBox(
+      width: outerSize,
+      height: outerSize,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // ── Outer ring (thin border) ────────────────────────────────────
+          Container(
+            width: outerSize,
+            height: outerSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: accentColor.withValues(
+                    alpha: isDarkMode ? 0.14 : 0.10),
+                width: 1,
+              ),
+            ),
+          ),
+          // ── Middle ring (light fill + border) ──────────────────────────
+          Container(
+            width: midSize,
+            height: midSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accentColor.withValues(
+                  alpha: isDarkMode ? 0.08 : 0.06),
+              border: Border.all(
+                color: accentColor.withValues(
+                    alpha: isDarkMode ? 0.22 : 0.18),
+                width: 1.5,
+              ),
+            ),
+          ),
+          // ── Image / icon ────────────────────────────────────────────────
+          Container(
+            width: imageSize,
+            height: imageSize,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(TSizes.radiusXl),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withValues(
+                      alpha: isDarkMode ? 0.40 : 0.22),
+                  blurRadius: 30,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(TSizes.radiusXl),
+              child: imagePath != null
+                  ? Image.asset(
+                      imagePath!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _IconFallback(
+                        icon: icon,
+                        accentColor: accentColor,
+                        isDarkMode: isDarkMode,
+                      ),
+                    )
+                  : _IconFallback(
+                      icon: icon,
+                      accentColor: accentColor,
+                      isDarkMode: isDarkMode,
+                    ),
+            ),
           ),
         ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(TSizes.radiusXl),
-        child: imagePath != null
-            ? Image.asset(
-                imagePath!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _IconFallback(
-                  icon: icon,
-                  accentColor: accentColor,
-                  isDarkMode: isDarkMode,
-                ),
-              )
-            : _IconFallback(
-                icon: icon,
-                accentColor: accentColor,
-                isDarkMode: isDarkMode,
-              ),
       ),
     );
   }
@@ -294,96 +314,75 @@ class _FeatureChips extends StatelessWidget {
   final List<Map<String, dynamic>> features;
   final Color accentColor;
   final bool isDarkMode;
-  final bool compact;
 
   const _FeatureChips({
     required this.features,
     required this.accentColor,
     required this.isDarkMode,
-    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     if (features.isEmpty) return const SizedBox.shrink();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: features.asMap().entries.map((entry) {
-        final idx = entry.key;
-        final f = entry.value;
-        // Middle card is scaled down to create a "hollow" concave effect
-        final isMiddle = idx == 1 && features.length == 3;
-        final scale = isMiddle ? 0.82 : 1.0;
-
-        return Expanded(
-          child: Transform.scale(
-            scale: scale,
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: TSizes.xs),
-              padding: EdgeInsets.symmetric(
-                horizontal: TSizes.sm,
-                vertical: compact ? TSizes.sm + 2 : TSizes.md + 2,
-              ),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? Colors.white.withValues(alpha: isMiddle ? 0.05 : 0.13)
-                    : (isMiddle
-                        ? accentColor.withValues(alpha: 0.07)
-                        : Colors.white.withValues(alpha: 0.88)),
-                borderRadius: BorderRadius.circular(TSizes.radiusMd + 2),
-                border: Border.all(
-                  color: isDarkMode
-                      ? Colors.white
-                          .withValues(alpha: isMiddle ? 0.10 : 0.24)
-                      : accentColor
-                          .withValues(alpha: isMiddle ? 0.20 : 0.35),
-                  width: 1.4,
-                ),
-                boxShadow: isMiddle
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: accentColor
-                              .withValues(alpha: isDarkMode ? 0.18 : 0.14),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    f['icon'] as IconData,
-                    size: compact ? 26 : 30,
-                    color: isDarkMode
-                        ? Colors.white.withValues(
-                            alpha: isMiddle ? 0.50 : 0.92)
-                        : accentColor.withValues(
-                            alpha: isMiddle ? 0.55 : 1.0),
-                  ),
-                  SizedBox(height: TSizes.xs + 2),
-                  Text(
-                    f['text'] as String,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: isDarkMode
-                          ? Colors.white.withValues(
-                              alpha: isMiddle ? 0.45 : 0.90)
-                          : accentColor.withValues(
-                              alpha: isMiddle ? 0.55 : 0.95),
-                    ),
-                  ),
-                ],
-              ),
+    return Column(
+      children: List.generate(features.length, (i) {
+        final f = features[i];
+        return Container(
+          margin: EdgeInsets.only(bottom: i < features.length - 1 ? 9.0 : 0),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? Colors.white.withValues(alpha: 0.07)
+                : Colors.white.withValues(alpha: 0.82),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : accentColor.withValues(alpha: 0.18),
+              width: 1,
             ),
           ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(
+                      alpha: isDarkMode ? 0.18 : 0.12),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  f['icon'] as IconData,
+                  size: 18,
+                  color: isDarkMode
+                      ? accentColor.withValues(alpha: 0.95)
+                      : accentColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  f['text'] as String,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode
+                        ? Colors.white.withValues(alpha: 0.88)
+                        : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.check_circle_outline_rounded,
+                size: 16,
+                color: accentColor.withValues(alpha: 0.60),
+              ),
+            ],
+          ),
         );
-      }).toList(),
+      }),
     );
   }
 }
