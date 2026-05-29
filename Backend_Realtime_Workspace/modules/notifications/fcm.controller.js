@@ -2,6 +2,7 @@ import {
     sendFCMToDevice, sendFCMToMultipleDevices, sendFCMToTopic, subscribeToTopic, unsubscribeFromTopic,
     validateFCMToken, NOTIFICATION_TYPES
 } from './fcm.service.js';
+import User from '../users/models/user.model.js';
 
 /**
  * FCM Controller for Teamspot Workspace App
@@ -259,6 +260,80 @@ export const unsubscribeDevicesFromTopic = async (req, res) => {
       success: false,
       message: 'Internal server error',
       error: error.message
+    });
+  }
+};
+
+/**
+ * Register current user's device token for push delivery.
+ * POST /api/notifications/device/register
+ * Body: { token, platform? }
+ */
+export const registerDeviceToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'token is required'
+      });
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { $addToSet: { fcmTokens: token } },
+      { new: true, select: '_id fcmTokens' }
+    ).lean();
+
+    return res.json({
+      success: true,
+      message: 'Device token registered',
+      tokenCount: updated?.fcmTokens?.length ?? 0,
+    });
+  } catch (error) {
+    console.error('Register device token error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Unregister current user's device token.
+ * POST /api/notifications/device/unregister
+ * Body: { token }
+ */
+export const unregisterDeviceToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'token is required'
+      });
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { $pull: { fcmTokens: token } },
+      { new: true, select: '_id fcmTokens' }
+    ).lean();
+
+    return res.json({
+      success: true,
+      message: 'Device token unregistered',
+      tokenCount: updated?.fcmTokens?.length ?? 0,
+    });
+  } catch (error) {
+    console.error('Unregister device token error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
     });
   }
 };

@@ -1,7 +1,8 @@
 import express from 'express';
 import {
   sendNotification, sendMultipleNotifications, sendTopicNotification, subscribeDevicesToTopic,
-  unsubscribeDevicesFromTopic, validateToken, getNotificationTypes
+  unsubscribeDevicesFromTopic, validateToken, getNotificationTypes,
+  registerDeviceToken, unregisterDeviceToken
 } from './fcm.controller.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 
@@ -11,6 +12,8 @@ const router = express.Router();
 router.use(authenticate);
 
 // Notification endpoints
+router.post('/device/register', registerDeviceToken);
+router.post('/device/unregister', unregisterDeviceToken);
 router.post('/send', sendNotification);
 router.post('/send-multiple', sendMultipleNotifications);
 router.post('/send-to-topic', sendTopicNotification);
