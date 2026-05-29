@@ -14,7 +14,7 @@
         clean-all health health-detailed infra
 
 APP_NAME        := teamspot-backend
-COMPOSE         := docker compose
+COMPOSE         := docker compose -p teamspot
 KAFKA_HOME      := /usr/local/kafka
 KAFKA_BIN       := $(KAFKA_HOME)/bin
 KAFKA_CFG       := $(KAFKA_HOME)/config
@@ -58,6 +58,7 @@ dev: ## Start full stack in Docker (default — hot-reload, Kafka+RabbitMQ in co
 	@open http://localhost:3000/health 2>/dev/null || true
 	@open http://localhost:8080 2>/dev/null || true
 	@open http://localhost:15672 2>/dev/null || true
+	$(COMPOSE) logs -f api
 
 dev-local: kafka-start rabbitmq-start ## Start locally without Docker (fallback — uses nodemon)
 	@$(MAKE) kafka-ui-local --no-print-directory &
@@ -133,6 +134,13 @@ docker-build: ## Build the app container
 
 docker-clean: ## Remove all volumes and containers
 	$(COMPOSE) down -v --remove-orphans
+
+clean-volumes: ## Remove orphan volumes from old project-name prefixes (one-time migration)
+	@echo "$(YELLOW)Removing stale volumes with old project-name prefixes...$(RESET)"
+	@docker volume ls --format '{{.Name}}' | \
+	  grep -E '^(backend_realtime_workspace|flutter_realtime_workspace)_' | \
+	  xargs -r docker volume rm
+	@echo "$(GREEN)✓ Stale volumes removed$(RESET)"
 
 # ── Database ─────────────────────────────────────────────────────────────────
 db-shell: ## Open MongoDB shell

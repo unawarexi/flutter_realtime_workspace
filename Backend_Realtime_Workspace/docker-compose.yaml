@@ -2,6 +2,12 @@
 # TeamSpot — Docker Compose
 # Primary dev runtime — `make dev` uses this.
 #
+# Project name is pinned to "teamspot" via the `name:` key so that volumes
+# are ALWAYS named teamspot_* regardless of which directory docker compose
+# is invoked from.  Without this, changing CWD produces a different project
+# name prefix and Docker silently creates a fresh set of orphan volumes.
+name: teamspot
+#
 # Cloud services (MongoDB Atlas, Redis Cloud, LiveKit, Qdrant) connect via
 # credentials in .env — no local containers needed for them.
 # Only Kafka + RabbitMQ run locally so the API can reach them on the Docker
@@ -169,11 +175,16 @@ services:
       - dev-tools
 
 # ── Volumes ───────────────────────────────────────────────────────────────────
+# Explicit names make volumes fully independent of project-name derivation.
 volumes:
   zookeeper_data:
+    name: teamspot-zookeeper-data
   zookeeper_log:
+    name: teamspot-zookeeper-log
   kafka_data:
+    name: teamspot-kafka-data
   rabbitmq_data:
+    name: teamspot-rabbitmq-data
 
 # ── Networks ──────────────────────────────────────────────────────────────────
 networks:
