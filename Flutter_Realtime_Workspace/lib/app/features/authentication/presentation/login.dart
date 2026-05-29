@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/login_password_fields.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/onboarding_divider.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/social_login_button.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/usecases/auth_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/auth_usecase.dart';
 import 'package:flutter_realtime_workspace/app/components/shapes/bg_patterns.dart';
 import 'package:flutter_realtime_workspace/app/components/shapes/decorative_painters.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';

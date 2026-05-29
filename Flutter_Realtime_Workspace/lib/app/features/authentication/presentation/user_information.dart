@@ -9,7 +9,7 @@ import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/avatar_picker.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/s_dropdown.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/user_info_page_card.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/usecases/user_info_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/user_info_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/screen_animations.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';

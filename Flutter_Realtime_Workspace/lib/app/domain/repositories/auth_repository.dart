@@ -190,6 +190,30 @@ class AuthRepository {
     );
   }
 
+  /// Change password for currently authenticated user.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _api.post(
+      ApiEndpoints.authChangePassword,
+      data: {
+        'oldPassword': currentPassword,
+        'newPassword': newPassword,
+      },
+    );
+  }
+
+  /// Invalidate all active sessions for the current user.
+  Future<void> logoutAllSessions() async {
+    await _api.post(ApiEndpoints.authLogoutAll);
+  }
+
+  /// Send 2FA email code for setup/verification while signed in.
+  Future<void> send2FAEmailCode() async {
+    await _api.post(ApiEndpoints.auth2faEmailSend, data: {});
+  }
+
   /// Verify 2FA code (email OTP or TOTP) after login.
   Future<AuthSessionModel> verify2FA({
     required String tempToken,

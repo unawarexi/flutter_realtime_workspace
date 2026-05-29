@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/components/shapes/bg_patterns.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/usecases/auth_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/auth_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/icons.dart';
