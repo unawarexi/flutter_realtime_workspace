@@ -19,7 +19,11 @@ class AuthUseCase {
   static String? validatePassword(String? value) {
     final password = value ?? '';
     if (password.isEmpty) return 'Password is required';
-    if (password.length < 8) return 'Password must be at least 8 characters';
+    if (password.length < 8) return 'At least 8 characters required';
+    if (password.length > 128) return 'Password too long (max 128 characters)';
+    if (!password.contains(RegExp(r'[A-Z]'))) return 'Add at least one uppercase letter (A–Z)';
+    if (!password.contains(RegExp(r'[a-z]'))) return 'Add at least one lowercase letter (a–z)';
+    if (!password.contains(RegExp(r'[0-9]'))) return 'Add at least one number (0–9)';
     return null;
   }
 

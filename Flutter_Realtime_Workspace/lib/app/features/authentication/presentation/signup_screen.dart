@@ -229,9 +229,9 @@ class _SignUpState extends ConsumerState<SignUp> {
                             obscureText: _obscureConfirm,
                             textInputAction: TextInputAction.done,
                             validator: (value) {
-                              final passErr =
-                                  AuthUseCase.validatePassword(value);
-                              if (passErr != null) return passErr;
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your password';
+                              }
                               if (value != _passwordController.text) {
                                 return 'Passwords do not match';
                               }
