@@ -5,11 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/integrations/usecases/integration_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/integration_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 import 'package:flutter_realtime_workspace/store/integration_provider.dart';
+import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
 
 class IntegrationSetupScreen extends ConsumerWidget {
   const IntegrationSetupScreen({super.key});
@@ -19,7 +20,8 @@ class IntegrationSetupScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
     final intId = GoRouterState.of(context).pathParameters['integrationId'];
-    final intAsync = ref.watch(integrationsProvider);
+    final workspaceId = ref.watch(activeWorkspaceProvider)?.id ?? '';
+    final intAsync = ref.watch(integrationsProvider(workspaceId));
 
     return Scaffold(
       backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,
@@ -42,7 +44,7 @@ class IntegrationSetupScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: TSizes.md),
                 Text(intg.name, style: TextStyle(fontSize: TResponsive.sp(context, 20), fontWeight: FontWeight.w700, color: isDark ? TColors.textPrimaryDark : TColors.textPrimaryLight)),
-                if (intg.description != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text(intg.description!, textAlign: TextAlign.center, style: TextStyle(fontSize: TResponsive.sp(context, 13), color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight))),
+                Padding(padding: const EdgeInsets.only(top: 4), child: Text(IntegrationUseCase.typeLabel(intg.type), textAlign: TextAlign.center, style: TextStyle(fontSize: TResponsive.sp(context, 13), color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight))),
                 const SizedBox(height: TSizes.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -67,13 +69,13 @@ class IntegrationSetupScreen extends ConsumerWidget {
                 variant: SButtonVariant.danger,
                 size: SButtonSize.sm,
                 prefixIcon: Icons.delete_outline,
-                onPressed: IntegrationUseCase.canInstall(ref) ? () => IntegrationUseCase.uninstallIntegration(context: context, ref: ref, id: intg.id) : null,
+                onPressed: IntegrationUseCase.canInstallIntegration(ref) ? () => IntegrationUseCase.uninstall(context: context, ref: ref, id: intg.id) : null,
               ),
             ] else
               TButton(
                 text: 'Install',
                 prefixIcon: Icons.download_rounded,
-                onPressed: IntegrationUseCase.canInstall(ref) ? () => IntegrationUseCase.installIntegration(context: context, ref: ref, id: intg.id) : null,
+                onPressed: IntegrationUseCase.canInstallIntegration(ref) ? () => IntegrationUseCase.install(context: context, ref: ref, body: {'workspaceId': workspaceId, 'type': intg.type, 'name': intg.name}) : null,
               ),
           ]);
         },

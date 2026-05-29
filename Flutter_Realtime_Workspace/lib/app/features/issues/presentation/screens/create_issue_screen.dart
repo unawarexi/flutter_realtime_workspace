@@ -6,7 +6,7 @@ import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
 import 'package:flutter_realtime_workspace/core/utils/formatters.dart';
 import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
-import 'package:flutter_realtime_workspace/app/features/issues/usecases/issue_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/issue_usecase.dart';
 
 class CreateIssueScreen extends ConsumerStatefulWidget {
   final String? projectId;

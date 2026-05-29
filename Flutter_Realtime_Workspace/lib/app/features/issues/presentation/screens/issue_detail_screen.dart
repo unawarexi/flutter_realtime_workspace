@@ -9,7 +9,9 @@ import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter_realtime_workspace/store/issue_provider.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/issue_model.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
-import 'package:flutter_realtime_workspace/app/features/issues/usecases/issue_usecase.dart';
+import 'package:flutter_realtime_workspace/app/components/widgets/meta_info_row.dart';
+import 'package:flutter_realtime_workspace/app/components/widgets/comment_tile.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/issue_usecase.dart';
 
 Color _statusColor(String s) => switch (s) {
       'open' => const Color(0xFF3B82F6),
@@ -258,25 +260,22 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
                   ),
                   child: Column(
                     children: [
-                      _MetaRow(
+                      MetaInfoRow(
                           icon: Iconsax.calendar_1,
                           label: 'Due Date',
                           value: issue.dueDate != null
                               ? TFormatter.formatDate(issue.dueDate!)
-                              : 'No due date',
-                          isDark: isDark),
-                      _MetaRow(
+                              : 'No due date'),
+                      MetaInfoRow(
                           icon: Iconsax.calendar_tick,
                           label: 'Resolved',
                           value: issue.resolvedAt != null
                               ? TFormatter.formatDate(issue.resolvedAt!)
-                              : 'Not resolved',
-                          isDark: isDark),
-                      _MetaRow(
+                              : 'Not resolved'),
+                      MetaInfoRow(
                           icon: Iconsax.calendar_add,
                           label: 'Created',
                           value: TFormatter.formatDate(issue.createdAt),
-                          isDark: isDark,
                           isLast: true),
                     ],
                   ),
@@ -406,14 +405,17 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
                   )
                 else
                   ...issue.comments.map(
-                    (c) => _CommentTile(comment: c, isDark: isDark),
+                    (c) => CommentTile(
+                      userId: c.userId,
+                      content: c.content,
+                      createdAt: c.createdAt,
+                    ),
                   ),
                 if (canComment) ...[
                   const SizedBox(height: 16),
-                  _CommentInput(
+                  CommentInputField(
                     controller: _commentCtrl,
                     isSubmitting: _submittingComment,
-                    isDark: isDark,
                     onSubmit: () => _submitComment(issue.id),
                   ),
                 ],
@@ -648,185 +650,5 @@ class _TagChip extends StatelessWidget {
                 color: color,
                 fontWeight: FontWeight.w600)),
       );
-}
-
-class _MetaRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool isDark;
-  final bool isLast;
-
-  const _MetaRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.isDark,
-    this.isLast = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textPrimary = isDark ? TColors.textDark : TColors.textLight;
-    final textSec =
-        isDark ? TColors.textDarkSecondary : TColors.textLightSecondary;
-    final border = isDark ? TColors.darkBorder : TColors.lightBorder;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              Icon(icon, size: 16, color: textSec),
-              const SizedBox(width: 10),
-              Text(label, style: TextStyle(fontSize: 13, color: textSec)),
-              const Spacer(),
-              Text(value,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary)),
-            ],
-          ),
-        ),
-        if (!isLast) Divider(height: 1, color: border),
-      ],
-    );
-  }
-}
-
-class _CommentTile extends StatelessWidget {
-  final IssueComment comment;
-  final bool isDark;
-  const _CommentTile({required this.comment, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = isDark ? TColors.darkElevated : Colors.white;
-    final border = isDark ? TColors.darkBorder : TColors.lightBorder;
-    final textPrimary = isDark ? TColors.textDark : TColors.textLight;
-    final textSec =
-        isDark ? TColors.textDarkSecondary : TColors.textLightSecondary;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: TColors.primary.withOpacity(0.2),
-                child: Text(
-                  (comment.userId.isNotEmpty
-                          ? comment.userId[0]
-                          : '?')
-                      .toUpperCase(),
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: TColors.primary),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(comment.userId,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: textPrimary)),
-              ),
-              Text(TFormatter.formatDate(comment.createdAt),
-                  style: TextStyle(fontSize: 11, color: textSec)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(comment.content,
-              style: TextStyle(
-                  fontSize: 14, color: textPrimary, height: 1.5)),
-        ],
-      ),
-    );
-  }
-}
-
-class _CommentInput extends StatelessWidget {
-  final TextEditingController controller;
-  final bool isSubmitting;
-  final bool isDark;
-  final VoidCallback onSubmit;
-
-  const _CommentInput({
-    required this.controller,
-    required this.isSubmitting,
-    required this.isDark,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = isDark ? TColors.darkElevated : TColors.lightElevated;
-    final border = isDark ? TColors.darkBorder : TColors.lightBorder;
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: border),
-            ),
-            child: TextField(
-              controller: controller,
-              maxLines: null,
-              style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? TColors.textDark : TColors.textLight),
-              decoration: InputDecoration(
-                hintText: 'Add a comment...',
-                hintStyle: TextStyle(
-                    color: isDark
-                        ? TColors.textDarkTertiary
-                        : TColors.textLightTertiary),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(14),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: isSubmitting ? null : onSubmit,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isSubmitting
-                  ? TColors.primary.withOpacity(0.5)
-                  : TColors.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: isSubmitting
-                ? const Center(
-                    child: SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white)))
-                : const Icon(Iconsax.send_1,
-                    color: Colors.white, size: 18),
-          ),
-        ),
-      ],
-    );
-  }
 }
 

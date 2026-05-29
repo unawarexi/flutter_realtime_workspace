@@ -11,7 +11,7 @@ import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/issue_model.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/empty_state.dart';
-import 'package:flutter_realtime_workspace/app/features/issues/usecases/issue_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/issue_usecase.dart';
 import 'package:flutter_realtime_workspace/app/features/issues/presentation/widgets/issue_card.dart';
 import 'package:flutter_realtime_workspace/app/features/issues/presentation/widgets/issue_filter_sheet.dart';
 
