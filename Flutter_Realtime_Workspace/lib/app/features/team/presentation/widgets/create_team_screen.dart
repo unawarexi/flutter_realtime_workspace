@@ -21,7 +21,6 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
 
   // For search
   String _searchQuery = '';
-  bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
   bool _searchLoading = false;
   String? _searchError;
@@ -502,29 +501,6 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon, bool isDarkMode) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 14,
-          color: isDarkMode
-              ? TColors.textSecondaryDark
-              : TColors.textTertiaryLight,
-        ),
-        const SizedBox(width: 6),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : TColors.backgroundDark,
-          ),
-        ),
-      ],
     );
   }
 

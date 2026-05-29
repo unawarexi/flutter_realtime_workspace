@@ -8,8 +8,8 @@ import 'package:flutter_realtime_workspace/core/animations/widget_animations.dar
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter_realtime_workspace/store/task_provider.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/task_model.dart';
+import 'package:flutter_realtime_workspace/core/utils/formatters.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
-import 'package:flutter_realtime_workspace/app/features/tasks/usecases/task_usecase.dart';
 
 Color _statusColor(String s) => switch (s) {
       'in_progress' => const Color(0xFF3B82F6),
@@ -39,7 +39,6 @@ class MyTasksScreen extends ConsumerStatefulWidget {
 class _MyTasksScreenState extends ConsumerState<MyTasksScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabs;
-  String _selectedStatus = 'all';
 
   @override
   void initState() {
@@ -107,7 +106,7 @@ class _MyTasksScreenState extends ConsumerState<MyTasksScreen>
             5,
             (i) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: SSkeleton(height: 80, isDark: isDark, radius: 14),
+              child: const TSkeleton(height: 80),
             ),
           ),
         ),
@@ -200,7 +199,6 @@ class _TaskList extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
         itemCount: tasks.length,
         itemBuilder: (context, i) => TWidgetAnimations.slideUp(
-          delay: Duration(milliseconds: i * 40),
           child: _MyTaskCard(task: tasks[i], isDark: isDark),
         ),
       ),
@@ -307,7 +305,7 @@ class _MyTaskCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    THelperFunctions.formatDate(task.dueDate!),
+                    TFormatter.formatDate(task.dueDate!),
                     style: TextStyle(
                         fontSize: 11,
                         color: isOverdue ? TColors.error : textSec),

@@ -6,7 +6,7 @@ import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
 import 'package:flutter_realtime_workspace/core/utils/formatters.dart';
 import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
-import 'package:flutter_realtime_workspace/app/features/tasks/usecases/task_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/task_usecase.dart';
 
 class CreateTaskScreen extends ConsumerStatefulWidget {
   /// Optional pre-filled project ID.

@@ -6,11 +6,12 @@ import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/workflows/usecases/workflow_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/workflow_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 import 'package:flutter_realtime_workspace/store/workflow_provider.dart';
+import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
 
 class WorkflowsScreen extends ConsumerStatefulWidget {
   const WorkflowsScreen({super.key});
@@ -26,7 +27,8 @@ class _State extends ConsumerState<WorkflowsScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
-    final wfAsync = ref.watch(workflowsProvider);
+    final workspaceId = ref.watch(activeWorkspaceProvider)?.id;
+    final wfAsync = ref.watch(workflowsProvider(workspaceId ?? ''));
     final canCreate = WorkflowUseCase.canCreateWorkflow(ref);
 
     return Scaffold(
@@ -42,7 +44,7 @@ class _State extends ConsumerState<WorkflowsScreen> {
           if (_activeOnly) list = WorkflowUseCase.filterActive(list);
 
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(workflowsProvider),
+            onRefresh: () async => ref.invalidate(workflowsProvider(workspaceId ?? '')),
             child: CustomScrollView(
               slivers: [
                 SliverPadding(

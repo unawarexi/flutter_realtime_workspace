@@ -10,7 +10,7 @@ import 'package:flutter_realtime_workspace/core/animations/widget_animations.dar
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter_realtime_workspace/store/task_provider.dart';
 import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
-import 'package:flutter_realtime_workspace/app/features/tasks/usecases/task_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/task_usecase.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/features/tasks/presentation/widgets/task_card.dart';
 import 'package:flutter_realtime_workspace/app/features/tasks/presentation/widgets/task_filter_sheet.dart';

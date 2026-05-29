@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/app/features/team_management/domain/usecases/add_team_member_usecase.dart';
-import 'package:flutter_realtime_workspace/core/network/api_exception.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/team_usecase.dart';
+import 'package:flutter_realtime_workspace/core/constants/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
+import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
-class AddTeamMemberScreen extends StatefulWidget {
+class AddTeamMemberScreen extends ConsumerStatefulWidget {
 	const AddTeamMemberScreen({
 		super.key,
 		required this.teamId,
@@ -11,98 +14,94 @@ class AddTeamMemberScreen extends StatefulWidget {
 	final String teamId;
 
 	@override
-	State<AddTeamMemberScreen> createState() => _AddTeamMemberScreenState();
+	ConsumerState<AddTeamMemberScreen> createState() => _AddTeamMemberScreenState();
 }
 
-class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
+class _AddTeamMemberScreenState extends ConsumerState<AddTeamMemberScreen> {
 	final _formKey = GlobalKey<FormState>();
 	final _emailController = TextEditingController();
-	final _roleController = TextEditingController();
-	final _useCase = AddTeamMemberUseCase();
-
+	String _role = 'member';
 	bool _isSubmitting = false;
+
+	static const _roles = ['member', 'lead', 'admin'];
 
 	@override
 	void dispose() {
 		_emailController.dispose();
-		_roleController.dispose();
 		super.dispose();
 	}
 
 	Future<void> _submit() async {
-		if (!_formKey.currentState!.validate()) {
-			return;
-		}
-
-		setState(() {
-			_isSubmitting = true;
-		});
-
-		final result = await _useCase(
+		if (!_formKey.currentState!.validate()) return;
+		setState(() => _isSubmitting = true);
+		await TeamUseCase.inviteMember(
+			context: context,
+			ref: ref,
 			teamId: widget.teamId,
-			email: _emailController.text.trim(),
-			role: _roleController.text.trim(),
+			body: {
+				'email': _emailController.text.trim(),
+				'role': _role,
+			},
 		);
-
-		if (!mounted) {
-			return;
-		}
-
-		setState(() {
-			_isSubmitting = false;
-		});
-
-		switch (result) {
-			case ApiSuccess<Map<String, dynamic>>():
-				ScaffoldMessenger.of(context).showSnackBar(
-					const SnackBar(content: Text('Team member added successfully.')),
-				);
-				Navigator.of(context).pop(result.data);
-			case ApiFailure<Map<String, dynamic>>():
-				ScaffoldMessenger.of(context).showSnackBar(
-					SnackBar(content: Text(result.exception.message)),
-				);
-		}
+		if (!mounted) return;
+		setState(() => _isSubmitting = false);
+		Navigator.of(context).pop();
 	}
 
 	@override
 	Widget build(BuildContext context) {
+		final isDark = Theme.of(context).brightness == Brightness.dark;
+		final hPad = TResponsive.pagePadding(context);
+		final textPrimary = isDark ? TColors.textDark : TColors.textLight;
+
 		return Scaffold(
-			appBar: AppBar(title: const Text('Add Team Member')),
+			backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,
+			appBar: AppBar(
+				title: const Text('Add Team Member'),
+				backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,
+				elevation: 0,
+			),
 			body: Padding(
-				padding: const EdgeInsets.all(16),
+				padding: EdgeInsets.all(hPad),
 				child: Form(
 					key: _formKey,
 					child: Column(
+						crossAxisAlignment: CrossAxisAlignment.stretch,
 						children: [
 							TextFormField(
 								controller: _emailController,
 								keyboardType: TextInputType.emailAddress,
-								decoration: const InputDecoration(
+								style: TextStyle(color: textPrimary),
+								decoration: InputDecoration(
 									labelText: 'Member email',
+									hintText: 'user@example.com',
+									border: OutlineInputBorder(borderRadius: BorderRadius.circular(TSizes.radiusMd)),
 								),
 								validator: (value) {
-									if (value == null || value.trim().isEmpty) {
-										return 'Email is required';
-									}
+									if (value == null || value.trim().isEmpty) return 'Email is required';
+									if (!value.contains('@')) return 'Enter a valid email';
 									return null;
 								},
 							),
-							const SizedBox(height: 12),
-							TextFormField(
-								controller: _roleController,
-								decoration: const InputDecoration(
+							const SizedBox(height: TSizes.md),
+							DropdownButtonFormField<String>(
+								value: _role,
+								decoration: InputDecoration(
 									labelText: 'Role',
-									hintText: 'member, admin, lead',
+									border: OutlineInputBorder(borderRadius: BorderRadius.circular(TSizes.radiusMd)),
 								),
+								items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r.capitalize()))).toList(),
+								onChanged: (v) => setState(() => _role = v ?? 'member'),
 							),
-							const SizedBox(height: 20),
-							SizedBox(
-								width: double.infinity,
-								child: FilledButton(
-									onPressed: _isSubmitting ? null : _submit,
-									child: Text(_isSubmitting ? 'Adding...' : 'Add member'),
+							const SizedBox(height: TSizes.xl),
+							FilledButton(
+								onPressed: _isSubmitting ? null : _submit,
+								style: FilledButton.styleFrom(
+									backgroundColor: TColors.primary,
+									padding: const EdgeInsets.symmetric(vertical: TSizes.md),
+									shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TSizes.radiusMd)),
 								),
+								child: Text(_isSubmitting ? 'Sending...' : 'Send Invitation'),
 							),
 						],
 					),
@@ -111,3 +110,8 @@ class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
 		);
 	}
 }
+
+extension _StringExt on String {
+	String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+}
+

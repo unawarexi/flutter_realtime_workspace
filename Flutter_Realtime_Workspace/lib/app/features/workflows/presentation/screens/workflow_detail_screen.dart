@@ -6,7 +6,7 @@ import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/workflows/usecases/workflow_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/workflow_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
@@ -20,7 +20,7 @@ class WorkflowDetailScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
     final wfId = GoRouterState.of(context).pathParameters['workflowId'];
-    final wfAsync = ref.watch(workflowsProvider);
+    final wfAsync = ref.watch(workflowDetailProvider(wfId ?? ''));
 
     return Scaffold(
       backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,
@@ -28,9 +28,7 @@ class WorkflowDetailScreen extends ConsumerWidget {
       body: wfAsync.when(
         loading: () => Padding(padding: EdgeInsets.all(hPad), child: Column(children: List.generate(3, (_) => const Padding(padding: EdgeInsets.only(bottom: TSizes.sm), child: TSkeleton(height: 60))))),
         error: (_, __) => const Center(child: Text('Failed to load')),
-        data: (workflows) {
-          final wf = workflows.where((w) => w.id == wfId).firstOrNull;
-          if (wf == null) return const Center(child: Text('Workflow not found'));
+        data: (wf) {
 
           return ListView(padding: EdgeInsets.symmetric(horizontal: hPad, vertical: TSizes.md), children: [
             // Header

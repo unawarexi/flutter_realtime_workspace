@@ -6,11 +6,12 @@ import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/storage/usecases/storage_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/storage_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 import 'package:flutter_realtime_workspace/store/storage_provider.dart';
+import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
 
 class StorageScreen extends ConsumerStatefulWidget {
   const StorageScreen({super.key});
@@ -25,7 +26,8 @@ class _State extends ConsumerState<StorageScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
-    final filesAsync = ref.watch(storageFilesProvider);
+    final workspaceId = ref.watch(activeWorkspaceProvider)?.id;
+    final filesAsync = ref.watch(storageFilesProvider({'workspaceId': workspaceId, 'projectId': null, 'taskId': null, 'mimeType': null}));
     final canUpload = StorageUseCase.canUpload(ref);
 
     return Scaffold(
@@ -52,7 +54,7 @@ class _State extends ConsumerState<StorageScreen> {
                       Text('No files', style: TextStyle(color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight)),
                     ]))
                   : RefreshIndicator(
-                      onRefresh: () async => ref.invalidate(storageFilesProvider),
+                      onRefresh: () async => ref.invalidate(storageFilesProvider({'workspaceId': workspaceId, 'projectId': null, 'taskId': null, 'mimeType': null})),
                       child: ListView.separated(
                         padding: EdgeInsets.symmetric(horizontal: hPad),
                         itemCount: filtered.length,
@@ -71,7 +73,7 @@ class _State extends ConsumerState<StorageScreen> {
                               const SizedBox(width: TSizes.sm),
                               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                 Text(f.filename, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: TResponsive.sp(context, 14), fontWeight: FontWeight.w500, color: isDark ? TColors.textPrimaryDark : TColors.textPrimaryLight)),
-                                Text(StorageUseCase.formatSize(f.size), style: TextStyle(fontSize: TResponsive.sp(context, 11), color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight)),
+                                Text(StorageUseCase.formatFileSize(f.bytes), style: TextStyle(fontSize: TResponsive.sp(context, 11), color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight)),
                               ])),
                               if (StorageUseCase.canDelete(ref))
                                 IconButton(

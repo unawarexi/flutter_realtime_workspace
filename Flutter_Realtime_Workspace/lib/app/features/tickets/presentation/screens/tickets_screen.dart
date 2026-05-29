@@ -6,11 +6,12 @@ import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/tickets/usecases/ticket_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/ticket_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 import 'package:flutter_realtime_workspace/store/ticket_provider.dart';
+import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
 
 class TicketsScreen extends ConsumerStatefulWidget {
   const TicketsScreen({super.key});
@@ -41,7 +42,8 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
-    final ticketsAsync = ref.watch(ticketsProvider);
+    final workspaceId = ref.watch(activeWorkspaceProvider)?.id;
+    final ticketsAsync = ref.watch(ticketsProvider({'workspaceId': workspaceId, 'status': null}));
     final canCreate = TicketUseCase.canCreateTicket(ref);
 
     return Scaffold(
@@ -100,7 +102,7 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen>
                       );
                     }
                     return RefreshIndicator(
-                      onRefresh: () async => ref.invalidate(ticketsProvider),
+                      onRefresh: () async => ref.invalidate(ticketsProvider({'workspaceId': workspaceId, 'status': null})),
                       child: ListView.separated(
                         padding: EdgeInsets.symmetric(horizontal: hPad, vertical: TSizes.sm),
                         itemCount: list.length,

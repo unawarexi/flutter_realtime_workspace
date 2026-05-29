@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/tickets/usecases/ticket_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/ticket_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
@@ -19,7 +19,7 @@ class TicketDetailScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
     final ticketId = GoRouterState.of(context).pathParameters['ticketId'];
-    final ticketsAsync = ref.watch(ticketsProvider);
+    final ticketsAsync = ref.watch(ticketDetailProvider(ticketId ?? ''));
 
     return Scaffold(
       backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,
@@ -27,9 +27,8 @@ class TicketDetailScreen extends ConsumerWidget {
       body: ticketsAsync.when(
         loading: () => Padding(padding: EdgeInsets.all(hPad), child: Column(children: List.generate(3, (_) => const Padding(padding: EdgeInsets.only(bottom: TSizes.sm), child: TSkeleton(height: 60))))),
         error: (_, __) => const Center(child: Text('Failed to load')),
-        data: (tickets) {
-          final ticket = tickets.where((t) => t.id == ticketId).firstOrNull;
-          if (ticket == null) return const Center(child: Text('Ticket not found'));
+        data: (ticket) {
+          // ticket is the TicketModel directly from ticketDetailProvider
 
           return ListView(
             padding: EdgeInsets.symmetric(horizontal: hPad, vertical: TSizes.md),

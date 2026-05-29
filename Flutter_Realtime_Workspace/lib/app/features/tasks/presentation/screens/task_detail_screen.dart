@@ -8,9 +8,12 @@ import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.d
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter_realtime_workspace/store/task_provider.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/task_model.dart';
-import 'package:flutter_realtime_workspace/app/features/tasks/usecases/task_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/task_usecase.dart';
 import 'package:flutter_realtime_workspace/core/utils/formatters.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
+import 'package:flutter_realtime_workspace/app/components/widgets/meta_info_row.dart';
+import 'package:flutter_realtime_workspace/app/components/widgets/comment_tile.dart';
+import 'package:flutter_realtime_workspace/app/features/tasks/presentation/widgets/task_checklist_tile.dart';
 
 Color _statusColor(String s) => switch (s) {
       'in_progress' => const Color(0xFF3B82F6),
@@ -241,35 +244,31 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   ),
                   child: Column(
                     children: [
-                      _MetaRow(
+                      MetaInfoRow(
                         icon: Iconsax.calendar_1,
                         label: 'Due Date',
                         value: task.dueDate != null
                             ? TFormatter.formatDate(task.dueDate!)
                             : 'No due date',
-                        isDark: isDark,
                         highlight: task.dueDate != null &&
                             task.dueDate!.isBefore(DateTime.now()),
                       ),
-                      _MetaRow(
+                      MetaInfoRow(
                         icon: Iconsax.clock,
                         label: 'Estimated',
                         value: task.estimatedHours != null
                             ? '${task.estimatedHours}h'
                             : 'Not set',
-                        isDark: isDark,
                       ),
-                      _MetaRow(
+                      MetaInfoRow(
                         icon: Iconsax.clock_1,
                         label: 'Logged',
                         value: '${task.loggedHours}h',
-                        isDark: isDark,
                       ),
-                      _MetaRow(
+                      MetaInfoRow(
                         icon: Iconsax.calendar_add,
                         label: 'Created',
                         value: TFormatter.formatDate(task.createdAt),
-                        isDark: isDark,
                         isLast: true,
                       ),
                     ],
@@ -344,63 +343,14 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       border: Border.all(color: border),
                     ),
                     child: Column(
-                      children: task.checklist.asMap().entries.map((e) {
-                        final item = e.value;
-                        return ListTile(
-                          dense: true,
-                          leading: canEdit
-                              ? GestureDetector(
-                                  onTap: () => _toggleChecklist(task, e.key),
-                                  child: AnimatedContainer(
-                                    duration:
-                                        const Duration(milliseconds: 200),
-                                    width: 20,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                      color: item.completed
-                                          ? TColors.success
-                                          : Colors.transparent,
-                                      borderRadius:
-                                          BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: item.completed
-                                            ? TColors.success
-                                            : border,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: item.completed
-                                        ? const Icon(Icons.check,
-                                            size: 14,
-                                            color: Colors.white)
-                                        : null,
-                                  ),
-                                )
-                              : Icon(
-                                  item.completed
-                                      ? Icons.check_circle
-                                      : Icons.circle_outlined,
-                                  size: 20,
-                                  color: item.completed
-                                      ? TColors.success
-                                      : border,
-                                ),
-                          title: Text(
-                            item.title,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: item.completed
-                                  ? (isDark
-                                      ? TColors.textDarkTertiary
-                                      : TColors.textLightTertiary)
-                                  : textPrimary,
-                              decoration: item.completed
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      children: task.checklist.asMap().entries.map((e) =>
+                        TaskChecklistTile(
+                          item: e.value,
+                          canEdit: canEdit,
+                          onToggle: () => _toggleChecklist(task, e.key),
+                          isLast: e.key == task.checklist.length - 1,
+                        ),
+                      ).toList(),
                     ),
                   ),
                 ],
@@ -480,15 +430,18 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   )
                 else
                   ...task.comments.map(
-                    (c) => _CommentTile(comment: c, isDark: isDark),
+                    (c) => CommentTile(
+                      userId: c.userId,
+                      content: c.content,
+                      createdAt: c.createdAt,
+                    ),
                   ),
                 // Add comment
                 if (canComment) ...[
                   const SizedBox(height: 16),
-                  _CommentInput(
+                  CommentInputField(
                     controller: _commentController,
                     isSubmitting: _isSubmittingComment,
-                    isDark: isDark,
                     onSubmit: () => _submitComment(task.id),
                   ),
                 ],
@@ -673,182 +626,4 @@ class _Chip extends StatelessWidget {
                 color: color,
                 letterSpacing: 0.5)),
       );
-}
-
-class _MetaRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool isDark;
-  final bool highlight;
-  final bool isLast;
-
-  const _MetaRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.isDark,
-    this.highlight = false,
-    this.isLast = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textPrimary = isDark ? TColors.textDark : TColors.textLight;
-    final textSec = isDark ? TColors.textDarkSecondary : TColors.textLightSecondary;
-    final border = isDark ? TColors.darkBorder : TColors.lightBorder;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              Icon(icon, size: 16, color: textSec),
-              const SizedBox(width: 10),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 13, color: textSec)),
-              const Spacer(),
-              Text(value,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: highlight ? TColors.error : textPrimary)),
-            ],
-          ),
-        ),
-        if (!isLast) Divider(height: 1, color: border),
-      ],
-    );
-  }
-}
-
-class _CommentTile extends StatelessWidget {
-  final TaskComment comment;
-  final bool isDark;
-  const _CommentTile({required this.comment, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = isDark ? TColors.darkElevated : Colors.white;
-    final border = isDark ? TColors.darkBorder : TColors.lightBorder;
-    final textPrimary = isDark ? TColors.textDark : TColors.textLight;
-    final textSec = isDark ? TColors.textDarkSecondary : TColors.textLightSecondary;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: TColors.primary.withOpacity(0.2),
-                child: Text(
-                  (comment.userId.isNotEmpty ? comment.userId[0] : '?')
-                      .toUpperCase(),
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: TColors.primary),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(comment.userId,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: textPrimary)),
-              ),
-              Text(TFormatter.formatDate(comment.createdAt),
-                  style: TextStyle(fontSize: 11, color: textSec)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(comment.content,
-              style: TextStyle(fontSize: 14, color: textPrimary, height: 1.5)),
-        ],
-      ),
-    );
-  }
-}
-
-class _CommentInput extends StatelessWidget {
-  final TextEditingController controller;
-  final bool isSubmitting;
-  final bool isDark;
-  final VoidCallback onSubmit;
-
-  const _CommentInput({
-    required this.controller,
-    required this.isSubmitting,
-    required this.isDark,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = isDark ? TColors.darkElevated : TColors.lightElevated;
-    final border = isDark ? TColors.darkBorder : TColors.lightBorder;
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: border),
-            ),
-            child: TextField(
-              controller: controller,
-              maxLines: null,
-              style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? TColors.textDark : TColors.textLight),
-              decoration: InputDecoration(
-                hintText: 'Add a comment...',
-                hintStyle: TextStyle(
-                    color: isDark
-                        ? TColors.textDarkTertiary
-                        : TColors.textLightTertiary),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(14),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: isSubmitting ? null : onSubmit,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isSubmitting ? TColors.primary.withOpacity(0.5) : TColors.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: isSubmitting
-                ? const Center(
-                    child: SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white)))
-                : const Icon(Iconsax.send_1, color: Colors.white, size: 18),
-          ),
-        ),
-      ],
-    );
-  }
 }

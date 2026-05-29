@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/storage/usecases/storage_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/storage_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
@@ -19,10 +19,35 @@ class _State extends ConsumerState<UploadScreen> {
   bool _loading = false;
 
   Future<void> _upload() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      withData: false,
+      withReadStream: false,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.single;
+    if (file.path == null) return;
+    final mimeType = _mimeFromExtension(file.extension ?? '');
     setState(() => _loading = true);
-    await StorageUseCase.uploadFile(context: context, ref: ref);
+    await StorageUseCase.uploadFile(
+      context: context,
+      ref: ref,
+      filePath: file.path!,
+      fileName: file.name,
+      mimeType: mimeType,
+    );
     if (!mounted) return;
     setState(() => _loading = false);
+  }
+
+  String _mimeFromExtension(String ext) {
+    const map = {
+      'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
+      'gif': 'image/gif', 'webp': 'image/webp', 'pdf': 'application/pdf',
+      'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'mp4': 'video/mp4', 'mp3': 'audio/mpeg', 'zip': 'application/zip',
+    };
+    return map[ext.toLowerCase()] ?? 'application/octet-stream';
   }
 
   @override
