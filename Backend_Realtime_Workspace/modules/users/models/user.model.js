@@ -8,7 +8,11 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     // ── Identity ──────────────────────────────────────────────────────────
-    firebaseUid: { type: String, required: true, unique: true, index: true },
+    // firebaseUid is only set for social-auth users or when a user links their
+    // account to a social provider. Email/password users have no Firebase UID.
+    // sparse: true allows multiple documents to have null while still enforcing
+    // uniqueness among non-null values.
+    firebaseUid: { type: String, unique: true, sparse: true, index: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     fullName: { type: String, trim: true },
     displayName: { type: String, trim: true },

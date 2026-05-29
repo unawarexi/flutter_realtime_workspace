@@ -253,19 +253,42 @@ export async function loginSocial({ idToken, inviteCode, deviceInfo = {} }) {
   let user = await User.findOne({ firebaseUid: decoded.uid });
 
   if (!user) {
-    // Auto-create on first social login
-    user = await User.create({
-      firebaseUid: decoded.uid,
-      email: decoded.email,
-      fullName: decoded.name || decoded.email?.split("@")[0],
-      displayName: decoded.name || null,
-      profilePicture: decoded.picture || null,
-      status: "active",
-      "twoFactorSettings.emailVerified": decoded.email_verified || false,
-      inviteCode: generateInviteCode(),
-      usedInviteCode: inviteCode,
-    });
-    eventBus.publish(DomainEvents.USER_REGISTERED, { userId: user._id, method: "social" });
+    // Check for an existing email/password account with the same email.
+    // If one exists, link the Firebase UID to it rather than creating a duplicate.
+    const emailUser = await User.findOne({ email: decoded.email }).lean();
+
+    if (emailUser) {
+      if (emailUser.firebaseUid && emailUser.firebaseUid !== decoded.uid) {
+        // Edge case: account already linked to a different social provider
+        throw conflict("This email is already linked to a different social account. Sign in with your original method.");
+      }
+      // Link Firebase UID to the existing account
+      user = await User.findByIdAndUpdate(
+        emailUser._id,
+        {
+          firebaseUid: decoded.uid,
+          // Backfill profile picture only if the user doesn't have one yet
+          ...(!emailUser.profilePicture && decoded.picture ? { profilePicture: decoded.picture } : {}),
+          "twoFactorSettings.emailVerified": emailUser.twoFactorSettings?.emailVerified || decoded.email_verified || false,
+        },
+        { new: true }
+      );
+      eventBus.publish(DomainEvents.USER_LOGGED_IN, { userId: user._id, method: "social-link" });
+    } else {
+      // New user — first time signing in via social, no prior account
+      user = await User.create({
+        firebaseUid: decoded.uid,
+        email: decoded.email,
+        fullName: decoded.name || decoded.email?.split("@")[0],
+        displayName: decoded.name || null,
+        profilePicture: decoded.picture || null,
+        status: "active",
+        "twoFactorSettings.emailVerified": decoded.email_verified || false,
+        inviteCode: generateInviteCode(),
+        usedInviteCode: inviteCode,
+      });
+      eventBus.publish(DomainEvents.USER_REGISTERED, { userId: user._id, method: "social" });
+    }
   }
 
   if (user.status === "suspended")   throw new AppError("Account suspended", HttpStatus.FORBIDDEN, ErrorCodes.ACCOUNT_SUSPENDED);

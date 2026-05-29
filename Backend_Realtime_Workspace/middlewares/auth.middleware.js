@@ -1,17 +1,22 @@
 // ============================================================================
-// TeamSpot — Firebase Auth Middleware
-// Verify Firebase ID tokens and lookup user in MongoDB
+// TeamSpot — Auth Middleware
+// Verify custom JWT access tokens for protected routes.
+// Firebase tokens are only used at social login time (auth.service loginSocial).
+// After any login — email/password or social — the client receives a custom
+// JWT signed with JWT_SECRET; that is what protected routes validate.
 // ============================================================================
 
+import jwt from "jsonwebtoken";
 import admin from "../config/firebase-admin.config.js";
 import User from "../modules/users/models/user.model.js";
+import { env } from "../config/env.config.js";
 import { HttpStatus, ErrorCodes } from "../config/constants.js";
 import { createLogger } from "../observability/logger.js";
 
 const log = createLogger("Auth");
 
 // ============================================================================
-// AUTHENTICATE — Verify Firebase token, require existing user in DB
+// AUTHENTICATE — Verify custom JWT, require existing active user in DB
 // ============================================================================
 
 export async function authenticate(req, res, next) {
@@ -24,13 +29,26 @@ export async function authenticate(req, res, next) {
       });
     }
 
-    const idToken = authHeader.split("Bearer ")[1];
+    const token = authHeader.split("Bearer ")[1];
 
-    // Verify the Firebase ID token (checkRevoked catches deleted/disabled users)
-    const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] });
+    } catch (jwtErr) {
+      if (jwtErr.name === "TokenExpiredError") {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          success: false,
+          error: { code: ErrorCodes.TOKEN_EXPIRED, message: "Token expired. Please sign in again." },
+        });
+      }
+      return res.status(HttpStatus.UNAUTHORIZED).json({
+        success: false,
+        error: { code: ErrorCodes.TOKEN_INVALID, message: "Invalid token. Please sign in again." },
+      });
+    }
 
-    // Find user in MongoDB — do NOT auto-create
-    const user = await User.findOne({ firebaseUid: decodedToken.uid }).lean();
+    // decoded.sub is the MongoDB user _id (set in signAccess)
+    const user = await User.findById(decoded.sub).lean();
 
     if (!user) {
       return res.status(HttpStatus.NOT_FOUND).json({
@@ -42,47 +60,28 @@ export async function authenticate(req, res, next) {
       });
     }
 
-    // Attach user to request
-    req.user = user;
-    req.firebaseUser = decodedToken;
-
-    next();
-  } catch (error) {
-    if (error.code === "auth/id-token-expired") {
-      return res.status(HttpStatus.UNAUTHORIZED).json({
-        success: false,
-        error: { code: ErrorCodes.TOKEN_EXPIRED, message: "Token expired. Please sign in again." },
-      });
-    }
-
-    if (error.code === "auth/id-token-revoked") {
-      return res.status(HttpStatus.UNAUTHORIZED).json({
-        success: false,
-        error: { code: ErrorCodes.TOKEN_INVALID, message: "Token revoked. Please sign in again." },
-      });
-    }
-
-    if (error.code === "auth/user-disabled") {
+    if (user.status === "suspended" || user.status === "deactivated") {
       return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         error: { code: ErrorCodes.ACCOUNT_SUSPENDED, message: "Account has been disabled. Contact support." },
       });
     }
 
-    if (error.code?.startsWith("auth/")) {
-      return res.status(HttpStatus.UNAUTHORIZED).json({
-        success: false,
-        error: { code: ErrorCodes.FIREBASE_AUTH_FAILED, message: "Authentication failed" },
-      });
-    }
+    req.user = user;
+    // Expose decoded JWT claims (sessionId, role, tenantId) for downstream use
+    req.tokenClaims = decoded;
 
+    next();
+  } catch (error) {
     log.error("Auth middleware error", { error });
     next(error);
   }
 }
 
 // ============================================================================
-// VERIFY FIREBASE TOKEN — Only verifies token, no DB lookup (for sign-in)
+// VERIFY FIREBASE TOKEN — Used only by the social login endpoint.
+// Verifies the one-time Firebase ID token the client sends to initiate social
+// sign-in. After this, a custom JWT is issued and used for all subsequent calls.
 // ============================================================================
 
 export async function verifyFirebaseToken(req, res, next) {
@@ -135,7 +134,7 @@ export async function verifyFirebaseToken(req, res, next) {
 }
 
 // ============================================================================
-// OPTIONAL AUTH — Attach user if token present, continue if not
+// OPTIONAL AUTH — Attach user if a valid JWT is present, continue if not
 // ============================================================================
 
 export async function optionalAuth(req, res, next) {
@@ -145,17 +144,16 @@ export async function optionalAuth(req, res, next) {
   }
 
   try {
-    const idToken = authHeader.split("Bearer ")[1];
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const token = authHeader.split("Bearer ")[1];
+    const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] });
 
-    const user = await User.findOne({ firebaseUid: decodedToken.uid }).lean();
-
-    if (user) {
+    const user = await User.findById(decoded.sub).lean();
+    if (user && user.status === "active") {
       req.user = user;
-      req.firebaseUser = decodedToken;
+      req.tokenClaims = decoded;
     }
   } catch {
-    // Silently continue without auth
+    // Silently continue without auth — token invalid/expired is not an error here
   }
 
   next();
