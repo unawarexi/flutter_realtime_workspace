@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/app/features/legal/usecases/legal_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/models/legal_model.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+import 'package:flutter_realtime_workspace/store/legal_provider.dart';
 
 class TermsScreen extends ConsumerWidget {
   const TermsScreen({super.key});
@@ -35,7 +36,7 @@ class TermsScreen extends ConsumerWidget {
 }
 
 class _LegalDocView extends StatelessWidget {
-  final LegalDoc doc;
+  final LegalDocument doc;
   final bool isDark;
 
   const _LegalDocView({required this.doc, required this.isDark});
@@ -93,7 +94,7 @@ class _SectionWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            section.title,
+            section.heading,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: isDark ? TColors.textDark : TColors.textLight,
@@ -101,7 +102,7 @@ class _SectionWidget extends StatelessWidget {
           ),
           const SizedBox(height: TSizes.sm),
           Text(
-            section.content,
+            section.body,
             style: TextStyle(
               fontSize: 13,
               height: 1.6,

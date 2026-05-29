@@ -16,10 +16,16 @@ class LegalSection {
     this.subsections = const [],
   });
 
-  factory LegalSection.fromJson(Map<String, dynamic> json) => LegalSection(
-        id: json['id'] as String,
-        heading: json['heading'] as String,
-        body: json['body'] as String,
+    factory LegalSection.fromJson(Map<String, dynamic> json) {
+    final resolvedHeading =
+      (json['heading'] ?? json['title'] ?? '').toString().trim();
+    final resolvedBody =
+      (json['body'] ?? json['content'] ?? '').toString().trim();
+
+    return LegalSection(
+      id: (json['id'] ?? json['_id'] ?? resolvedHeading).toString(),
+      heading: resolvedHeading,
+      body: resolvedBody,
         items: (json['items'] as List<dynamic>?)
                 ?.map((e) => e as String)
                 .toList() ??
@@ -30,6 +36,7 @@ class LegalSection {
                 .toList() ??
             [],
       );
+    }
 }
 
 /// A subsection within a legal section (e.g., 2.1, 2.2).
@@ -39,14 +46,15 @@ class LegalSubsection {
 
   const LegalSubsection({required this.heading, this.items = const []});
 
-  factory LegalSubsection.fromJson(Map<String, dynamic> json) =>
-      LegalSubsection(
-        heading: json['heading'] as String,
+  factory LegalSubsection.fromJson(Map<String, dynamic> json) {
+    return LegalSubsection(
+        heading: (json['heading'] ?? json['title'] ?? '').toString(),
         items: (json['items'] as List<dynamic>?)
                 ?.map((e) => e as String)
                 .toList() ??
             [],
       );
+  }
 }
 
 /// A complete legal document (Terms of Service or Privacy Policy).
@@ -65,13 +73,24 @@ class LegalDocument {
     required this.sections,
   });
 
-  factory LegalDocument.fromJson(Map<String, dynamic> json) => LegalDocument(
-        title: json['title'] as String,
-        effectiveDate: json['effectiveDate'] as String,
-        lastUpdated: json['lastUpdated'] as String,
-        version: json['version'] as String,
-        sections: (json['sections'] as List<dynamic>)
-            .map((e) => LegalSection.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+  factory LegalDocument.fromJson(Map<String, dynamic> json) {
+    final rawSections = json['sections'];
+    final sections = <LegalSection>[];
+
+    if (rawSections is List) {
+      for (final section in rawSections) {
+        if (section is Map<String, dynamic>) {
+          sections.add(LegalSection.fromJson(section));
+        }
+      }
+    }
+
+    return LegalDocument(
+      title: (json['title'] ?? 'Legal Document').toString(),
+      effectiveDate: (json['effectiveDate'] ?? '').toString(),
+      lastUpdated: (json['lastUpdated'] ?? '').toString(),
+      version: (json['version'] ?? '1.0.0').toString(),
+      sections: sections,
+    );
+  }
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/app/features/legal/usecases/legal_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/models/legal_model.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+import 'package:flutter_realtime_workspace/store/legal_provider.dart';
 
 class PrivacyScreen extends ConsumerWidget {
   const PrivacyScreen({super.key});
@@ -34,7 +35,7 @@ class PrivacyScreen extends ConsumerWidget {
 }
 
 class _PrivacyDocView extends StatelessWidget {
-  final LegalDoc doc;
+  final LegalDocument doc;
   final bool isDark;
 
   const _PrivacyDocView({required this.doc, required this.isDark});
@@ -71,7 +72,7 @@ class _PrivacyDocView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      s.title,
+                      s.heading,
                       style:
                           Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
@@ -82,7 +83,7 @@ class _PrivacyDocView extends StatelessWidget {
                     ),
                     const SizedBox(height: TSizes.sm),
                     Text(
-                      s.content,
+                      s.body,
                       style: TextStyle(
                         fontSize: 13,
                         height: 1.6,
