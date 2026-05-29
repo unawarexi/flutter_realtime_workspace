@@ -29,7 +29,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   static const Color primaryBlue = Color(0xFF1E3A8A);
   static const Color accentBlue = Color(0xFF3B82F6);
   static const Color lightBlue = Color(0xFFEFF6FF);
-  static const Color darkBlue = Color(0xFF0F172A);
   
   Color get surfaceColor =>  isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight;
   Color get cardColor => isDarkMode ? const Color(0xFF1E293B) : Colors.white;

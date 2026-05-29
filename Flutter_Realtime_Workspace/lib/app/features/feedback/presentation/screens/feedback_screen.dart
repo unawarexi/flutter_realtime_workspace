@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/feedback/usecases/feedback_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/feedback_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
@@ -18,7 +18,7 @@ class FeedbackScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
-    final fbAsync = ref.watch(feedbackListProvider);
+    final fbAsync = ref.watch(feedbackListProvider({'workspaceId': null, 'type': null}));
 
     return Scaffold(
       backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,
@@ -38,7 +38,7 @@ class FeedbackScreen extends ConsumerWidget {
             ]));
           }
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(feedbackListProvider),
+            onRefresh: () async => ref.invalidate(feedbackListProvider({'workspaceId': null, 'type': null})),
             child: ListView.separated(
               padding: EdgeInsets.symmetric(horizontal: hPad, vertical: TSizes.md),
               itemCount: feedbacks.length,
@@ -60,7 +60,7 @@ class FeedbackScreen extends ConsumerWidget {
                       Text('${fb.createdAt.day}/${fb.createdAt.month}/${fb.createdAt.year}', style: TextStyle(fontSize: TResponsive.sp(context, 10), color: isDark ? TColors.textTertiaryDark : TColors.textTertiaryLight)),
                     ]),
                     const SizedBox(height: 6),
-                    Text(fb.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: TResponsive.sp(context, 14), color: isDark ? TColors.textPrimaryDark : TColors.textPrimaryLight)),
+                    Text(fb.description ?? fb.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: TResponsive.sp(context, 14), color: isDark ? TColors.textPrimaryDark : TColors.textPrimaryLight)),
                     if (fb.rating != null) ...[
                       const SizedBox(height: 6),
                       Row(children: List.generate(5, (j) => Icon(j < (fb.rating ?? 0) ? Icons.star_rounded : Icons.star_border_rounded, size: 16, color: TColors.yellow))),
