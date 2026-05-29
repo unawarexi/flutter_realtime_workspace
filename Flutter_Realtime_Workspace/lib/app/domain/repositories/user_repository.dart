@@ -31,17 +31,6 @@ class UserRepository {
     return UserModel.fromJson(res.data['data']);
   }
 
-  /// Register FCM device token for push notifications.
-  Future<void> registerDevice({
-    required String fcmToken,
-    required String platform,
-  }) async {
-    await _api.post(ApiEndpoints.notificationSubscribe, data: {
-      'token': fcmToken,
-      'platform': platform,
-    });
-  }
-
   Future<List<UserModel>> getUsers({String? query}) async {
     final res = await _api.get(ApiEndpoints.users, queryParameters: {
       if (query != null && query.isNotEmpty) 'q': query,

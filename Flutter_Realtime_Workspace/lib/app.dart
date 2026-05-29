@@ -4,6 +4,7 @@ import 'package:flutter_realtime_workspace/theme/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/router/app_router.dart';
+import 'package:flutter_realtime_workspace/store/notification_provider.dart';
 import 'package:flutter_realtime_workspace/store/theme_provider.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/connectivity_toast.dart';
 
@@ -13,6 +14,7 @@ class TeamSpotApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    ref.watch(notificationRealtimeProvider);
 
     return MaterialApp.router(
       title: 'TeamSpot',

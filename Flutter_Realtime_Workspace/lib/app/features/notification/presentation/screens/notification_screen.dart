@@ -1,888 +1,416 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/button.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/notification_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
+import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
+import 'package:flutter_realtime_workspace/store/notification_provider.dart';
+import 'package:go_router/go_router.dart';
 
-
-class NotificationScreen extends StatefulWidget {
+class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
 
   @override
-  State<NotificationScreen> createState() => _NotificationScreenState();
+  ConsumerState<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late AnimationController _fabAnimationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fabScaleAnimation;
-  
-  String _selectedTab = 'All';
-  final List<String> _tabs = ['All', 'Direct', 'Unread', 'Starred', 'Important'];
-  
+class _NotificationScreenState extends ConsumerState<NotificationScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
   @override
   void initState() {
     super.initState();
-    
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+    _controller = AnimationController(
       vsync: this,
-    );
-    
-    _fabAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
-    ));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
+      duration: const Duration(milliseconds: 420),
+    )..forward();
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.04),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
-    ));
-    
-    _fabScaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fabAnimationController,
-      curve: Curves.elasticOut,
-    ));
-    
-    _animationController.forward();
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) _fabAnimationController.forward();
-    });
+    ).animate(_fade);
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _fabAnimationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(notificationRealtimeProvider);
+
     final isDarkMode = THelperFunctions.isDarkMode(context);
-    
+    final unreadCount = NotificationUseCase.unreadCount(ref);
+
     return Scaffold(
-      backgroundColor:  isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            _buildModernAppBar(isDarkMode),
-            SliverToBoxAdapter(
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildNotificationStats(isDarkMode),
-                      const SizedBox(height: 32),
-                      _buildFilterTabs(isDarkMode),
-                      const SizedBox(height: 32),
-                      _buildEmptyState(isDarkMode),
-                    ],
-                  ),
-                ),
+      backgroundColor:
+          isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        titleSpacing: 20,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Notifications',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: isDarkMode ? TColors.textDark : TColors.textLight,
+              ),
+            ),
+            Text(
+              'Android push and realtime badge state',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDarkMode
+                    ? TColors.textDarkSecondary
+                    : TColors.textLightSecondary,
               ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: _buildModernFAB(isDarkMode),
-    );
-  }
-
-  Widget _buildModernAppBar(bool isDarkMode) {
-    return SliverAppBar(
-      automaticallyImplyLeading: false,
-      expandedHeight: 80,
-      floating: true,
-      pinned: true,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      systemOverlayStyle: isDarkMode
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
-      // leading: Padding(
-      //   padding: const EdgeInsets.only(left: 14, top: 12, bottom: 12),
-      //   child: GestureDetector(
-      //     onTap: () => Navigator.pop(context),
-      //     child: Container(
-      //       decoration: BoxDecoration(
-      //         color: isDarkMode
-      //            // ? Colors.white.withOpacity(0.07)
-      //             : Colors.black.withOpacity(0.06),
-      //         shape: BoxShape.circle,
-      //         boxShadow: [
-      //           BoxShadow(
-      //             color: isDarkMode
-      //                // ? Colors.black.withOpacity(0.18)
-      //                 : Colors.grey.withOpacity(0.10),
-      //             blurRadius: 8,
-      //             offset: const Offset(0, 2),
-      //           ),
-      //         ],
-      //         border: Border.all(
-      //           color: isDarkMode
-      //             //  ? Colors.white.withOpacity(0.10)
-      //               : const Color(0xFFE2E8F0),
-      //           width: 1.2,
-      //         ),
-      //       ),
-      //       child: Icon(
-      //         Icons.arrow_back_rounded,
-      //         color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
-      //         size: 28,
-      //       ),
-      //     ),
-      //   ),
-      // ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? const Color(0xFF1E293B).withOpacity(0.95)
-                : Colors.white.withOpacity(0.95),
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-            border: Border.all(
-              color: isDarkMode
-                  ? const Color(0xFF334155)
-                  : const Color(0xFFE2E8F0),
-              width: 1,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: TSizes.md),
+            child: Center(
+              child: TextButton(
+                onPressed: unreadCount == 0
+                    ? null
+                    : () => NotificationUseCase.markAllRead(
+                          context: context,
+                          ref: ref,
+                        ),
+                child: const Text('Mark all read'),
+              ),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 18, right: 18, top: 24, bottom: 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Notifications',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Stay updated with your workspace',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDarkMode
-                              ? Colors.white.withOpacity(0.7)
-                              : const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildAppBarActions(isDarkMode),
-              ],
-            ),
-          ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildAppBarActions(bool isDarkMode) {
-    return Row(
-      children: [
-        _buildActionButton(
-          icon: Icons.search_rounded,
-          onPressed: () {},
-          isDarkMode: isDarkMode,
-        ),
-        const SizedBox(width: 10),
-        _buildActionButton(
-          icon: Icons.more_horiz_rounded,
-          onPressed: () => _showMoreOptions(context),
-          isDarkMode: isDarkMode,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required bool isDarkMode,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? Colors.white.withOpacity(0.08)
-                : Colors.black.withOpacity(0.06),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: isDarkMode
-                    ? Colors.black.withOpacity(0.13)
-                    : Colors.grey.withOpacity(0.10),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+      body: FadeTransition(
+        opacity: _fade,
+        child: SlideTransition(
+          position: _slide,
+          child: ListView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            children: [
+              _StatsRow(
+                isDarkMode: isDarkMode,
+                unreadCount: unreadCount,
+              ),
+              const SizedBox(height: TSizes.lg),
+              _RealtimeStatusCard(
+                isDarkMode: isDarkMode,
+                unreadCount: unreadCount,
+              ),
+              const SizedBox(height: TSizes.md),
+              const _CapabilitiesCard(),
+              const SizedBox(height: TSizes.md),
+              _ActionsCard(
+                isDarkMode: isDarkMode,
+                unreadCount: unreadCount,
               ),
             ],
-            border: Border.all(
-              color: isDarkMode
-                  ? Colors.white.withOpacity(0.10)
-                  : const Color(0xFFE2E8F0),
-              width: 1.2,
-            ),
-          ),
-          child: Center(
-            child: Icon(
-              icon,
-              color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
-              size: 22,
-            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildNotificationStats(bool isDarkMode) {
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({
+    required this.isDarkMode,
+    required this.unreadCount,
+  });
+
+  final bool isDarkMode;
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
-          child: _buildStatCard(
-            title: 'Total',
-            value: '0',
-            icon: Icons.notifications_none,
-            color: const Color(0xFF1E40AF),
-            isDarkMode: isDarkMode,
-          ),
-        ),
-        const SizedBox(width: 6), // reduced spacing
-        Expanded(
-          child: _buildStatCard(
+          child: _StatCard(
             title: 'Unread',
-            value: '0',
-            icon: Icons.mark_email_unread,
+            value: '$unreadCount',
+            icon: Icons.notifications_active_outlined,
             color: const Color(0xFFDC2626),
             isDarkMode: isDarkMode,
           ),
         ),
-        const SizedBox(width: 6), // reduced spacing
+        const SizedBox(width: TSizes.sm),
         Expanded(
-          child: _buildStatCard(
-            title: 'Starred',
-            value: '0',
-            icon: Icons.star_outline,
-            color: const Color(0xFFF59E0B),
+          child: _StatCard(
+            title: 'Transport',
+            value: 'Live',
+            icon: Icons.wifi_tethering_rounded,
+            color: const Color(0xFF1E40AF),
+            isDarkMode: isDarkMode,
+          ),
+        ),
+        const SizedBox(width: TSizes.sm),
+        Expanded(
+          child: _StatCard(
+            title: 'Platform',
+            value: 'Android',
+            icon: Icons.android_rounded,
+            color: const Color(0xFF16A34A),
             isDarkMode: isDarkMode,
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    required bool isDarkMode,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(8), // reduced padding
-      decoration: BoxDecoration(
-        color: isDarkMode 
-            ? const Color(0xFF1E293B).withOpacity(0.6)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(8), // reduced radius
-        border: Border.all(
-          color: isDarkMode 
-              ? const Color(0xFF334155)
-              : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDarkMode 
-                ? Colors.black.withOpacity(0.05)
-                : Colors.grey.withOpacity(0.03),
-            blurRadius: 6, // reduced blur
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.isDarkMode,
+  });
+
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final bool isDarkMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return TCard(
+      hasBorder: true,
+      hasShadow: true,
+      padding: const EdgeInsets.all(TSizes.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(4), // reduced padding
+            padding: const EdgeInsets.all(TSizes.sm),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4), // reduced radius
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(TSizes.radiusSm),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 10, // reduced icon size
-            ),
+            child: Icon(icon, color: color, size: TSizes.iconSm),
           ),
-          const SizedBox(height: 4), // reduced spacing
+          const SizedBox(height: TSizes.sm),
           Text(
             value,
             style: TextStyle(
-              fontSize: 14, // reduced font size
+              fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
-              letterSpacing: -0.5,
+              color: isDarkMode ? TColors.textDark : TColors.textLight,
             ),
           ),
-          const SizedBox(height: 1), // reduced spacing
+          const SizedBox(height: 2),
           Text(
             title,
             style: TextStyle(
-              fontSize: 7, // reduced font size
-              fontWeight: FontWeight.w500,
-              color: isDarkMode 
-                  ? Colors.white.withOpacity(0.7)
-                  : const Color(0xFF64748B),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDarkMode
+                  ? TColors.textDarkSecondary
+                  : TColors.textLightSecondary,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildFilterTabs(bool isDarkMode) {
-    return Column(
+class _RealtimeStatusCard extends StatelessWidget {
+  const _RealtimeStatusCard({
+    required this.isDarkMode,
+    required this.unreadCount,
+  });
+
+  final bool isDarkMode;
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return TCard(
+      hasBorder: true,
+      hasShadow: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            unreadCount > 0 ? 'New activity available' : 'All caught up',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: isDarkMode ? TColors.textDark : TColors.textLight,
+            ),
+          ),
+          const SizedBox(height: TSizes.sm),
+          Text(
+            unreadCount > 0
+                ? 'Unread badge state is being driven from websocket notification events. Open the related screen from the push tap, or clear the badge here when you have reviewed the update.'
+                : 'Push notifications, local Android channels, and websocket badge updates are wired. The backend notifications module does not expose a persisted in-app inbox endpoint yet, so this screen reflects live state instead of a stored timeline.',
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.45,
+              color: isDarkMode
+                  ? TColors.textDarkSecondary
+                  : TColors.textLightSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CapabilitiesCard extends StatelessWidget {
+  const _CapabilitiesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const TCard(
+      hasBorder: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _CapabilityRow(
+            icon: Icons.notifications_outlined,
+            title: 'Android local channels',
+            subtitle:
+                'Meeting, call, chat, and system channels are configured in NotificationService.',
+          ),
+          SizedBox(height: TSizes.md),
+          _CapabilityRow(
+            icon: Icons.route_outlined,
+            title: 'Safe tap routing',
+            subtitle:
+                'Notification taps now navigate only to routes that exist in the app router.',
+          ),
+          SizedBox(height: TSizes.md),
+          _CapabilityRow(
+            icon: Icons.phone_android_outlined,
+            title: 'Android-first rollout',
+            subtitle:
+                'Apple notification settings remain intentionally disabled in the client.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CapabilityRow extends StatelessWidget {
+  const _CapabilityRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = THelperFunctions.isDarkMode(context);
+
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Filter by',
-          style: TextStyle(
-            fontSize: 10, // reduced font size
-            fontWeight: FontWeight.w700,
-            color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
+        Container(
+          padding: const EdgeInsets.all(TSizes.sm),
+          decoration: BoxDecoration(
+            color: TColors.primary.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(TSizes.radiusSm),
           ),
+          child: Icon(icon, size: TSizes.iconSm, color: TColors.primary),
         ),
-        const SizedBox(height: 6), // reduced spacing
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: _tabs.map((tab) {
-              final isSelected = _selectedTab == tab;
-              return Padding(
-                padding: const EdgeInsets.only(right: 4), // reduced spacing
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedTab = tab;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(8), // reduced radius
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), // reduced padding
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                          ? const Color(0xFF1E40AF)
-                          : isDarkMode 
-                              ? const Color(0xFF1E293B).withOpacity(0.6)
-                              : Colors.white,
-                      borderRadius: BorderRadius.circular(8), // reduced radius
-                      border: Border.all(
-                        color: isSelected 
-                            ? const Color(0xFF1E40AF)
-                            : isDarkMode 
-                                ? const Color(0xFF334155)
-                                : const Color(0xFFE2E8F0),
-                        width: 1,
-                      ),
-                      boxShadow: isSelected ? [
-                        BoxShadow(
-                          color: const Color(0xFF1E40AF).withOpacity(0.12),
-                          blurRadius: 6, // reduced blur
-                          offset: const Offset(0, 2),
-                        ),
-                      ] : [
-                        BoxShadow(
-                          color: isDarkMode 
-                              ? Colors.black.withOpacity(0.05)
-                              : Colors.grey.withOpacity(0.02),
-                          blurRadius: 3, // reduced blur
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      tab,
-                      style: TextStyle(
-                        fontSize: 8, // reduced font size
-                        fontWeight: FontWeight.w600,
-                        color: isSelected 
-                            ? Colors.white
-                            : isDarkMode 
-                                ? Colors.white.withOpacity(0.8)
-                                : const Color(0xFF64748B),
-                      ),
-                    ),
-                  ),
+        const SizedBox(width: TSizes.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: isDarkMode ? TColors.textDark : TColors.textLight,
                 ),
-              );
-            }).toList(),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: isDarkMode
+                      ? TColors.textDarkSecondary
+                      : TColors.textLightSecondary,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildEmptyState(bool isDarkMode) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12), // reduced padding
-      decoration: BoxDecoration(
-        color: isDarkMode 
-            ? const Color(0xFF1E293B).withOpacity(0.4)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(8), // reduced radius
-        border: Border.all(
-          color: isDarkMode 
-              ? const Color(0xFF334155)
-              : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-      ),
+class _ActionsCard extends ConsumerWidget {
+  const _ActionsCard({
+    required this.isDarkMode,
+    required this.unreadCount,
+  });
+
+  final bool isDarkMode;
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return TCard(
+      hasBorder: true,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8), // reduced padding
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E40AF).withOpacity(0.1),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFF1E40AF).withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              Icons.notifications_none,
-              size: 18, // reduced icon size
-              color: const Color(0xFF1E40AF).withOpacity(0.8),
-            ),
-          ),
-          const SizedBox(height: 8), // reduced spacing
           Text(
-            "All caught up!",
+            'Actions',
             style: TextStyle(
-              fontSize: 12, // reduced font size
+              fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
-              letterSpacing: -0.5,
+              color: isDarkMode ? TColors.textDark : TColors.textLight,
             ),
           ),
-          const SizedBox(height: 4), // reduced spacing
-          Text(
-            "No new notifications at the moment.\nWhen there's activity on your workspace,\nwe'll let you know right here.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 8, // reduced font size
-              height: 1.2, // reduced line height
-              color: isDarkMode 
-                  ? Colors.white.withOpacity(0.7)
-                  : const Color(0xFF64748B),
-              fontWeight: FontWeight.w500,
-            ),
+          const SizedBox(height: TSizes.md),
+          TButton(
+            text: 'Open notification preferences',
+            variant: SButtonVariant.outline,
+            onPressed: () => context.push('/settings'),
           ),
-          const SizedBox(height: 8), // reduced spacing
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // reduced padding
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E40AF).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6), // reduced radius
-              border: Border.all(
-                color: const Color(0xFF1E40AF).withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.refresh,
-                  size: 10, // reduced icon size
-                  color: Color(0xFF1E40AF),
-                ),
-                SizedBox(width: 4), // reduced spacing
-                Text(
-                  'Pull down to refresh',
-                  style: TextStyle(
-                    fontSize: 8, // reduced font size
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E40AF),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: TSizes.sm),
+          TButton(
+            text:
+                unreadCount > 0 ? 'Clear unread badge' : 'Unread badge is clear',
+            onPressed: unreadCount > 0
+                ? () => NotificationUseCase.markAllRead(
+                      context: context,
+                      ref: ref,
+                    )
+                : null,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildModernFAB(bool isDarkMode) {
-    return ScaleTransition(
-      scale: _fabScaleAnimation,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1E40AF).withOpacity(0.4),
-              blurRadius: 24,
-              offset: const Offset(0, 12),
-            ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showSnoozeOptions(context),
-          backgroundColor: const Color(0xFF1E40AF),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          icon: const Icon(
-            Icons.schedule,
-            color: Colors.white,
-            size: 20,
-          ),
-          label: const Text(
-            'Snooze',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showMoreOptions(BuildContext context) {
-    final isDarkMode = THelperFunctions.isDarkMode(context);
-    
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return Container(
-          margin: const EdgeInsets.all(10), // reduced margin
-          decoration: BoxDecoration(
-            color: isDarkMode 
-                ? const Color(0xFF1E293B)
-                : Colors.white,
-            borderRadius: BorderRadius.circular(14), // reduced radius
-            border: Border.all(
-              color: isDarkMode 
-                  ? const Color(0xFF334155)
-                  : const Color(0xFFE2E8F0),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 28, // reduced width
-                height: 3, // reduced height
-                margin: const EdgeInsets.only(top: 8), // reduced margin
-                decoration: BoxDecoration(
-                  color: isDarkMode 
-                      ? Colors.white.withOpacity(0.3)
-                      : const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12), // reduced padding
-                child: Column(
-                  children: [
-                    _buildBottomSheetItem(
-                      icon: Icons.mark_email_read,
-                      title: 'Mark all as read',
-                      subtitle: 'Clear all unread notifications',
-                      onTap: () => Navigator.pop(context),
-                      isDarkMode: isDarkMode,
-                    ),
-                    const SizedBox(height: 6), // reduced spacing
-                    _buildBottomSheetItem(
-                      icon: Icons.settings,
-                      title: 'Notification settings',
-                      subtitle: 'Manage your preferences',
-                      onTap: () => Navigator.pop(context),
-                      isDarkMode: isDarkMode,
-                    ),
-                    const SizedBox(height: 6), // reduced spacing
-                    _buildBottomSheetItem(
-                      icon: Icons.delete_outline,
-                      title: 'Clear all',
-                      subtitle: 'Remove all notifications',
-                      onTap: () => Navigator.pop(context),
-                      isDarkMode: isDarkMode,
-                      isDestructive: true,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildBottomSheetItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required bool isDarkMode,
-    bool isDestructive = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12), // reduced radius
-      child: Container(
-        padding: const EdgeInsets.all(10), // reduced padding
-        decoration: BoxDecoration(
-          color: isDarkMode 
-              ? const Color(0xFF334155).withOpacity(0.22)
-              : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12), // reduced radius
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7), // reduced padding
-              decoration: BoxDecoration(
-                color: isDestructive 
-                    ? const Color(0xFFDC2626).withOpacity(0.09)
-                    : const Color(0xFF1E40AF).withOpacity(0.09),
-                borderRadius: BorderRadius.circular(8), // reduced radius
-              ),
-              child: Icon(
-                icon,
-                color: isDestructive 
-                    ? const Color(0xFFDC2626)
-                    : const Color(0xFF1E40AF),
-                size: 16, // reduced icon size
-              ),
-            ),
-            const SizedBox(width: 10), // reduced spacing
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 13, // reduced font size
-                      fontWeight: FontWeight.w600,
-                      color: isDestructive 
-                          ? const Color(0xFFDC2626)
-                          : isDarkMode 
-                              ? Colors.white
-                              : const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 1), // reduced spacing
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 10, // reduced font size
-                      color: isDarkMode 
-                          ? Colors.white.withOpacity(0.7)
-                          : const Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 12, // reduced icon size
-              color: isDarkMode 
-                  ? Colors.white.withOpacity(0.5)
-                  : const Color(0xFF94A3B8),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSnoozeOptions(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return Container(
-          margin: const EdgeInsets.all(8), // reduced margin
-          decoration: BoxDecoration(
-            color: isDarkMode 
-                ? const Color(0xFF1E293B)
-                : Colors.white,
-            borderRadius: BorderRadius.circular(10), // reduced radius
-            border: Border.all(
-              color: isDarkMode 
-                  ? const Color(0xFF334155)
-                  : const Color(0xFFE2E8F0),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 24, // reduced width
-                height: 2, // reduced height
-                margin: const EdgeInsets.only(top: 6), // reduced margin
-                decoration: BoxDecoration(
-                  color: isDarkMode 
-                      ? Colors.white.withOpacity(0.3)
-                      : const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(1), // reduced radius
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8), // reduced padding
-                child: Column(
-                  children: [
-                    Text(
-                      'Snooze Notifications',
-                      style: TextStyle(
-                        fontSize: 10, // reduced font size
-                        fontWeight: FontWeight.w700,
-                        color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 2), // reduced spacing
-                    Text(
-                      'Temporarily pause notifications for',
-                      style: TextStyle(
-                        fontSize: 7, // reduced font size
-                        color: isDarkMode 
-                            ? Colors.white.withOpacity(0.7)
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 6), // reduced spacing
-                    ...['15 minutes', '30 minutes', '1 hour', '2 hours', '4 hours', '1 day']
-                        .map((option) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 4), // reduced spacing
-                        child: _buildSnoozeOption(option, isDarkMode),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSnoozeOption(String option, bool isDarkMode) {
-    return InkWell(
-      onTap: () => Navigator.pop(context),
-      borderRadius: BorderRadius.circular(8), // reduced radius
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(8), // reduced padding
-        decoration: BoxDecoration(
-          color: isDarkMode 
-              ? const Color(0xFF334155).withOpacity(0.3)
-              : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(8), // reduced radius
-          border: Border.all(
-            color: isDarkMode 
-                ? const Color(0xFF475569)
-                : const Color(0xFFE2E8F0),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4), // reduced padding
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E40AF).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4), // reduced radius
-              ),
-              child: const Icon(
-                Icons.schedule,
-                color: Color(0xFF1E40AF),
-                size: 10, // reduced icon size
-              ),
-            ),
-            const SizedBox(width: 6), // reduced spacing
-            Expanded(
-              child: Text(
-                option,
-                style: TextStyle(
-                  fontSize: 8, // reduced font size
-                  fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
-                ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 10, // reduced icon size
-              color: isDarkMode 
-                  ? Colors.white.withOpacity(0.5)
-                  : const Color(0xFF94A3B8),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -6,17 +6,37 @@ import 'package:flutter_realtime_workspace/core/apis/endpoints.dart';
 class NotificationRepository {
   final _api = ApiClient.instance;
 
-  Future<void> subscribeDevice(
+  Future<void> registerDevice(
       {required String token, required String platform}) async {
-    await _api.post(ApiEndpoints.notificationSubscribe, data: {
+    await _api.post(ApiEndpoints.notificationDeviceRegister, data: {
       'token': token,
       'platform': platform,
     });
   }
 
-  Future<void> unsubscribeDevice(String token) async {
-    await _api.post(ApiEndpoints.notificationUnsubscribe,
+  Future<void> unregisterDevice(String token) async {
+    await _api.post(ApiEndpoints.notificationDeviceUnregister,
         data: {'token': token});
+  }
+
+  Future<void> subscribeTokensToTopic({
+    required List<String> tokens,
+    required String topic,
+  }) async {
+    await _api.post(ApiEndpoints.notificationSubscribe, data: {
+      'tokens': tokens,
+      'topic': topic,
+    });
+  }
+
+  Future<void> unsubscribeTokensFromTopic({
+    required List<String> tokens,
+    required String topic,
+  }) async {
+    await _api.post(ApiEndpoints.notificationUnsubscribe, data: {
+      'tokens': tokens,
+      'topic': topic,
+    });
   }
 
   Future<void> send(Map<String, dynamic> body) async {

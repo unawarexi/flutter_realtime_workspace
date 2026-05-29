@@ -4,7 +4,7 @@ import 'package:flutter_realtime_workspace/app/domain/models/notification_model.
 class NotificationCard extends StatelessWidget {
 	const NotificationCard({super.key, required this.notification});
 
-	final AppNotification notification;
+	final NotificationModel notification;
 
 	@override
 	Widget build(BuildContext context) {
@@ -14,12 +14,12 @@ class NotificationCard extends StatelessWidget {
 		return Container(
 			padding: const EdgeInsets.all(16),
 			decoration: BoxDecoration(
-				color: notification.isRead
+				color: notification.read
 						? theme.colorScheme.surface
 						: theme.colorScheme.primary.withValues(alpha: 0.06),
 				borderRadius: BorderRadius.circular(16),
 				border: Border.all(
-					color: notification.isRead
+					color: notification.read
 							? theme.dividerColor.withValues(alpha: 0.4)
 							: theme.colorScheme.primary.withValues(alpha: 0.18),
 				),
@@ -31,7 +31,7 @@ class NotificationCard extends StatelessWidget {
 						radius: 18,
 						backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
 						child: Icon(
-							notification.isRead
+							notification.read
 									? Icons.notifications_none_rounded
 									: Icons.notifications_active_rounded,
 							size: 18,
@@ -51,7 +51,7 @@ class NotificationCard extends StatelessWidget {
 								),
 								const SizedBox(height: 6),
 								Text(
-									notification.body,
+									notification.body ?? '',
 									style: theme.textTheme.bodyMedium,
 								),
 								const SizedBox(height: 10),
@@ -67,7 +67,7 @@ class NotificationCard extends StatelessWidget {
 												borderRadius: BorderRadius.circular(999),
 											),
 											child: Text(
-												notification.category,
+												notification.type,
 												style: theme.textTheme.labelSmall?.copyWith(
 													color: theme.colorScheme.secondary,
 												),
