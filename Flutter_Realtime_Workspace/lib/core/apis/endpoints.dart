@@ -56,6 +56,8 @@ class ApiEndpoints {
   static const notificationSend = '/notifications/send';
   static const notificationSendMultiple = '/notifications/send-multiple';
   static const notificationSendTopic = '/notifications/send-to-topic';
+    static const notificationDeviceRegister = '/notifications/device/register';
+    static const notificationDeviceUnregister = '/notifications/device/unregister';
   static const notificationSubscribe = '/notifications/subscribe';
   static const notificationUnsubscribe = '/notifications/unsubscribe';
   static const notificationValidateToken = '/notifications/validate-token';

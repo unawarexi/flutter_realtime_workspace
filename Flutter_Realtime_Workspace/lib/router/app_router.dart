@@ -40,11 +40,13 @@ import 'package:flutter_realtime_workspace/app/features/team/presentation/widget
 
 // Account Management
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/account.dart';
-import 'package:flutter_realtime_workspace/app/features/settings/presentation/settings.dart';
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/invite.dart';
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/feedback.dart' as acct_fb;
-import 'package:flutter_realtime_workspace/app/features/settings/presentation/support.dart';
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/whats_new.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/rate_us.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/more_apps.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/screens/settings_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/screens/support_screen.dart';
 
 // Notifications
 import 'package:flutter_realtime_workspace/app/features/notification/presentation/screens/notification_screen.dart';
@@ -238,7 +240,23 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/home',
-          builder: (context, state) => const BottomNavigationBarWidget(),
+          builder: (context, state) {
+            final tab = state.uri.queryParameters['tab'] ?? 'home';
+            final index = switch (tab) {
+              'home' => 0,
+              'projects' => 1,
+              'tasks' => 2,
+              'issues' => 3,
+              'chat' => 4,
+              'teams' => 5,
+              'dashboard' => 6,
+              'analytics' => 7,
+              'notifications' => 8,
+              'settings' => 9,
+              _ => 0,
+            };
+            return BottomNavigationBarWidget(initialIndex: index);
+          },
         ),
         GoRoute(
           path: '/dashboard',
@@ -295,7 +313,7 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(path: 'my', builder: (c, s) => const MyTasksScreen()),
             GoRoute(path: 'create', builder: (c, s) => const ts.CreateTaskScreen()),
-            GoRoute(path: ':taskId', builder: (c, s) => const TaskDetailScreen()),
+            GoRoute(path: ':taskId', builder: (c, s) => TaskDetailScreen(taskId: s.pathParameters['taskId']!)),
           ],
         ),
         GoRoute(
@@ -303,7 +321,7 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const IssuesScreen(),
           routes: [
             GoRoute(path: 'create', builder: (c, s) => const CreateIssueScreen()),
-            GoRoute(path: ':issueId', builder: (c, s) => const IssueDetailScreen()),
+            GoRoute(path: ':issueId', builder: (c, s) => IssueDetailScreen(issueId: s.pathParameters['issueId']!)),
           ],
         ),
         GoRoute(
@@ -404,10 +422,12 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(path: '/roles', builder: (c, s) => const RolesScreen()),
         GoRoute(path: '/account', builder: (c, s) => AccountScreen(userId: FirebaseAuth.instance.currentUser?.uid ?? '')),
-        GoRoute(path: '/settings', builder: (c, s) => const SettingsSection(isDarkMode: false)),
+        GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
         GoRoute(path: '/account/invite', builder: (c, s) => const InviteScreen()),
-        GoRoute(path: '/support', builder: (c, s) => const SupportSection(isDarkMode: false)),
+        GoRoute(path: '/support', builder: (c, s) => const SupportScreen()),
         GoRoute(path: '/whats-new', builder: (c, s) => const WhatsNewScreen()),
+        GoRoute(path: '/rate-us', builder: (c, s) => const RateUsScreen()),
+        GoRoute(path: '/more-apps', builder: (c, s) => const MoreAppsScreen()),
         GoRoute(path: '/account/feedback', builder: (c, s) => const acct_fb.FeedbackScreen()),
       ],
     ),

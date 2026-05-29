@@ -10,6 +10,13 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
 /// Unread notification count (for badges) — updated via WebSocket events.
 final unreadNotificationCountProvider = StateProvider<int>((ref) => 0);
 
+/// Keeps the unread badge in sync with backend websocket notification events.
+final notificationRealtimeProvider = Provider<NotificationWebSocketListener>((ref) {
+  final listener = NotificationWebSocketListener(ref);
+  ref.onDispose(listener.dispose);
+  return listener;
+});
+
 /// Listens to real-time notification events via WebSocket and increments
 /// the unread badge counter. In-app notification REST routes do not exist
 /// in the backend; state is maintained client-side from WebSocket pushes.

@@ -146,11 +146,11 @@ class NotificationService {
   /// Route incoming FCM message to the right notification type.
   Future<void> _handleRemoteMessage(RemoteMessage message) async {
     final data = message.data;
-    final type = data['type'] ?? '';
-    final isInstant = data['isInstant'] == 'true';
+    final type = _normalizeType(data['type']);
+    final isInstant = _isInstantCall(data);
 
     // Incoming call → show CallKit (native call UI with ring + vibrate)
-    if (type == 'MEETING_INVITE' && isInstant) {
+    if (type == 'meeting_invite' && isInstant) {
       await _showIncomingCall(message);
       return;
     }
@@ -233,7 +233,7 @@ class NotificationService {
   Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
     final data = message.data;
-    final type = data['type'] ?? '';
+    final type = _normalizeType(data['type']);
 
     final title = notification?.title ?? data['title'] ?? 'TeamSpot';
     final body = notification?.body ?? data['body'] ?? '';
@@ -272,14 +272,16 @@ class NotificationService {
 
   AndroidNotificationChannel _channelForType(String type) {
     switch (type) {
-      case 'MEETING_INVITE':
+      case 'meeting_invite':
         return _callChannel;
-      case 'CHAT_MESSAGE':
+      case 'chat_message':
+      case 'message_received':
+      case 'team_mention':
         return _chatChannel;
-      case 'MEETING_REMINDER':
-      case 'MEETING_CANCELLED':
+      case 'meeting_reminder':
+      case 'meeting_cancelled':
         return _meetingChannel;
-      case 'RECORDING_READY':
+      case 'recording_ready':
       default:
         return _systemChannel;
     }
@@ -296,20 +298,25 @@ class NotificationService {
 
   /// Navigate based on notification data payload.
   void _navigateFromMessage(Map<String, dynamic> data) {
-    final type = data['type'] ?? '';
+    final type = _normalizeType(data['type']);
     final context = rootNavigatorKey.currentContext;
     if (context == null) return;
 
+    final actionUrl = data['actionUrl']?.toString();
+    if (actionUrl != null && actionUrl.isNotEmpty && actionUrl.startsWith('/')) {
+      appRouter.go(actionUrl);
+      return;
+    }
+
     switch (type) {
-      case 'MEETING_INVITE':
-        final meetingCode = data['meetingCode'] ?? data['code'];
-        if (meetingCode != null) {
-          appRouter.go('/join/$meetingCode');
-        } else {
-          appRouter.go('/meetings');
-        }
+      case 'meeting_invite':
+      case 'meeting_reminder':
+      case 'meeting_cancelled':
+        appRouter.go('/meetings');
         break;
-      case 'CHAT_MESSAGE':
+      case 'chat_message':
+      case 'message_received':
+      case 'team_mention':
         final chatRoomId = data['chatRoomId'];
         if (chatRoomId != null) {
           appRouter.go('/chat/$chatRoomId');
@@ -317,15 +324,49 @@ class NotificationService {
           appRouter.go('/chat');
         }
         break;
-      case 'RECORDING_READY':
-        appRouter.go('/recordings');
+      case 'recording_ready':
+        appRouter.go('/files');
         break;
-      case 'MEETING_REMINDER':
-      case 'MEETING_CANCELLED':
-        appRouter.go('/meetings');
+      case 'task_assigned':
+      case 'task_completed':
+      case 'task_overdue':
+      case 'deadline_approaching':
+        appRouter.go('/tasks');
+        break;
+      case 'project_invite':
+      case 'workspace_update':
+        appRouter.go('/projects');
         break;
       default:
-        appRouter.go('/home');
+        appRouter.go('/notifications');
+    }
+  }
+
+  bool _isInstantCall(Map<String, dynamic> data) {
+    final raw = data['isInstant']?.toString().toLowerCase();
+    if (raw == 'true' || raw == '1') return true;
+
+    final callType = data['callType']?.toString().toLowerCase();
+    return callType == 'audio' || callType == 'video';
+  }
+
+  String _normalizeType(Object? rawType) {
+    final type = rawType?.toString().trim();
+    if (type == null || type.isEmpty) return '';
+
+    switch (type.toUpperCase()) {
+      case 'MEETING_INVITE':
+        return 'meeting_invite';
+      case 'CHAT_MESSAGE':
+        return 'chat_message';
+      case 'MEETING_REMINDER':
+        return 'meeting_reminder';
+      case 'MEETING_CANCELLED':
+        return 'meeting_cancelled';
+      case 'RECORDING_READY':
+        return 'recording_ready';
+      default:
+        return type.toLowerCase();
     }
   }
 

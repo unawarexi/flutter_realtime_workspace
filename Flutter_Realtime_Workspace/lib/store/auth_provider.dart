@@ -7,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/auth_session_model.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/user_model.dart';
 import 'package:flutter_realtime_workspace/app/domain/repositories/auth_repository.dart';
-import 'package:flutter_realtime_workspace/store/user_provider.dart';
+import 'package:flutter_realtime_workspace/store/notification_provider.dart';
 import 'package:flutter_realtime_workspace/core/network/account_guard.dart';
 import 'package:flutter_realtime_workspace/core/services/notification_service.dart';
 import 'package:flutter_realtime_workspace/core/services/storage_service.dart';
@@ -192,16 +192,16 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     try {
       final token = await NotificationService.instance.getToken();
       if (token != null) {
-        await _ref.read(userRepositoryProvider).registerDevice(
-          fcmToken: token,
+        await _ref.read(notificationRepositoryProvider).registerDevice(
+          token: token,
           platform: 'android',
         );
       }
       // Listen for token refresh and re-register automatically
       NotificationService.instance.onTokenRefresh.listen((newToken) async {
         try {
-          await _ref.read(userRepositoryProvider).registerDevice(
-            fcmToken: newToken,
+          await _ref.read(notificationRepositoryProvider).registerDevice(
+            token: newToken,
             platform: 'android',
           );
         } catch (e) {
