@@ -14,7 +14,6 @@ import 'package:flutter_realtime_workspace/app/features/settings/presentation/wi
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/widgets/delete_account.dart';
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/settings.dart';
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/support.dart';
-import 'package:flutter_realtime_workspace/router/app_router.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -53,12 +52,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen>
   final TextEditingController _bioController = TextEditingController();
 
   // For delete account modal
-  bool _agreeTerms = false;
-  bool _agreeRecovery = false;
   final TextEditingController _deleteConfirmController =
       TextEditingController();
-  bool _isDeleting = false;
-  bool _biometricSuccess = false;
 
   // Add this getter back for use in all widget methods
   bool get isDarkMode => THelperFunctions.isDarkMode(context);
@@ -117,7 +112,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen>
       await ref.read(userRepositoryProvider).getProfile();
     } else {
       // Refresh other user's info
-      ref.refresh(userInfoByIdProvider(widget.userId));
+      ref.invalidate(userInfoByIdProvider(widget.userId));
       await Future.delayed(const Duration(milliseconds: 500));
     }
   }
@@ -955,10 +950,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen>
 
   void _showDeleteAccountModal(BuildContext context, String confirmWord) async {
     setState(() {
-      _agreeTerms = false;
-      _agreeRecovery = false;
       _deleteConfirmController.clear();
-      _biometricSuccess = false;
     });
 
     showModalBottomSheet(

@@ -1,32 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/settings_usecase.dart';
+import 'package:flutter_realtime_workspace/store/settings_provider.dart';
 
-class NotificationSettings extends StatefulWidget {
+class NotificationSettings extends ConsumerWidget {
   const NotificationSettings({super.key});
 
   @override
-  State<NotificationSettings> createState() => _NotificationSettingsState();
-}
-
-class _NotificationSettingsState extends State<NotificationSettings> {
-  bool pushNotifications = true;
-  bool emailNotifications = false;
-  bool mentionNotifications = true;
-  bool taskUpdates = true;
-  bool sound = true;
-  bool vibrate = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Theme colors (same as account.dart)
     const primaryBlue = Color(0xFF1E40AF);
     const lightBlue = Color(0xFF3B82F6);
     const backgroundLight = Color(0xFFFAFBFC);
     const backgroundDark = Color(0xFF0F172A);
-    const cardLight = Color(0xFFFFFFFF);
-    const cardDark = Color(0xFF1E293B);
     const textPrimary = Color(0xFF0F172A);
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final settings = ref.watch(settingsProvider);
 
     return Scaffold(
       backgroundColor: isDarkMode ? backgroundDark : backgroundLight,
@@ -53,8 +43,12 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             icon: Icons.notifications_active_rounded,
             title: "Push Notifications",
             subtitle: "Receive notifications on your device",
-            value: pushNotifications,
-            onChanged: (v) => setState(() => pushNotifications = v),
+            value: settings.pushNotifications,
+            onChanged: (v) => SettingsUseCase.toggleNotificationChannel(
+              ref: ref,
+              channel: 'push',
+              enabled: v,
+            ),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -62,8 +56,12 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             icon: Icons.email_rounded,
             title: "Email Notifications",
             subtitle: "Get updates via email",
-            value: emailNotifications,
-            onChanged: (v) => setState(() => emailNotifications = v),
+            value: settings.emailNotifications,
+            onChanged: (v) => SettingsUseCase.toggleNotificationChannel(
+              ref: ref,
+              channel: 'email',
+              enabled: v,
+            ),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -73,8 +71,12 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             icon: Icons.alternate_email_rounded,
             title: "Mentions",
             subtitle: "Notify when you are mentioned",
-            value: mentionNotifications,
-            onChanged: (v) => setState(() => mentionNotifications = v),
+            value: settings.mentionNotifications,
+            onChanged: (v) => SettingsUseCase.toggleNotificationChannel(
+              ref: ref,
+              channel: 'mentions',
+              enabled: v,
+            ),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -82,8 +84,12 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             icon: Icons.task_rounded,
             title: "Task Updates",
             subtitle: "Updates on assigned tasks",
-            value: taskUpdates,
-            onChanged: (v) => setState(() => taskUpdates = v),
+            value: settings.taskUpdates,
+            onChanged: (v) => SettingsUseCase.toggleNotificationChannel(
+              ref: ref,
+              channel: 'tasks',
+              enabled: v,
+            ),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -93,8 +99,12 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             icon: Icons.volume_up_rounded,
             title: "Sound",
             subtitle: "Play sound for notifications",
-            value: sound,
-            onChanged: (v) => setState(() => sound = v),
+            value: settings.sound,
+            onChanged: (v) => SettingsUseCase.toggleNotificationChannel(
+              ref: ref,
+              channel: 'sound',
+              enabled: v,
+            ),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -102,8 +112,12 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             icon: Icons.vibration_rounded,
             title: "Vibrate",
             subtitle: "Vibrate on notification",
-            value: vibrate,
-            onChanged: (v) => setState(() => vibrate = v),
+            value: settings.vibrate,
+            onChanged: (v) => SettingsUseCase.toggleNotificationChannel(
+              ref: ref,
+              channel: 'vibrate',
+              enabled: v,
+            ),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),

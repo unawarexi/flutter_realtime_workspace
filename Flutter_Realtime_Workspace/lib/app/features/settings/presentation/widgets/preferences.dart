@@ -1,34 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/settings_usecase.dart';
+import 'package:flutter_realtime_workspace/store/settings_provider.dart';
 
-class Preferences extends StatefulWidget {
+class Preferences extends ConsumerWidget {
   const Preferences({super.key});
 
   @override
-  State<Preferences> createState() => _PreferencesState();
-}
-
-class _PreferencesState extends State<Preferences> {
-  bool darkMode = false;
-  bool compactMode = false;
-  bool autoSync = true;
-  bool enableAnimations = true;
-  bool showAvatars = true;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Theme colors (same as account.dart)
     const primaryBlue = Color(0xFF1E40AF);
     const lightBlue = Color(0xFF3B82F6);
     const backgroundLight = Color(0xFFFAFBFC);
     const backgroundDark = Color(0xFF0F172A);
-    const cardLight = Color(0xFFFFFFFF);
-    const cardDark = Color(0xFF1E293B);
     const textPrimary = Color(0xFF0F172A);
-    const textSecondary = Color(0xFF64748B);
-    const borderLight = Color(0xFFE2E8F0);
-    const borderDark = Color(0xFF334155);
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final settings = ref.watch(settingsProvider);
 
     return Scaffold(
       backgroundColor: isDarkMode ? backgroundDark : backgroundLight,
@@ -55,8 +43,13 @@ class _PreferencesState extends State<Preferences> {
             icon: Icons.dark_mode_rounded,
             title: "Dark Mode",
             subtitle: "Reduce eye strain in low light",
-            value: darkMode,
-            onChanged: (v) => setState(() => darkMode = v),
+            value: settings.darkMode,
+            onChanged: (v) {
+              SettingsUseCase.updateTheme(
+                ref: ref,
+                theme: v ? 'dark' : 'light',
+              );
+            },
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -64,8 +57,8 @@ class _PreferencesState extends State<Preferences> {
             icon: Icons.view_compact_rounded,
             title: "Compact Mode",
             subtitle: "Smaller UI elements",
-            value: compactMode,
-            onChanged: (v) => setState(() => compactMode = v),
+            value: settings.compactMode,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setCompactMode(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -75,8 +68,8 @@ class _PreferencesState extends State<Preferences> {
             icon: Icons.sync_rounded,
             title: "Auto Sync",
             subtitle: "Sync data automatically",
-            value: autoSync,
-            onChanged: (v) => setState(() => autoSync = v),
+            value: settings.autoSync,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setAutoSync(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -84,8 +77,8 @@ class _PreferencesState extends State<Preferences> {
             icon: Icons.animation_rounded,
             title: "Enable Animations",
             subtitle: "Smooth transitions and effects",
-            value: enableAnimations,
-            onChanged: (v) => setState(() => enableAnimations = v),
+            value: settings.enableAnimations,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setEnableAnimations(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -93,8 +86,8 @@ class _PreferencesState extends State<Preferences> {
             icon: Icons.account_circle_rounded,
             title: "Show Avatars",
             subtitle: "Display user avatars in lists",
-            value: showAvatars,
-            onChanged: (v) => setState(() => showAvatars = v),
+            value: settings.showAvatars,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setShowAvatars(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),

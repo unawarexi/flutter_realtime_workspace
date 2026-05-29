@@ -1,8 +1,8 @@
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/settings_usecase.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/store/user_provider.dart';
 
 class UpdateAccount extends ConsumerStatefulWidget {
   final Map<String, dynamic> userInfo;
@@ -74,6 +74,7 @@ class _UpdateAccountState extends ConsumerState<UpdateAccount> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final data = {
+      'fullName': _displayNameController.text.trim(),
       'displayName': _displayNameController.text.trim(),
       'email': _emailController.text.trim(),
       'phoneNumber': _phoneController.text.trim(),
@@ -89,8 +90,12 @@ class _UpdateAccountState extends ConsumerState<UpdateAccount> {
       'timezone': _timezoneController.text.trim(),
       'bio': _bioController.text.trim(),
     };
-    await ref.read(updateProfileProvider)(fullName: data["fullName"] as String?, bio: data["bio"] as String?);
-    if (mounted) Navigator.of(context).pop();
+    final ok = await SettingsUseCase.updateAccount(
+      context: context,
+      ref: ref,
+      updates: data,
+    );
+    if (mounted && ok) Navigator.of(context).pop();
   }
 
   void _handleHorizontalDrag(DragEndDetails details) {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_realtime_workspace/router/app_router.dart';
 
 class SupportSection extends StatelessWidget {
   final bool isDarkMode;
@@ -24,7 +23,7 @@ class SupportSection extends StatelessWidget {
       {
         'icon': Icons.star_rate_rounded,
         'title': 'Rate App',
-        'route': '/account/rate-us',
+        'route': '/rate-us',
       },
       {
         'icon': Icons.new_releases_rounded,
@@ -34,7 +33,7 @@ class SupportSection extends StatelessWidget {
       {
         'icon': Icons.apps_rounded,
         'title': 'More Apps',
-        'route': '/account/more-apps',
+        'route': '/more-apps',
       },
     ];
 

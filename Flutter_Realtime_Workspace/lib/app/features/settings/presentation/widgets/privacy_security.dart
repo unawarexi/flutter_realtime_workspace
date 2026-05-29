@@ -1,7 +1,10 @@
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/app/features/authentication/usecases/referral_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/referral_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/settings_usecase.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/widgets/delete_account.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/store/settings_provider.dart';
 import 'package:flutter_realtime_workspace/store/user_provider.dart';
 
 class PrivacySecurity extends ConsumerStatefulWidget {
@@ -12,15 +15,60 @@ class PrivacySecurity extends ConsumerStatefulWidget {
 }
 
 class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
-  bool biometricLogin = true;
-  bool twoFactorAuth = false;
-  bool allowSearch = true;
-  bool showOnlineStatus = true;
-  bool dataCollection = false;
-
   bool _isRegenerating = false;
   String? _regenerateError;
   String? _regenerateSuccess;
+
+  Future<void> _showChangePasswordDialog() async {
+    final currentPasswordCtrl = TextEditingController();
+    final newPasswordCtrl = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Change Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: currentPasswordCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Current Password'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: newPasswordCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'New Password'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final current = currentPasswordCtrl.text.trim();
+              final next = newPasswordCtrl.text.trim();
+              if (current.isEmpty || next.isEmpty) return;
+
+              await SettingsUseCase.changePassword(
+                context: context,
+                ref: ref,
+                oldPassword: current,
+                newPassword: next,
+              );
+
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _regenerateInviteCode() async {
     setState(() {
@@ -56,6 +104,7 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
     const textPrimary = Color(0xFF0F172A);
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final settings = ref.watch(settingsProvider);
 
     // Get user info from provider
     final userState = ref.watch(currentUserProvider);
@@ -89,8 +138,8 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
             icon: Icons.fingerprint_rounded,
             title: "Biometric Login",
             subtitle: "Use fingerprint or face to unlock",
-            value: biometricLogin,
-            onChanged: (v) => setState(() => biometricLogin = v),
+            value: settings.biometricLogin,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setBiometricLogin(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -98,8 +147,13 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
             icon: Icons.phonelink_lock_rounded,
             title: "Two-Factor Authentication",
             subtitle: "Extra layer of security",
-            value: twoFactorAuth,
-            onChanged: (v) => setState(() => twoFactorAuth = v),
+            value: settings.twoFactorAuth,
+            onChanged: (v) async {
+              if (v) {
+                await SettingsUseCase.enable2FA(context: context, ref: ref);
+              }
+              ref.read(settingsProvider.notifier).setTwoFactorAuth(v);
+            },
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -109,8 +163,8 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
             icon: Icons.search_rounded,
             title: "Allow Search",
             subtitle: "Let others find you by email",
-            value: allowSearch,
-            onChanged: (v) => setState(() => allowSearch = v),
+            value: settings.allowSearch,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setAllowSearch(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -118,8 +172,8 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
             icon: Icons.visibility_rounded,
             title: "Show Online Status",
             subtitle: "Display when you are active",
-            value: showOnlineStatus,
-            onChanged: (v) => setState(() => showOnlineStatus = v),
+            value: settings.showOnlineStatus,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setShowOnlineStatus(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -127,8 +181,8 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
             icon: Icons.analytics_rounded,
             title: "Data Collection",
             subtitle: "Allow anonymous usage analytics",
-            value: dataCollection,
-            onChanged: (v) => setState(() => dataCollection = v),
+            value: settings.dataCollection,
+            onChanged: (v) => ref.read(settingsProvider.notifier).setDataCollection(v),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
@@ -137,24 +191,25 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
           _actionTile(
             icon: Icons.lock_reset_rounded,
             title: "Change Password",
-            onTap: () {
-              // Implement password change navigation
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Change Password tapped")),
-              );
-            },
+            onTap: _showChangePasswordDialog,
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
           _actionTile(
             icon: Icons.delete_forever_rounded,
             title: "Delete Account",
-            onTap: () {
-              // Implement delete account navigation
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Delete Account tapped")),
-              );
-            },
+            onTap: () => showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (_) => DeleteAccount(
+                confirmWord: 'DELETE',
+                isDarkMode: isDarkMode,
+              ),
+            ),
             isDarkMode: isDarkMode,
             primaryBlue: primaryBlue,
           ),
