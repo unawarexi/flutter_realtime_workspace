@@ -6,10 +6,17 @@ import 'package:flutter_realtime_workspace/app/features/home/presentation/home_s
 import 'package:flutter_realtime_workspace/app/features/issues/presentation/screens/issues_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/notification/presentation/screens/notification_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/project/presentation/project_home_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/collaboration/presentation/chat_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/team/presentation/all_team.dart';
+import 'package:flutter_realtime_workspace/app/features/analytics/presentation/screens/analytics_dashboard_screen.dart';
+import 'package:flutter_realtime_workspace/app/features/settings/presentation/screens/settings_screen.dart';
 
 
 class BottomNavigationBarWidget extends StatefulWidget {
-  const BottomNavigationBarWidget({super.key});
+  final int initialIndex;
+
+  const BottomNavigationBarWidget({super.key, this.initialIndex = 0});
 
   @override
   _BottomNavigationBarWidgetState createState() =>
@@ -18,12 +25,12 @@ class BottomNavigationBarWidget extends StatefulWidget {
 
 class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     with TickerProviderStateMixin {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   int _hoveredIndex = -1;
+  final ScrollController _navScrollController = ScrollController();
 
   late AnimationController _animationController;
   late AnimationController _rippleController;
-  late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   late List<AnimationController> _itemControllers;
   late List<Animation<double>> _itemAnimations;
@@ -31,9 +38,14 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
   final List<Widget> _screens = [
     const Home(),
     const ProjectHome(),
+    const TasksScreen(),
     const IssuesScreen(),
+    const ChatScreen(),
+    const AllTeamScreen(),
     const DashboardScreen(),
+    const AnalyticsDashboardScreen(),
     const NotificationScreen(),
+    const SettingsScreen(),
   ];
 
   final List<NavigationItem> _navigationItems = [
@@ -50,10 +62,28 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
       color: const Color(0xFF1E3A8A),
     ),
     NavigationItem(
+      icon: Icons.task_alt_outlined,
+      selectedIcon: Icons.task_alt_rounded,
+      label: 'Tasks',
+      color: const Color(0xFF334155),
+    ),
+    NavigationItem(
       icon: Icons.bug_report_outlined,
       selectedIcon: Icons.bug_report_rounded,
       label: 'Issues',
       color: const Color(0xFF1E3A8A),
+    ),
+    NavigationItem(
+      icon: Icons.chat_bubble_outline_rounded,
+      selectedIcon: Icons.chat_bubble_rounded,
+      label: 'Chat',
+      color: const Color(0xFF0F766E),
+    ),
+    NavigationItem(
+      icon: Icons.groups_outlined,
+      selectedIcon: Icons.groups_rounded,
+      label: 'Teams',
+      color: const Color(0xFF475569),
     ),
     NavigationItem(
       icon: Icons.dashboard_outlined,
@@ -62,18 +92,35 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
       color: const Color(0xFF164E63),
     ),
     NavigationItem(
+      icon: Icons.analytics_outlined,
+      selectedIcon: Icons.analytics_rounded,
+      label: 'Analytics',
+      color: const Color(0xFF14532D),
+    ),
+    NavigationItem(
       icon: Icons.notifications_outlined,
       selectedIcon: Icons.notifications_rounded,
       label: 'Notifications',
       color: const Color(0xFF0C4A6E),
       hasNotification: true,
     ),
+    NavigationItem(
+      icon: Icons.settings_outlined,
+      selectedIcon: Icons.settings_rounded,
+      label: 'Settings',
+      color: const Color(0xFF1F2937),
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex.clamp(0, _navigationItems.length - 1);
     _initializeAnimations();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToIndex(_selectedIndex, animate: false);
+    });
   }
 
   void _initializeAnimations() {
@@ -87,17 +134,13 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
     // Individual item animations
     _itemControllers = List.generate(
-        5,
+        _navigationItems.length,
         (index) => AnimationController(
               duration: Duration(milliseconds: 200 + (index * 50)),
               vsync: this,
@@ -123,10 +166,30 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
   void dispose() {
     _animationController.dispose();
     _rippleController.dispose();
+    _navScrollController.dispose();
     for (var controller in _itemControllers) {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  void _scrollToIndex(int index, {bool animate = true}) {
+    if (!_navScrollController.hasClients) return;
+
+    const itemWidth = 84.0;
+    final target = (index * itemWidth) - (MediaQuery.of(context).size.width / 2) + itemWidth;
+    final maxScroll = _navScrollController.position.maxScrollExtent;
+    final offset = target.clamp(0.0, maxScroll);
+
+    if (animate) {
+      _navScrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _navScrollController.jumpTo(offset);
+    }
   }
 
   void _onItemTapped(int index) {
@@ -145,6 +208,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
       // Scale animation for selected item
       _itemControllers[index].reset();
       _itemControllers[index].forward();
+      _scrollToIndex(index);
     }
   }
 
@@ -155,7 +219,10 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     return Scaffold(
       backgroundColor:
           isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFFAFBFC),
-      body: _screens[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _screens,
+      ),
       bottomNavigationBar: AnimatedBuilder(
         animation: _fadeAnimation,
         builder: (context, child) {
@@ -171,11 +238,18 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
                     height: 80, // Increased height
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 12), // Adjusted padding
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(_navigationItems.length, (index) {
-                        return _buildNavigationItem(index, isDarkMode);
-                      }),
+                    child: SingleChildScrollView(
+                      controller: _navScrollController,
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: List.generate(_navigationItems.length, (index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: _buildNavigationItem(index, isDarkMode),
+                          );
+                        }),
+                      ),
                     ),
                   ),
                 ),
@@ -213,10 +287,10 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOutCubic,
-                  width: isSelected ? 70 : 52,
+                  width: isSelected ? 74 : 56,
                   height: 56, // Increased height to accommodate content
                   constraints: BoxConstraints(
-                    maxWidth: isSelected ? 70 : 52,
+                    maxWidth: isSelected ? 74 : 56,
                     maxHeight: 56,
                   ),
                   child: Stack(
