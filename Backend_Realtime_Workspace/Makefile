@@ -4,7 +4,8 @@
 # ============================================================================
 
 .PHONY: help dev dev-local dev-tools start stop restart logs shell restart-api build \
-        docker-up docker-down docker-logs docker-build docker-clean docker-restart docker-up-all \
+	logs-all logs-rabbitmq logs-kafka logs-kafka-ui \
+	docker-up docker-down docker-logs docker-build docker-clean docker-restart docker-up-all \
         db-shell db-status db-seed db-backup \
         redis-cli redis-flush redis-monitor \
         kafka-start kafka-stop kafka-restart kafka-status kafka-logs \
@@ -69,6 +70,18 @@ dev-tools: ## Start full stack + Mongo Express (Docker + dev-tools profile)
 
 logs: ## Tail API container logs (follow)
 	$(COMPOSE) logs -f api
+
+logs-all: ## Tail all Docker service logs (follow)
+	$(COMPOSE) logs -f
+
+logs-rabbitmq: ## Tail RabbitMQ container logs (follow)
+	$(COMPOSE) logs -f rabbitmq
+
+logs-kafka: ## Tail Kafka container logs (follow)
+	$(COMPOSE) logs -f kafka
+
+logs-kafka-ui: ## Tail Kafka UI container logs (follow)
+	$(COMPOSE) logs -f kafka-ui
 
 shell: ## Open shell in the running api container
 	$(COMPOSE) exec api sh
