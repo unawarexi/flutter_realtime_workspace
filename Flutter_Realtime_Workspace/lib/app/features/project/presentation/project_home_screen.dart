@@ -6,7 +6,7 @@ import 'package:flutter_realtime_workspace/core/utils/permission_helper.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/project_model.dart';
 import 'package:flutter_realtime_workspace/app/features/project/presentation/create_project_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/project/presentation/project_timeline_screen.dart';
-import 'package:flutter_realtime_workspace/app/features/project/usecases/project_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/project_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/store/project_provider.dart';
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/schedules/usecases/schedule_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/schedule_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
@@ -29,7 +29,7 @@ class _State extends ConsumerState<ScheduleScreen> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
-    final scheduleAsync = ref.watch(schedulesProvider);
+    final scheduleAsync = ref.watch(schedulesProvider({'workspaceId': null, 'from': null, 'to': null}));
     final canCreate = ScheduleUseCase.canCreateSchedule(ref);
 
     return Scaffold(
@@ -72,7 +72,7 @@ class _State extends ConsumerState<ScheduleScreen> with SingleTickerProviderStat
       ]));
     }
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(schedulesProvider),
+      onRefresh: () async => ref.invalidate(schedulesProvider({'workspaceId': null, 'from': null, 'to': null})),
       child: ListView.separated(
         padding: EdgeInsets.symmetric(horizontal: hPad, vertical: TSizes.md),
         itemCount: items.length,

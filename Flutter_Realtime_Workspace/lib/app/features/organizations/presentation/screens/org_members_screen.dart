@@ -5,7 +5,7 @@ import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/organizations/usecases/organization_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/organization_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';

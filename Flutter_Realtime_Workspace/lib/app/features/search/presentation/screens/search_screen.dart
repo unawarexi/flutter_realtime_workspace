@@ -5,7 +5,7 @@ import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
 import 'package:flutter_realtime_workspace/app/components/widgets/app_bar.dart';
-import 'package:flutter_realtime_workspace/app/features/search/usecases/search_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/search_usecase.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/responsive.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
@@ -29,7 +29,7 @@ class _State extends ConsumerState<SearchScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hPad = TResponsive.pagePadding(context);
     final query = ref.watch(searchQueryProvider);
-    final resultsAsync = query.isNotEmpty ? ref.watch(searchResultsProvider(query)) : null;
+    final resultsAsync = query.isNotEmpty ? ref.watch(searchResultsProvider) : null;
 
     return Scaffold(
       backgroundColor: isDark ? TColors.backgroundDark : TColors.backgroundLight,

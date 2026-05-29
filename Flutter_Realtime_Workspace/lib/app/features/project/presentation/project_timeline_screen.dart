@@ -19,7 +19,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen>
   late AnimationController _filterAnimationController;
   late AnimationController _tabAnimationController;
   late Animation<double> _filterAnimation;
-  late Animation<double> _tabAnimation;
 
   @override
   void initState() {
@@ -34,10 +33,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen>
     );
     _filterAnimation = CurvedAnimation(
       parent: _filterAnimationController,
-      curve: Curves.easeInOut,
-    );
-    _tabAnimation = CurvedAnimation(
-      parent: _tabAnimationController,
       curve: Curves.easeInOut,
     );
     _tabAnimationController.forward();
@@ -148,7 +143,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen>
   Widget _buildModernTabOption(String title, int index, bool isDarkMode) {
     bool isActive = _activeTabIndex == index;
     final textSecondary = isDarkMode ? TColors.textSecondaryDark : TColors.textSecondaryLight;
-    final textPrimary = isDarkMode ? TColors.textPrimaryDark : TColors.textPrimaryLight;
     final activeColor = isDarkMode ? TColors.accentBlue : TColors.primaryBlue;
     return GestureDetector(
       onTap: () {
@@ -305,7 +299,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen>
   Widget _buildFilterSection(bool isDarkMode) {
     final cardColor = isDarkMode ? TColors.cardColorDark : TColors.cardColorLight;
     final textPrimary = isDarkMode ? TColors.textPrimaryDark : TColors.textPrimaryLight;
-    final textSecondary = isDarkMode ? TColors.textSecondaryDark : TColors.textSecondaryLight;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
@@ -379,7 +372,6 @@ class _ProjectTimelineScreenState extends State<ProjectTimelineScreen>
   void _showProjectMenu(bool isDarkMode) {
     final cardColor = isDarkMode ? TColors.cardColorDark : TColors.cardColorLight;
     final textPrimary = isDarkMode ? TColors.textPrimaryDark : TColors.textPrimaryLight;
-    final textSecondary = isDarkMode ? TColors.textSecondaryDark : TColors.textSecondaryLight;
     showModalBottomSheet(
       backgroundColor: Colors.transparent,
       context: context,
