@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/app/features/home/usecases/home_usecase.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/home_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/icons.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 import 'package:flutter_realtime_workspace/core/services/google_geo_location.dart';
+import 'package:flutter_realtime_workspace/core/utils/permission_handler.dart';
+import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Workspace tools list and "Find Chill Spots" CTA.
-class HomeWorkspaceTools extends StatelessWidget {
+class HomeWorkspaceTools extends ConsumerWidget {
   const HomeWorkspaceTools({super.key, required this.isDark});
   final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
-    final tools = HomeUseCase.workspaceTools();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tools = HomeUseCase.workspaceTools(ref);
 
     return TWidgetAnimations.slideUp(
       duration: const Duration(milliseconds: 480),
@@ -54,7 +58,7 @@ class _ToolCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, tool.route),
+      onTap: () => context.push(tool.route),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? TColors.darkCard : TColors.lightSurface,
@@ -133,10 +137,32 @@ class _ChillSpotButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const GoogleMapScreen()),
-      ),
+      onTap: () async {
+        final result = await PermissionManager.requestLocationWhenInUse();
+        if (!context.mounted) return;
+        if (result.isGranted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const GoogleMapScreen()),
+          );
+          return;
+        }
+
+        final isPermanent = result.status == PermissionStatus.permanentlyDenied;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            action: isPermanent
+                ? SnackBarAction(
+                    label: 'Settings',
+                    onPressed: () {
+                      PermissionManager.openSettings();
+                    },
+                  )
+                : null,
+          ),
+        );
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(

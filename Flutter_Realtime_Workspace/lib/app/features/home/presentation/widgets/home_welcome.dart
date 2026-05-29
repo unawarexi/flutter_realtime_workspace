@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/app/features/home/usecases/home_usecase.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/home_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
 /// Greeting headline, display name, and a summary status pill.
 class HomeWelcome extends ConsumerWidget {
-  const HomeWelcome({super.key, required this.isDark});
+  const HomeWelcome({
+    super.key,
+    required this.isDark,
+    required this.summaryText,
+    required this.roleLabel,
+  });
   final bool isDark;
+  final String summaryText;
+  final String roleLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,40 +69,69 @@ class HomeWelcome extends ConsumerWidget {
           // ── Status pill ───────────────────────────────────────
           TWidgetAnimations.fadeIn(
             delay: const Duration(milliseconds: 160),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: TSizes.sm + 2,
-                vertical: TSizes.xs - 1,
-              ),
-              decoration: BoxDecoration(
-                color: TColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(TSizes.radiusFull),
-                border: Border.all(
-                  color: TColors.primary.withValues(alpha: 0.14),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: TColors.success,
-                      shape: BoxShape.circle,
+            child: Wrap(
+              spacing: TSizes.xs,
+              runSpacing: TSizes.xs,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: TSizes.sm + 2,
+                    vertical: TSizes.xs - 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: TColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(TSizes.radiusFull),
+                    border: Border.all(
+                      color: TColors.primary.withValues(alpha: 0.14),
                     ),
                   ),
-                  const SizedBox(width: TSizes.xs),
-                  Text(
-                    '3 active projects  •  2 pending reviews',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: TColors.success,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: TSizes.xs),
+                      Text(
+                        summaryText,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? TColors.blue400 : TColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: TSizes.sm,
+                    vertical: TSizes.xs - 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? TColors.darkCard.withValues(alpha: 0.8)
+                        : TColors.lightSurface,
+                    borderRadius: BorderRadius.circular(TSizes.radiusFull),
+                    border: Border.all(
+                      color: isDark ? TColors.darkBorder : TColors.lightBorder,
+                    ),
+                  ),
+                  child: Text(
+                    roleLabel,
                     style: TextStyle(
                       fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? TColors.blue400 : TColors.primary,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? TColors.textDark : TColors.textLight,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/input.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
-import 'package:flutter_realtime_workspace/core/constants/icons.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 
 /// Decorated search bar with filter icon.
@@ -30,50 +30,10 @@ class HomeSearchBar extends StatelessWidget {
             ),
           ],
         ),
-        child: TextField(
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: isDark ? TColors.textDark : TColors.textLight,
-          ),
-          decoration: InputDecoration(
-            hintText: 'Search projects, files or people…',
-            hintStyle: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: isDark ? TColors.darkMuted : TColors.lightMuted,
-            ),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.all(TSizes.sm),
-              child: Icon(
-                TIcons.search,
-                size: TSizes.iconSm + 2,
-                color: isDark ? TColors.blue400 : TColors.primary,
-              ),
-            ),
-            suffixIcon: Padding(
-              padding: const EdgeInsets.all(TSizes.xs),
-              child: Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: isDark ? TColors.darkBorder : TColors.lightElevated,
-                  borderRadius: BorderRadius.circular(TSizes.radiusSm),
-                ),
-                child: Icon(
-                  TIcons.filter,
-                  size: TSizes.iconSm - 2,
-                  color: isDark
-                      ? TColors.textSecondaryDark
-                      : TColors.textSecondaryLight,
-                ),
-              ),
-            ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: TSizes.sm + 2,
-              horizontal: TSizes.sm,
-            ),
+        child: const Padding(
+          padding: EdgeInsets.all(TSizes.xs),
+          child: TSearchBar(
+            hint: 'Search projects, files or people…',
           ),
         ),
       ),

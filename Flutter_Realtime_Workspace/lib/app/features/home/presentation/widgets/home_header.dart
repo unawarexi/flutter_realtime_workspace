@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_realtime_workspace/app/features/home/usecases/home_usecase.dart';
-import 'package:flutter_realtime_workspace/app/features/settings/presentation/account.dart';
-import 'package:flutter_realtime_workspace/app/features/project/presentation/create_task_screen.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/home_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/icons.dart';
 import 'package:flutter_realtime_workspace/core/constants/image_strings.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+import 'package:go_router/go_router.dart';
 
 /// Top bar with profile avatar, notification button, and add button.
 class HomeHeader extends ConsumerWidget {
-  const HomeHeader({super.key, required this.isDark});
+  const HomeHeader({
+    super.key,
+    required this.isDark,
+    required this.unreadCount,
+    required this.roleLabel,
+  });
   final bool isDark;
+  final int unreadCount;
+  final String roleLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,12 +31,7 @@ class HomeHeader extends ConsumerWidget {
         children: [
           // ── Avatar ──────────────────────────────────────────
           GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AccountScreen(userId: userId),
-              ),
-            ),
+            onTap: () => context.push('/account?userId=$userId'),
             child: Stack(
               children: [
                 Container(
@@ -77,26 +78,50 @@ class HomeHeader extends ConsumerWidget {
               ],
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: TSizes.sm),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: TSizes.sm,
+                  vertical: TSizes.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: TColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(TSizes.radiusFull),
+                  border: Border.all(
+                    color: TColors.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+                child: Text(
+                  roleLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? TColors.blue400 : TColors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
           // ── Action buttons ───────────────────────────────────
           Row(
             children: [
               _HeaderIconBtn(
                 icon: TIcons.notification,
                 isDark: isDark,
-                badge: true,
+                badge: unreadCount > 0,
+                onTap: () => context.push('/notifications'),
               ),
               const SizedBox(width: TSizes.xs + 2),
               _HeaderIconBtn(
                 icon: TIcons.add,
                 isDark: isDark,
                 primary: true,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const CreateTaskScreen(),
-                  ),
-                ),
+                onTap: () => context.push('/tasks/create'),
               ),
             ],
           ),

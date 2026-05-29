@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/skeleton.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/home_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/icons.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+import 'package:go_router/go_router.dart';
 
 /// Recent activity feed showing project cards.
 class HomeRecentActivity extends StatelessWidget {
-  const HomeRecentActivity({super.key, required this.isDark});
+  const HomeRecentActivity({
+    super.key,
+    required this.isDark,
+    required this.items,
+    required this.isLoading,
+  });
   final bool isDark;
+  final List<HomeActivityItem> items;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +33,7 @@ class HomeRecentActivity extends StatelessWidget {
             children: [
               _SectionTitle(title: 'Recent Activity', isDark: isDark),
               TextButton(
-                onPressed: () {},
+                onPressed: () => context.push('/tasks'),
                 style: TextButton.styleFrom(
                   foregroundColor:
                       isDark ? TColors.blue400 : TColors.primary,
@@ -42,35 +53,48 @@ class HomeRecentActivity extends StatelessWidget {
             ],
           ),
           const SizedBox(height: TSizes.sm),
-          TWidgetAnimations.fadeIn(
-            delay: const Duration(milliseconds: 60),
-            child: _ActivityCard(
-              icon: TIcons.file,
-              title: 'Mobile App Design',
-              subtitle: 'Updated 2 hours ago  •  Design Team',
-              isDark: isDark,
-            ),
-          ),
-          const SizedBox(height: TSizes.xs + 2),
-          TWidgetAnimations.fadeIn(
-            delay: const Duration(milliseconds: 120),
-            child: _ActivityCard(
-              icon: TIcons.issue,
-              title: 'Bug Fixes — Sprint 3',
-              subtitle: 'Updated 5 hours ago  •  Development',
-              isDark: isDark,
-            ),
-          ),
-          const SizedBox(height: TSizes.xs + 2),
-          TWidgetAnimations.fadeIn(
-            delay: const Duration(milliseconds: 180),
-            child: _ActivityCard(
-              icon: TIcons.task,
-              title: 'Q2 Marketing Goals',
-              subtitle: 'Updated yesterday  •  Marketing',
-              isDark: isDark,
-            ),
-          ),
+          if (isLoading)
+            const Column(
+              children: [
+                TSkeleton(height: 60),
+                SizedBox(height: TSizes.xs + 2),
+                TSkeleton(height: 60),
+                SizedBox(height: TSizes.xs + 2),
+                TSkeleton(height: 60),
+              ],
+            )
+          else if (items.isEmpty)
+            TCard(
+              hasBorder: true,
+              child: Text(
+                'No recent activity yet. Start by creating a task or project.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? TColors.darkMuted : TColors.lightMuted,
+                ),
+              ),
+            )
+          else
+            ...List.generate(items.length, (index) {
+              final item = items[index];
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == items.length - 1 ? 0 : TSizes.xs + 2,
+                ),
+                child: TWidgetAnimations.fadeIn(
+                  delay: Duration(milliseconds: 60 * (index + 1)),
+                  child: _ActivityCard(
+                    icon: item.icon,
+                    title: item.title,
+                    subtitle:
+                        '${item.subtitle}  •  ${HomeUseCase.timeAgo(item.date)}',
+                    accentColor: item.color,
+                    isDark: isDark,
+                  ),
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -82,34 +106,22 @@ class _ActivityCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.accentColor,
     required this.isDark,
   });
   final IconData icon;
   final String title;
   final String subtitle;
+  final Color accentColor;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return TCard(
+      hasBorder: true,
+      hasShadow: true,
       padding: const EdgeInsets.symmetric(
           horizontal: TSizes.sm + 2, vertical: TSizes.sm),
-      decoration: BoxDecoration(
-        color: isDark ? TColors.darkCard : TColors.lightSurface,
-        borderRadius: BorderRadius.circular(TSizes.radiusMd),
-        border: Border.all(
-          color: isDark ? TColors.darkBorder : TColors.lightBorder,
-          width: 0.9,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color:
-                (isDark ? Colors.black : Colors.grey).withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
       child: Row(
         children: [
           // Icon container
@@ -117,13 +129,13 @@ class _ActivityCard extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: TColors.primary.withValues(alpha: 0.09),
+              color: accentColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(TSizes.radiusSm),
             ),
             child: Icon(
               icon,
               size: TSizes.iconSm,
-              color: isDark ? TColors.blue400 : TColors.primary,
+              color: accentColor,
             ),
           ),
           const SizedBox(width: TSizes.sm),

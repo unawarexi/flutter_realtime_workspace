@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_workspace/app/features/home/usecases/home_usecase.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/app/components/ui/card.dart';
+import 'package:flutter_realtime_workspace/app/domain/usecases/home_usecase.dart';
 import 'package:flutter_realtime_workspace/core/animations/widget_animations.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
+import 'package:go_router/go_router.dart';
 
 /// 2×2 grid of quick-action cards.
-class HomeQuickActions extends StatelessWidget {
+class HomeQuickActions extends ConsumerWidget {
   const HomeQuickActions({super.key, required this.isDark});
   final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
-    final actions = HomeUseCase.quickActions(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final actions = HomeUseCase.quickActions(ref);
 
     return TWidgetAnimations.slideUp(
       duration: const Duration(milliseconds: 440),
@@ -33,7 +36,7 @@ class HomeQuickActions extends StatelessWidget {
               return TWidgetAnimations.fadeIn(
                 delay: Duration(milliseconds: 60 * i),
                 child: GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, action.route),
+                  onTap: () => context.push(action.route),
                   child: _QuickActionCard(
                     action: action,
                     isDark: isDark,
@@ -58,27 +61,13 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? TColors.darkCard : TColors.lightSurface,
-        borderRadius: BorderRadius.circular(TSizes.radiusMd),
-        border: Border.all(
-          color: isDark ? TColors.darkBorder : TColors.lightBorder,
-          width: 0.9,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: action.color.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return TCard(
+      hasBorder: true,
+      hasShadow: true,
       padding: const EdgeInsets.all(TSizes.sm + 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon pill
           Container(
             width: 32,
             height: 32,
