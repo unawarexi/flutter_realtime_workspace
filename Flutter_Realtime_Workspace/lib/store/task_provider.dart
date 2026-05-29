@@ -6,6 +6,12 @@ final taskRepositoryProvider = Provider<TaskRepository>((_) {
   return TaskRepository();
 });
 
+/// Single task by ID.
+final taskDetailProvider =
+    FutureProvider.autoDispose.family<TaskModel, String>((ref, id) {
+  return ref.watch(taskRepositoryProvider).getTask(id);
+});
+
 /// Tasks for a project.
 final tasksProvider = FutureProvider.autoDispose
     .family<List<TaskModel>, Map<String, String?>>((ref, filters) {

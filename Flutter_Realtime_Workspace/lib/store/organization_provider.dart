@@ -12,6 +12,13 @@ final organizationsProvider =
   return ref.watch(organizationRepositoryProvider).getOrganizations();
 });
 
+/// The first (active) organization for the current user.
+final activeOrganizationProvider =
+    FutureProvider.autoDispose<OrganizationModel?>((ref) async {
+  final orgs = await ref.watch(organizationsProvider.future);
+  return orgs.isNotEmpty ? orgs.first : null;
+});
+
 /// Organization members.
 final orgMembersProvider =
     FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>(
