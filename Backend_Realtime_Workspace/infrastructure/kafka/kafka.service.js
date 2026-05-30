@@ -50,9 +50,37 @@ export async function initKafka() {
   return { kafka, producer, consumer };
 }
 
+const LEADER_ELECTION_ERROR = "There is no leader for this topic-partition as we are in the middle of a leadership election";
+const MAX_LEADER_RETRIES = 5;
+const LEADER_RETRY_DELAY_MS = 1500;
+
+async function _sendWithLeaderRetry(payload) {
+  for (let attempt = 1; attempt <= MAX_LEADER_RETRIES; attempt++) {
+    try {
+      await producer.send(payload);
+      return;
+    } catch (err) {
+      const isLeaderElection =
+        err.message?.includes("leadership election") ||
+        err.message?.includes("LEADER_NOT_AVAILABLE") ||
+        err.type === "LEADER_NOT_AVAILABLE";
+      if (isLeaderElection && attempt < MAX_LEADER_RETRIES) {
+        log.warn("Kafka leader election in progress, retrying...", {
+          attempt,
+          topic: payload.topic,
+          retryInMs: LEADER_RETRY_DELAY_MS,
+        });
+        await new Promise((r) => setTimeout(r, LEADER_RETRY_DELAY_MS));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 export async function publishEvent(topic, key, value, headers = {}) {
   if (!producer) throw new Error("Kafka producer not initialized");
-  await producer.send({
+  const message = {
     topic,
     messages: [{
       key: typeof key === "string" ? key : JSON.stringify(key),
@@ -60,12 +88,13 @@ export async function publishEvent(topic, key, value, headers = {}) {
       headers,
       timestamp: Date.now().toString(),
     }],
-  });
+  };
+  await _sendWithLeaderRetry(message);
 }
 
 export async function publishBatch(topic, messages) {
   if (!producer) throw new Error("Kafka producer not initialized");
-  await producer.send({
+  const payload = {
     topic,
     messages: messages.map((msg) => ({
       key: typeof msg.key === "string" ? msg.key : JSON.stringify(msg.key),
@@ -73,7 +102,8 @@ export async function publishBatch(topic, messages) {
       headers: msg.headers || {},
       timestamp: Date.now().toString(),
     })),
-  });
+  };
+  await _sendWithLeaderRetry(payload);
 }
 
 export async function subscribeToTopics(topics, handler) {
