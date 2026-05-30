@@ -128,6 +128,27 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     }
   }
 
+  /// Verify email with 6-digit OTP. The backend activates the account and
+  /// issues a JWT session automatically — user does not need to re-login.
+  Future<void> verifyEmailOtp(String email, String otp) async {
+    state = const AsyncValue.loading();
+    try {
+      final session = await _ref
+          .read(authRepositoryProvider)
+          .verifyEmailOtp(email, otp);
+      if (session.user != null) {
+        state = AsyncValue.data(session.user);
+        _registerFcmToken();
+        _connectWebSocket(session.user!);
+      } else {
+        state = const AsyncValue.data(null);
+      }
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
   /// Fetch latest user profile from backend.
   Future<void> fetchProfile() async {
     try {

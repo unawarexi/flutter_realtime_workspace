@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/domain/models/auth_session_model.dart';
 import 'package:flutter_realtime_workspace/store/auth_provider.dart';
 import 'package:flutter_realtime_workspace/app/components/common/toast_alerts.dart';
+import 'package:flutter_realtime_workspace/core/network/api_exception.dart';
+
+/// Backend error code sent when a user tries to log in before verifying email.
+const _kEmailNotVerified = 'E1011';
 
 class AuthUseCase {
   AuthUseCase._();
@@ -66,6 +70,48 @@ class AuthUseCase {
         context.go('/home');
       }
     } catch (e) {
+      // If email not verified, redirect to OTP screen instead of showing an error
+      if (e is ApiException && e.errorCode == _kEmailNotVerified) {
+        final target = e.email?.isNotEmpty == true ? e.email! : email;
+        if (context.mounted) {
+          AppToast.show(
+            'Please verify your email to continue.',
+            type: ToastType.info,
+            context: context,
+          );
+          context.go('/verify-email', extra: target);
+        }
+        return;
+      }
+      if (context.mounted) {
+        AppToast.show(
+          _extractErrorMessage(e),
+          type: ToastType.error,
+          context: context,
+        );
+      }
+    }
+  }
+
+  /// Verify the email OTP sent at registration.
+  /// On success the backend auto-logs in the user; we navigate to the
+  /// success screen which auto-routes to /options.
+  static Future<void> verifyEmailOtp({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      await ref.read(currentUserProvider.notifier).verifyEmailOtp(email, otp);
+      if (context.mounted) {
+        context.go('/verify-email-success', extra: {
+          'nextRoute': '/options',
+          'title': 'Email Verified!',
+          'message': 'Your account is ready. Let\'s get you set up.',
+        });
+      }
+    } catch (e) {
       if (context.mounted) {
         AppToast.show(
           _extractErrorMessage(e),
@@ -94,11 +140,7 @@ class AuthUseCase {
           type: ToastType.success,
           context: context,
         );
-        context.go('/verify-email-success', extra: {
-          'nextRoute': '/options',
-          'title': 'Almost There!',
-          'message': 'We\'ve sent a verification link to your email.\nVerify your account, then choose how to get started.',
-        });
+        context.go('/verify-email', extra: email);
       }
     } catch (e) {
       if (context.mounted) {
@@ -162,11 +204,13 @@ class AuthUseCase {
   }
 
   static String _extractErrorMessage(Object e) {
+    if (e is ApiException) {
+      if (e.errorCode == _kEmailNotVerified) return 'Please verify your email before logging in';
+      return e.message;
+    }
     final raw = e.toString();
     if (raw.contains('Invalid credentials')) return 'Invalid email or password';
-    if (raw.contains('verify your email')) {
-      return 'Please verify your email before logging in';
-    }
+    if (raw.contains('verify your email')) return 'Please verify your email before logging in';
     return raw.replaceFirst('Exception: ', '').replaceFirst('ApiException: ', '');
   }
 

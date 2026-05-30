@@ -3,11 +3,15 @@ import 'package:dio/dio.dart';
 class ApiException implements Exception {
   final String message;
   final int? statusCode;
+  final String? errorCode; // e.g. "E1011" — maps to backend ErrorCodes
+  final String? email;     // present when errorCode == E1011 (unverified login)
   final dynamic data;
 
   const ApiException({
     required this.message,
     this.statusCode,
+    this.errorCode,
+    this.email,
     this.data,
   });
 
@@ -24,12 +28,23 @@ class ApiException implements Exception {
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
         String message = 'Something went wrong';
-        if (data is Map<String, dynamic> && data.containsKey('message')) {
-          message = data['message'].toString();
+        String? errorCode;
+        String? email;
+        if (data is Map<String, dynamic>) {
+          final err = data['error'];
+          if (err is Map<String, dynamic>) {
+            message = err['message']?.toString() ?? message;
+            errorCode = err['code']?.toString();
+            email = err['email']?.toString();
+          } else if (data.containsKey('message')) {
+            message = data['message'].toString();
+          }
         }
         return ApiException(
           message: message,
           statusCode: statusCode,
+          errorCode: errorCode,
+          email: email,
           data: data,
         );
       case DioExceptionType.cancel:

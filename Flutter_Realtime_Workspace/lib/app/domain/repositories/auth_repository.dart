@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_realtime_workspace/core/auth/google_signin.dart';
 import 'package:flutter_realtime_workspace/core/auth/github_signin.dart';
@@ -34,7 +35,10 @@ class AuthRepository {
           'termsAccepted': termsAccepted,
         },
       );
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
     } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
     }
   }
@@ -55,7 +59,10 @@ class AuthRepository {
       final session = AuthSessionModel.fromJson(res.data['data']);
       await _persistSession(session);
       return session;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
     } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
     }
   }
@@ -244,5 +251,24 @@ class AuthRepository {
       ApiEndpoints.authResendVerification,
       data: {'email': email.trim()},
     );
+  }
+
+  /// Verify email with OTP submitted by the user.
+  /// On success the backend auto-logs in the user and returns a session.
+  Future<AuthSessionModel> verifyEmailOtp(String email, String otp) async {
+    try {
+      final res = await _api.post(
+        ApiEndpoints.authVerifyEmail,
+        data: {'email': email.trim(), 'otp': otp.trim()},
+      );
+      final session = AuthSessionModel.fromJson(res.data['data']);
+      await _persistSession(session);
+      return session;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
   }
 }

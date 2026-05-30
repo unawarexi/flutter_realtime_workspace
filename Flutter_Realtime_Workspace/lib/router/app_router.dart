@@ -17,7 +17,9 @@ import 'package:flutter_realtime_workspace/app/features/authentication/presentat
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/forgot_password.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/reset_password.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/email_verification_success.dart';
+import 'package:flutter_realtime_workspace/app/features/authentication/presentation/verify_email_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/user_information.dart';
+import 'package:flutter_realtime_workspace/app/features/billing/presentation/screens/onboarding_billing_screen.dart';
 import 'package:flutter_realtime_workspace/app/features/authentication/presentation/widgets/options_screen.dart';
 
 // Collaboration
@@ -152,7 +154,7 @@ final GoRouter appRouter = GoRouter(
 
     final publicPaths = [
       '/onboarding', '/login', '/signup', '/2fa', '/terms', '/privacy',
-      '/forgot-password', '/reset-password', '/verify-email-success',
+      '/forgot-password', '/reset-password', '/verify-email-success', '/verify-email', '/onboarding-billing',
       '/options', '/user-info',
     ];
     final isPublic = publicPaths.any((p) => path.startsWith(p));
@@ -219,8 +221,19 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: '/verify-email',
+      builder: (context, state) {
+        final email = state.extra as String? ?? '';
+        return VerifyEmailScreen(email: email);
+      },
+    ),
+    GoRoute(
       path: '/user-info',
       builder: (context, state) => const UserInformationScreen(mode: UserInfoMode.create),
+    ),
+    GoRoute(
+      path: '/onboarding-billing',
+      builder: (context, state) => const OnboardingBillingScreen(),
     ),
     GoRoute(
       path: '/options',

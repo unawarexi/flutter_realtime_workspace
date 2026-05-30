@@ -140,7 +140,7 @@ class UserInfoUseCase {
         bio: payload['bio'] as String?,
       );
       if (!context.mounted) return false;
-      context.go('/home');
+      context.go('/onboarding-billing');
       return true;
     } catch (e) {
       if (!context.mounted) return false;
