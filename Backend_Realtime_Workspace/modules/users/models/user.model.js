@@ -120,6 +120,9 @@ const userSchema = new mongoose.Schema(
     },
     onboardingComplete: { type: Boolean, default: false },
     deletedAt: { type: Date },
+    // Set on registration; MongoDB TTL auto-removes pending accounts after 7 days.
+    // Cleared (unset) when email is successfully verified.
+    registrationExpiresAt: { type: Date, index: true },
 
     // ── Preferences ───────────────────────────────────────────────────────
     preferences: {
@@ -144,6 +147,11 @@ userSchema.index({ tenantId: 1, email: 1 });
 userSchema.index({ tenantId: 1, status: 1 });
 userSchema.index({ tenantId: 1, department: 1 });
 userSchema.index({ fullName: "text", displayName: "text", email: "text" });
+// TTL: auto-delete pending accounts whose registrationExpiresAt has passed
+userSchema.index(
+  { registrationExpiresAt: 1 },
+  { expireAfterSeconds: 0, partialFilterExpression: { status: "pending" } }
+);
 
 // ── Soft delete filter ────────────────────────────────────────────────────────
 userSchema.pre(/^find/, function () {

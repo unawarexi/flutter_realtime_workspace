@@ -44,6 +44,16 @@ export function tooManyRequests(message = "Too many requests") {
   return new AppError(message, HttpStatus.TOO_MANY_REQUESTS, ErrorCodes.RATE_LIMIT_EXCEEDED);
 }
 
+export function emailNotVerified(email) {
+  const err = new AppError(
+    "Please verify your email before logging in",
+    HttpStatus.FORBIDDEN,
+    ErrorCodes.EMAIL_NOT_VERIFIED,
+  );
+  err.email = email; // carry email so Flutter can redirect to verify screen
+  return err;
+}
+
 export default {
   AppError, badRequest, unauthorized, forbidden,
   notFound, conflict, internalError, tooManyRequests,

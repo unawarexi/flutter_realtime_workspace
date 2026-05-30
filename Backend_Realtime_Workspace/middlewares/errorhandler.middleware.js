@@ -130,6 +130,8 @@ export function globalErrorHandler(err, req, res, _next) {
     success: false,
     error: { code, message },
   };
+  // For EMAIL_NOT_VERIFIED, include the email so the client can redirect directly
+  if (err.email) response.error.email = err.email;
 
   if (isDevelopment()) {
     response.error.stack = err.stack;

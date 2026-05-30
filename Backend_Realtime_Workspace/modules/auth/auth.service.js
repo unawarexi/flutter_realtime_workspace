@@ -14,7 +14,7 @@ import admin from "firebase-admin";
 
 import User from "../users/models/user.model.js";
 import { env } from "../../config/env.config.js";
-import { AppError, notFound, unauthorized, conflict, badRequest, forbidden } from "../../core/errors/app-error.js";
+import { AppError, notFound, unauthorized, conflict, badRequest, forbidden, emailNotVerified } from "../../core/errors/app-error.js";
 import { HttpStatus, ErrorCodes, RabbitQueues, CacheTTL } from "../../config/constants.js";
 import { getRedisClient } from "../../infrastructure/redis/redis.service.js";
 import { publishToQueue } from "../../infrastructure/rabbitmq/rabbitmq.service.js";
@@ -44,7 +44,7 @@ const sessionKey      = (userId, sessionId) => `session:${userId}:${sessionId}`;
 const refreshKey      = (refreshToken)      => `refresh:${refreshToken}`;
 const otpKey          = (type, userId)      => `otp:${type}:${userId}`;
 const resetKey        = (token)             => `pwreset:${token}`;
-const verifyKey       = (token)             => `emailverify:${token}`;
+const verifyKey       = (userId)            => `emailverify:${userId}`; // keyed by userId
 const twoFaTempKey    = (token)             => `2fatemp:${token}`;
 const rateLimitKey    = (action, id)        => `ratelimit:${action}:${id}`;
 
@@ -124,16 +124,23 @@ async function createSession(user, deviceInfo = {}) {
 // REGISTER (email/password)
 // ============================================================================
 export async function register({ email, password, fullName, inviteCode, termsAccepted, timezone = "UTC", ip }) {
-  // Rate limit registrations per IP
   await checkBruteForce("register", ip || email, 20, 3600);
 
   if (!termsAccepted) throw badRequest("You must accept the Terms of Service and Privacy Policy to register.");
 
   const existing = await User.findOne({ email }).lean();
-  if (existing) throw conflict("An account with this email already exists");
+  if (existing) {
+    // If pending and expired, let them re-register
+    if (existing.status === "pending" && existing.registrationExpiresAt && new Date() > new Date(existing.registrationExpiresAt)) {
+      await User.deleteOne({ _id: existing._id });
+    } else {
+      throw conflict("An account with this email already exists");
+    }
+  }
 
-  // Hash password
   const passwordHash = await bcrypt.hash(password, 12);
+  const REGISTRATION_TTL_DAYS = 7;
+  const registrationExpiresAt = new Date(Date.now() + REGISTRATION_TTL_DAYS * 24 * 3600 * 1000);
 
   const user = await User.create({
     email,
@@ -141,17 +148,17 @@ export async function register({ email, password, fullName, inviteCode, termsAcc
     fullName,
     displayName: fullName,
     timezone,
-    status: "pending", // until email verified
+    status: "pending",
     termsAcceptedAt: termsAccepted ? new Date() : undefined,
     inviteCode: generateInviteCode(),
     usedInviteCode: inviteCode,
     profileCompletion: 0,
+    registrationExpiresAt,
   });
 
-  // Generate email verification OTP (6 digits, 30 min)
-  const otp    = crypto.randomInt(100000, 999999).toString();
-  const vToken = crypto.randomBytes(32).toString("hex");
-  await rSet(verifyKey(vToken), { userId: user._id.toString(), email, otp }, 1800);
+  // Generate 6-digit OTP (30 min TTL), stored by userId
+  const otp = crypto.randomInt(100000, 999999).toString();
+  await rSet(verifyKey(user._id.toString()), { email, otp }, 1800);
 
   await queueEmail("emailVerification", {
     recipientName: fullName || email,
@@ -159,23 +166,54 @@ export async function register({ email, password, fullName, inviteCode, termsAcc
     expiresIn: "30 minutes",
   }, email);
 
-  eventBus.publish(DomainEvents.USER_REGISTERED, { userId: user._id, email });
-
-  return { message: "Registration successful. Check your email to verify your account.", userId: user._id };
+  return { message: "Registration successful. Check your email for the 6-digit verification code.", userId: user._id };
 }
 
 // ============================================================================
-// VERIFY EMAIL
+// VERIFY EMAIL  (email + OTP; auto-logs in user on success)
 // ============================================================================
-export async function verifyEmail({ token, otp }) {
-  const data = await rGet(verifyKey(token));
-  if (!data) throw badRequest("Verification link expired or invalid");
-  if (data.otp !== otp) throw badRequest("Invalid OTP code");
+export async function verifyEmail({ email, otp }) {
+  const user = await User.findOne({ email }).lean();
+  if (!user) throw badRequest("No account found for this email address");
 
-  await User.findByIdAndUpdate(data.userId, { status: "active", "twoFactorSettings.emailVerified": true });
-  await rDel(verifyKey(token));
+  if (user.status === "active") return { alreadyVerified: true, message: "Email already verified. Please sign in." };
 
-  return { message: "Email verified. You can now log in." };
+  // Check if the registration window has expired (OTP TTL + account TTL safety check)
+  if (user.status === "pending" && user.registrationExpiresAt && new Date() > new Date(user.registrationExpiresAt)) {
+    await User.deleteOne({ _id: user._id });
+    throw badRequest("Your registration has expired (7-day limit). Please sign up again.");
+  }
+
+  const stored = await rGet(verifyKey(user._id.toString()));
+  if (!stored) throw badRequest("OTP expired. Use the Resend button to get a new code.");
+  if (stored.otp !== otp) throw badRequest("Invalid OTP code. Please check your email.");
+
+  // Activate account, clear expiry
+  const activeUser = await User.findByIdAndUpdate(
+    user._id,
+    {
+      status: "active",
+      "twoFactorSettings.emailVerified": true,
+      $unset: { registrationExpiresAt: 1 },
+    },
+    { new: true },
+  );
+  await rDel(verifyKey(user._id.toString()));
+
+  // Welcome email — only sent on first successful verification
+  await queueEmail("welcome", { recipientName: user.fullName || email }, email);
+
+  // Publish registration event now that account is confirmed
+  eventBus.publish(DomainEvents.USER_REGISTERED, { userId: user._id, email });
+
+  // Auto-login: issue a session so user doesn't have to re-enter password
+  const session = await createSession(activeUser, {});
+
+  return {
+    message: "Email verified! Welcome to TeamSpot.",
+    ...session,
+    user: activeUser,
+  };
 }
 
 // ============================================================================
@@ -185,15 +223,25 @@ export async function resendVerification({ email, ip }) {
   await checkBruteForce("resend", email, 5, 900);
 
   const user = await User.findOne({ email }).lean();
-  if (!user || user.status === "active") return { message: "If this account exists, a verification email has been sent." };
+  // Silently return for non-existent or already-active accounts (prevents enumeration)
+  if (!user) return { message: "If this account exists and is unverified, a new code has been sent." };
+  if (user.status === "active") return { message: "If this account exists and is unverified, a new code has been sent." };
 
-  const otp    = crypto.randomInt(100000, 999999).toString();
-  const vToken = crypto.randomBytes(32).toString("hex");
-  await rSet(verifyKey(vToken), { userId: user._id.toString(), email, otp }, 1800);
+  // If account TTL expired at the DB level, reject early
+  if (user.registrationExpiresAt && new Date() > new Date(user.registrationExpiresAt)) {
+    throw badRequest("Your registration has expired. Please sign up again.");
+  }
 
-  await queueEmail("emailVerification", { recipientName: user.fullName || email, verificationCode: otp, expiresIn: "30 minutes" }, email);
+  const otp = crypto.randomInt(100000, 999999).toString();
+  await rSet(verifyKey(user._id.toString()), { email, otp }, 1800);
 
-  return { message: "Verification email sent." };
+  await queueEmail("emailVerification", {
+    recipientName: user.fullName || email,
+    verificationCode: otp,
+    expiresIn: "30 minutes",
+  }, email);
+
+  return { message: "Verification code sent." };
 }
 
 // ============================================================================
@@ -207,7 +255,14 @@ export async function loginPassword({ email, password, deviceInfo = {}, ip }) {
 
   if (user.status === "suspended")   throw new AppError("Account suspended", HttpStatus.FORBIDDEN, ErrorCodes.ACCOUNT_SUSPENDED);
   if (user.status === "deactivated") throw new AppError("Account deactivated", HttpStatus.FORBIDDEN, ErrorCodes.ACCOUNT_DEACTIVATED);
-  if (user.status === "pending")     throw badRequest("Please verify your email first");
+  if (user.status === "pending") {
+    // Check if registration window has expired
+    if (user.registrationExpiresAt && new Date() > new Date(user.registrationExpiresAt)) {
+      await User.deleteOne({ _id: user._id });
+      throw badRequest("Your registration expired. Please sign up again.");
+    }
+    throw emailNotVerified(email);
+  }
 
   // Check account lock
   if (user.lockedUntil && new Date() < new Date(user.lockedUntil)) {
