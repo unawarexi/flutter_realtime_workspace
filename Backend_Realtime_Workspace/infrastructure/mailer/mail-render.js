@@ -140,6 +140,19 @@ export function render(templateData = {}) {
   // Fallback for plain {{ADDITIONAL_CONTENT}} variable in template
   html = html.replace(/{{ADDITIONAL_CONTENT}}/g, templateData.ADDITIONAL_CONTENT || "");
 
+  // FOOTER_EXTRA — full footer block (description + links + contact) for major emails only
+  const fullFooterHtml = `
+    <div class="footer-description">Empowering teams to collaborate, communicate, and achieve more together.</div>
+    <div class="footer-links" style="display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin:16px 0;">
+      <a href="https://teamspot.com/help" class="footer-link">Help Center</a>
+      <a href="https://teamspot.com/privacy" class="footer-link">Privacy Policy</a>
+      <a href="https://teamspot.com/terms" class="footer-link">Terms of Service</a>
+      <a href="https://teamspot.com/blog" class="footer-link">Blog</a>
+    </div>
+    <div class="footer-contact">TeamSpot Inc. &bull; <a href="mailto:support@teamspot.com" style="color:#94a3b8;text-decoration:none;">support@teamspot.com</a></div>
+  `;
+  html = html.replace(/{{FOOTER_EXTRA}}/g, templateData.FULL_FOOTER ? fullFooterHtml : "");
+
   // CONTENT_SECTIONS block
   html = safeReplace(
     html,

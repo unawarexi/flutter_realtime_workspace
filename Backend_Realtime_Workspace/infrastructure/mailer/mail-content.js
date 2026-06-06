@@ -90,6 +90,7 @@ class EmailContentGenerator {
                     </p>
                 </div>
             `,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(userData.userId, 'welcome')
     };
   }
@@ -316,6 +317,7 @@ class EmailContentGenerator {
                     </p>
                 </div>
             `,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(invitationData.inviteeId, 'invitations')
     };
   }
@@ -357,6 +359,7 @@ class EmailContentGenerator {
           primary: false
         }
       ],
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(memberData.recipientId, 'workspace-updates')
     };
   }
@@ -435,6 +438,7 @@ class EmailContentGenerator {
                     </p>
                 </div>
             `,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(meetingData.attendeeId, 'meetings')
     };
   }
@@ -593,6 +597,7 @@ class EmailContentGenerator {
           primary: false
         }
       ],
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(projectData.assigneeId, 'project-updates')
     };
   }
@@ -645,6 +650,7 @@ class EmailContentGenerator {
         }
       ],
       ATTACHMENTS: taskData.attachments,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(taskData.assigneeId, 'task-updates')
     };
   }
@@ -874,6 +880,7 @@ class EmailContentGenerator {
                 </p>
             </div>
         `,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(paymentData.customerId, 'billing')
     };
   }
@@ -936,6 +943,7 @@ class EmailContentGenerator {
                 </p>
             </div>
         `,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(paymentData.customerId, 'billing')
     };
   }
@@ -994,6 +1002,7 @@ class EmailContentGenerator {
           primary: false
         }
       ],
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(subscriptionData.customerId, 'billing-reminders')
     };
   }
@@ -1055,6 +1064,7 @@ class EmailContentGenerator {
                 </p>
             </div>
         `,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(subscriptionData.customerId, 'billing')
     };
   }
@@ -1251,6 +1261,7 @@ class EmailContentGenerator {
           primary: false
         }
       ],
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(digestData.recipientId, 'weekly-digest')
     };
   }
@@ -1339,6 +1350,7 @@ class EmailContentGenerator {
       BUTTONS: [
         { text: 'Open Workspace', url: `${this.baseUrl}/workspaces`, primary: true }
       ],
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: '',
     };
   }
@@ -1375,6 +1387,7 @@ class EmailContentGenerator {
       BUTTONS: [
         { text: 'Go to Organization', url: `${this.baseUrl}/organizations/${data.slug || ''}`, primary: true }
       ],
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: '',
     };
   }
@@ -1393,6 +1406,7 @@ class EmailContentGenerator {
           <p style="color:#166534;margin:0;font-size:13px;">This invitation link expires in 7 days. If you weren't expecting this invite, you can safely ignore it.</p>
         </div>
       `,
+      FULL_FOOTER: true,
       UNSUBSCRIBE_LINK: '',
     };
   }
