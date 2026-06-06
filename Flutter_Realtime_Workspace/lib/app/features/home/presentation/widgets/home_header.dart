@@ -163,8 +163,7 @@ class _HeaderIconBtn extends StatelessWidget {
               border: primary
                   ? null
                   : Border.all(
-                      color:
-                          isDark ? TColors.darkBorder : TColors.lightBorder,
+                      color: isDark ? TColors.darkBorder : TColors.lightBorder,
                       width: 0.9,
                     ),
               boxShadow: [

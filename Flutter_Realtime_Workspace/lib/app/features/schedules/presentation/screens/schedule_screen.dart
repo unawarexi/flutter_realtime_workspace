@@ -99,7 +99,7 @@ class _State extends ConsumerState<ScheduleScreen> with SingleTickerProviderStat
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(s.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: TResponsive.sp(context, 14), fontWeight: FontWeight.w600, color: isDark ? TColors.textPrimaryDark : TColors.textPrimaryLight)),
                 const SizedBox(height: 2),
-                Text('${_formatTime(s.startTime)}', style: TextStyle(fontSize: TResponsive.sp(context, 12), color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight)),
+                Text(_formatTime(s.startTime), style: TextStyle(fontSize: TResponsive.sp(context, 12), color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight)),
               ])),
               Icon(Icons.chevron_right_rounded, size: 20, color: isDark ? TColors.darkMuted : TColors.lightMuted),
             ]),

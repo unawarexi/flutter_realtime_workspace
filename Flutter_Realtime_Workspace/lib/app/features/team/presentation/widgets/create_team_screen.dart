@@ -7,7 +7,7 @@ import 'package:flutter_realtime_workspace/store/user_provider.dart';
 import 'package:flutter_realtime_workspace/app/components/common/toast_alerts.dart';
 
 class CreateTeamScreen extends ConsumerStatefulWidget {
-  const CreateTeamScreen({Key? key}) : super(key: key);
+  const CreateTeamScreen({super.key});
 
   @override
   ConsumerState<CreateTeamScreen> createState() => _CreateTeamScreenState();
@@ -43,7 +43,7 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
           builder: (context, scrollController) {
             return StatefulBuilder(
               builder: (context, setModalState) {
-                Future<void> _searchUser(String query) async {
+                Future<void> searchUser(String query) async {
                   setModalState(() {
                     _searchLoading = true;
                     _searchError = null;
@@ -109,7 +109,7 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
                             tooltip: "Search",
                             onPressed: _searchQuery.isNotEmpty && !_searchLoading
                                 ? () {
-                                    _searchUser(_searchQuery);
+                                    searchUser(_searchQuery);
                                   }
                                 : null,
                           ),
@@ -134,7 +134,7 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
                         onSubmitted: (_) {
                           // Optionally, allow pressing enter to search
                           if (_searchQuery.isNotEmpty && !_searchLoading) {
-                            _searchUser(_searchQuery);
+                            searchUser(_searchQuery);
                           }
                         },
                       ),
@@ -184,8 +184,8 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
                                   ),
                                 ),
                                 trailing: alreadySelected
-                                    ? Icon(Icons.check_circle, color: TColors.green)
-                                    : Icon(Icons.add_circle_outline, color: TColors.buttonPrimaryLight),
+                                    ? const Icon(Icons.check_circle, color: TColors.green)
+                                    : const Icon(Icons.add_circle_outline, color: TColors.buttonPrimaryLight),
                                 onTap: alreadySelected
                                     ? null
                                     : () {

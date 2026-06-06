@@ -39,10 +39,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       ref: ref,
       email: _emailController.text.trim(),
     );
-    if (mounted) setState(() {
+    if (mounted) {
+      setState(() {
       _loading = false;
       _sent = true;
     });
+    }
   }
 
   @override
@@ -218,7 +220,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               child: Center(
                                 child: GestureDetector(
                                   onTap: () => context.go('/login'),
-                                  child: Text(
+                                  child: const Text(
                                     'Back to Sign In',
                                     style: TextStyle(
                                       fontSize: 13,

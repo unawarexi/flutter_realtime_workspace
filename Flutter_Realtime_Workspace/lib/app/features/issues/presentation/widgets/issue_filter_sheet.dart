@@ -95,7 +95,7 @@ class _IssueFilterSheetState extends State<IssueFilterSheet> {
               TextButton(
                 onPressed: () =>
                     setState(() { _type = null; _severity = null; }),
-                child: Text(
+                child: const Text(
                   'Clear all',
                   style: TextStyle(color: TColors.primary),
                 ),

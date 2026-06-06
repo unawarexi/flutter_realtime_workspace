@@ -35,7 +35,7 @@ class OnboardingPageContent extends StatelessWidget {
         return SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: TSizes.lg),
+            padding: const EdgeInsets.symmetric(horizontal: TSizes.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -134,7 +134,7 @@ class OnboardingPageContent extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: TSizes.sm),
+                const SizedBox(height: TSizes.sm),
               ],
             ),
           ),

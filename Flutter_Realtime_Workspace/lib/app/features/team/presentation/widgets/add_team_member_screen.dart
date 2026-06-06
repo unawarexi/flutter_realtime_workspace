@@ -85,7 +85,7 @@ class _AddTeamMemberScreenState extends ConsumerState<AddTeamMemberScreen> {
 							),
 							const SizedBox(height: TSizes.md),
 							DropdownButtonFormField<String>(
-								value: _role,
+								initialValue: _role,
 								decoration: InputDecoration(
 									labelText: 'Role',
 									border: OutlineInputBorder(borderRadius: BorderRadius.circular(TSizes.radiusMd)),

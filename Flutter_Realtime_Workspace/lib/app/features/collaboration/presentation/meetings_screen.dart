@@ -684,7 +684,7 @@ class _ScheduleMeetState extends State<ScheduleMeet>
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,

@@ -90,14 +90,13 @@ class _ToastOverlay extends StatefulWidget {
   final VoidCallback onRemove;
 
   const _ToastOverlay({
-    Key? key,
     required this.message,
     this.title,
     required this.style,
     required this.gravity,
     required this.duration,
     required this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   State<_ToastOverlay> createState() => _ToastOverlayState();
@@ -228,11 +227,10 @@ class _AdvancedToastWidget extends StatelessWidget {
   final _ToastStyle style;
 
   const _AdvancedToastWidget({
-    Key? key,
     required this.message,
     this.title,
     required this.style,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

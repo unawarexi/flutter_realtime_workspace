@@ -35,8 +35,7 @@ class HomeRecentActivity extends StatelessWidget {
               TextButton(
                 onPressed: () => context.push('/tasks'),
                 style: TextButton.styleFrom(
-                  foregroundColor:
-                      isDark ? TColors.blue400 : TColors.primary,
+                  foregroundColor: isDark ? TColors.blue400 : TColors.primary,
                   padding: const EdgeInsets.symmetric(
                       horizontal: TSizes.sm, vertical: TSizes.xs),
                   minimumSize: Size.zero,
@@ -66,13 +65,26 @@ class HomeRecentActivity extends StatelessWidget {
           else if (items.isEmpty)
             TCard(
               hasBorder: true,
-              child: Text(
-                'No recent activity yet. Start by creating a task or project.',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? TColors.darkMuted : TColors.lightMuted,
-                ),
+              padding: const EdgeInsets.symmetric(
+                  vertical: TSizes.md, horizontal: TSizes.sm),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.event_busy_outlined,
+                    color: isDark ? TColors.darkMuted : TColors.lightMuted,
+                    size: TSizes.iconMd,
+                  ),
+                  const SizedBox(width: TSizes.sm),
+                  Text(
+                    'No recent activity available',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? TColors.darkMuted : TColors.lightMuted,
+                    ),
+                  ),
+                ],
               ),
             )
           else

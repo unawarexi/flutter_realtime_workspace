@@ -84,7 +84,7 @@ class _CreateIssueScreenState extends ConsumerState<CreateIssueScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : TextButton(
                     onPressed: _submit,
-                    child: Text('Create',
+                    child: const Text('Create',
                         style: TextStyle(
                             color: TColors.primary,
                             fontWeight: FontWeight.w700,
@@ -328,7 +328,7 @@ class _CreateIssueScreenState extends ConsumerState<CreateIssueScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(l,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 12,
                                       color: TColors.purple,
                                       fontWeight: FontWeight.w600)),
@@ -336,7 +336,7 @@ class _CreateIssueScreenState extends ConsumerState<CreateIssueScreen> {
                               GestureDetector(
                                 onTap: () =>
                                     setState(() => _labels.remove(l)),
-                                child: Icon(Icons.close,
+                                child: const Icon(Icons.close,
                                     size: 14, color: TColors.purple),
                               ),
                             ],
@@ -443,11 +443,11 @@ class _CreateIssueScreenState extends ConsumerState<CreateIssueScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: TColors.primary),
+          borderSide: const BorderSide(color: TColors.primary),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: TColors.error),
+          borderSide: const BorderSide(color: TColors.error),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

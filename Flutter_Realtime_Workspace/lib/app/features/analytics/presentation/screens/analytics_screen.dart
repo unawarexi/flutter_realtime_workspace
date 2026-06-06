@@ -67,18 +67,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           child: reportAsync.when(
             loading: () => Padding(
               padding: EdgeInsets.symmetric(horizontal: hPad),
-              child: Column(children: [
-                Row(children: const [
+              child: const Column(children: [
+                Row(children: [
                   Expanded(child: TSkeleton(height: 90)),
                   SizedBox(width: TSizes.sm),
                   Expanded(child: TSkeleton(height: 90)),
                   SizedBox(width: TSizes.sm),
                   Expanded(child: TSkeleton(height: 90)),
                 ]),
-                const SizedBox(height: TSizes.md),
-                const TSkeleton(height: 200),
-                const SizedBox(height: TSizes.md),
-                const TSkeleton(height: 200),
+                SizedBox(height: TSizes.md),
+                TSkeleton(height: 200),
+                SizedBox(height: TSizes.md),
+                TSkeleton(height: 200),
               ]),
             ),
             error: (_, __) => const Center(child: Text('Failed to load analytics')),

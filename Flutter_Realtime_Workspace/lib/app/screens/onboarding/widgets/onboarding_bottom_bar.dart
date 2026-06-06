@@ -74,7 +74,7 @@ class OnboardingBottomBar extends StatelessWidget {
           ),
 
 
-          SizedBox(height: TSizes.md),
+          const SizedBox(height: TSizes.md),
 
           // ── Navigation buttons ─────────────────────────────────────────────
           Row(
@@ -89,7 +89,7 @@ class OnboardingBottomBar extends StatelessWidget {
                     onPressed: onPrev,
                   ),
                 ),
-                SizedBox(width: TSizes.sm),
+                const SizedBox(width: TSizes.sm),
               ],
               Expanded(
                 child: _AccentButton(
@@ -148,8 +148,8 @@ class _AccentButton extends StatelessWidget {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           elevation: 0,
-          minimumSize: Size(double.infinity, TSizes.buttonHeightMd),
-          padding: EdgeInsets.symmetric(
+          minimumSize: const Size(double.infinity, TSizes.buttonHeightMd),
+          padding: const EdgeInsets.symmetric(
             horizontal: TSizes.md,
             vertical: TSizes.sm,
           ),
@@ -162,14 +162,14 @@ class _AccentButton extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: TSizes.fontSizeMD - 1,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
                 letterSpacing: 0.2,
               ),
             ),
-            SizedBox(width: TSizes.xs + 2),
+            const SizedBox(width: TSizes.xs + 2),
             Icon(
               isLast
                   ? Icons.rocket_launch_rounded

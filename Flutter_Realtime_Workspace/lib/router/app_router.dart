@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_realtime_workspace/core/services/storage_service.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_realtime_workspace/store/auth_provider.dart';
+
 // Screens
 import 'package:flutter_realtime_workspace/app/bottom_navigation.dart';
 import 'package:flutter_realtime_workspace/app/screens/splash/splash_screen.dart';
@@ -169,7 +172,18 @@ final GoRouter appRouter = GoRouter(
       return null;
     }
 
-    // Already logged in: bounce away from auth/onboarding screens
+    // Check if profile setup is required
+    try {
+      final container = ProviderScope.containerOf(context);
+      final needsProfileSetup = container.read(needsProfileSetupProvider);
+      if (needsProfileSetup && path != '/user-info') {
+        return '/user-info';
+      }
+    } catch (_) {
+      // In tests or edge cases without ProviderScope
+    }
+
+    // Already logged in and profile complete: bounce away from auth/onboarding screens
     if (path == '/login' ||
         path == '/onboarding' ||
         path.startsWith('/signup')) {

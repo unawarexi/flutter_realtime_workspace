@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
@@ -76,8 +75,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: List.generate(
-                5, (i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                5, (i) => const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
                       child: TSkeleton(height: 60),
                     )),
           ),
@@ -91,7 +90,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Iconsax.warning_2, size: 48, color: TColors.error),
+              const Icon(Iconsax.warning_2, size: 48, color: TColors.error),
               const SizedBox(height: 12),
               Text('Failed to load task',
                   style: TextStyle(
@@ -152,7 +151,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(task.key!,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: TColors.primary)),
@@ -161,7 +160,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           actions: [
             if (canEdit)
               IconButton(
-                icon: Icon(Iconsax.edit, color: TColors.primary, size: 20),
+                icon: const Icon(Iconsax.edit, color: TColors.primary, size: 20),
                 onPressed: () => _showEditSheet(context, isDark, task),
               ),
             if (canDelete)
@@ -298,7 +297,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                                         TColors.purple.withOpacity(0.3)),
                               ),
                               child: Text(l,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 12,
                                       color: TColors.purple,
                                       fontWeight: FontWeight.w600)),
@@ -331,7 +330,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                         task.checklist.length,
                     backgroundColor: border,
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(TColors.success),
+                        const AlwaysStoppedAnimation<Color>(TColors.success),
                     minHeight: 4,
                     borderRadius: BorderRadius.circular(2),
                   ),
@@ -381,7 +380,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                               color: TColors.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Iconsax.document,
+                            child: const Icon(Iconsax.document,
                                 size: 18, color: TColors.primary),
                           ),
                           const SizedBox(width: 12),
@@ -506,7 +505,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               child:
-                  Text('Delete', style: TextStyle(color: TColors.error))),
+                  const Text('Delete', style: TextStyle(color: TColors.error))),
         ],
       ),
     );
@@ -577,7 +576,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                             ? FontWeight.w700
                             : FontWeight.w500)),
                 trailing: isSelected
-                    ? Icon(Icons.check_circle, color: TColors.success)
+                    ? const Icon(Icons.check_circle, color: TColors.success)
                     : null,
                 onTap: () async {
                   Navigator.pop(context);

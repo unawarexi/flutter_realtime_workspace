@@ -381,7 +381,7 @@ class _SignUpState extends ConsumerState<SignUp> {
                                 ),
                                 GestureDetector(
                                   onTap: () => context.go('/login'),
-                                  child: Text(
+                                  child: const Text(
                                     'Login',
                                     style: TextStyle(
                                       fontSize: 12,

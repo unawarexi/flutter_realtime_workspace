@@ -159,13 +159,13 @@ class OrganizationScreen extends ConsumerWidget {
               const SizedBox(height: TSizes.lg),
 
               // ── Quota usage ──
-              _SectionLabel(label: 'QUOTAS'),
+              const _SectionLabel(label: 'QUOTAS'),
               const SizedBox(height: TSizes.sm),
               _QuotaGrid(org: org),
               const SizedBox(height: TSizes.lg),
 
               // ── Org details ──
-              _SectionLabel(label: 'DETAILS'),
+              const _SectionLabel(label: 'DETAILS'),
               const SizedBox(height: TSizes.sm),
               _DetailCard(org: org),
               const SizedBox(height: TSizes.lg),

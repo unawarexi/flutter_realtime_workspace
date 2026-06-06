@@ -731,8 +731,8 @@ class _ProjectHomeState extends ConsumerState<ProjectHome>
                           ),
                           _buildStatusBadge(statusLabel, isDarkMode),
                           if (project.starred)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 4),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4),
                               child: Icon(Icons.star_rounded, size: 14,
                                 color: TColors.yellow),
                             ),

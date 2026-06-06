@@ -145,16 +145,14 @@ class DateTimeTimezonePicker extends StatelessWidget {
               onPrimary: Colors.white,
               surface: isDarkMode ? TColors.cardColorDark : Colors.white,
               onSurface: isDarkMode ? Colors.white : TColors.backgroundDark,
-              background: isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,
             ).copyWith(
               brightness: isDarkMode ? Brightness.dark : Brightness.light,
             ),
-            dialogBackgroundColor: isDarkMode ? TColors.cardColorDark : Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: isDarkMode ? TColors.lightBlue : TColors.buttonPrimary,
               ),
-            ),
+            ), dialogTheme: DialogThemeData(backgroundColor: isDarkMode ? TColors.cardColorDark : Colors.white),
           ),
           child: child!,
         );
@@ -176,16 +174,14 @@ class DateTimeTimezonePicker extends StatelessWidget {
               onPrimary: Colors.white,
               surface: isDarkMode ? TColors.cardColorDark : Colors.white,
               onSurface: isDarkMode ? Colors.white : TColors.backgroundDark,
-              background: isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,
             ).copyWith(
               brightness: isDarkMode ? Brightness.dark : Brightness.light,
             ),
-            dialogBackgroundColor: isDarkMode ? TColors.cardColorDark : Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: isDarkMode ? TColors.lightBlue : TColors.buttonPrimary,
               ),
-            ),
+            ), dialogTheme: DialogThemeData(backgroundColor: isDarkMode ? TColors.cardColorDark : Colors.white),
           ),
           child: child!,
         );

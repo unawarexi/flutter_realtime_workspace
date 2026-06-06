@@ -385,7 +385,7 @@ class _PrivacySecurityState extends ConsumerState<PrivacySecurity> {
         trailing: Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: primaryBlue,
+          activeThumbColor: primaryBlue,
         ),
       ),
     );

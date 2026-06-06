@@ -12,15 +12,28 @@ final taskDetailProvider =
   return ref.watch(taskRepositoryProvider).getTask(id);
 });
 
+/// Filter key record — uses structural equality so Riverpod won't fire a new
+/// provider on every widget rebuild (unlike Map which uses reference equality).
+typedef TaskFilterKey = ({String? workspaceId, String? projectId, String? assigneeId, String? status});
+
 /// Tasks for a project.
-final tasksProvider = FutureProvider.autoDispose
-    .family<List<TaskModel>, Map<String, String?>>((ref, filters) {
-  return ref.watch(taskRepositoryProvider).getTasks(
-        projectId: filters['projectId'],
-        workspaceId: filters['workspaceId'],
-        assigneeId: filters['assigneeId'],
-        status: filters['status'],
+final tasksProvider = FutureProvider.family<List<TaskModel>, TaskFilterKey>((ref, filters) {
+  ref.keepAlive();
+  return ref.read(taskRepositoryProvider).getTasks(
+        projectId: filters.projectId,
+        workspaceId: filters.workspaceId,
+        assigneeId: filters.assigneeId,
+        status: filters.status,
       );
+});
+
+/// Tasks scoped to a single workspace — stable String? key avoids Map
+/// reference-equality issue that caused a new provider (and API call)
+/// to be created on every widget rebuild.
+final workspaceTasksProvider =
+    FutureProvider.family<List<TaskModel>, String?>((ref, workspaceId) {
+  ref.keepAlive();
+  return ref.read(taskRepositoryProvider).getTasks(workspaceId: workspaceId);
 });
 
 /// My tasks (assigned to current user).

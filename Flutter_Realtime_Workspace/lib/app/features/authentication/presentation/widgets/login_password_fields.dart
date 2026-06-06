@@ -91,7 +91,7 @@ class _PasswordAuthenticationState
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text(
+              child: const Text(
                 'Forgot Password?',
                 style: TextStyle(
                   fontSize: 12,

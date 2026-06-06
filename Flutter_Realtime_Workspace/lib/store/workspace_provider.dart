@@ -8,8 +8,9 @@ final workspaceRepositoryProvider = Provider<WorkspaceRepository>((_) {
 
 /// All workspaces for the current user.
 final workspacesProvider =
-    FutureProvider.autoDispose<List<WorkspaceModel>>((ref) {
-  return ref.watch(workspaceRepositoryProvider).getWorkspaces();
+    FutureProvider<List<WorkspaceModel>>((ref) {
+  ref.keepAlive();
+  return ref.read(workspaceRepositoryProvider).getWorkspaces();
 });
 
 /// Active workspace state.

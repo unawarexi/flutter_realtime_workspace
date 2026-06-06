@@ -72,7 +72,7 @@ class AccountGuard {
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
+              child: const Text(
                 'OK',
                 style: TextStyle(
                   color: TColors.accentBlue,

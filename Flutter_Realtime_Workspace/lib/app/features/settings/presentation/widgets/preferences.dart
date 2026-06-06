@@ -156,7 +156,7 @@ class Preferences extends ConsumerWidget {
         trailing: Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: primaryBlue,
+          activeThumbColor: primaryBlue,
         ),
       ),
     );

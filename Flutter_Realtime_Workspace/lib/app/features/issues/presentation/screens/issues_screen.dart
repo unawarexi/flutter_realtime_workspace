@@ -43,9 +43,13 @@ class _IssuesScreenState extends ConsumerState<IssuesScreen>
     super.dispose();
   }
 
-  Map<String, String?> get _filters => {
-        'workspaceId': ref.read(activeWorkspaceProvider)?.id,
-      };
+  IssueFilterKey get _filters => (
+        workspaceId: ref.read(activeWorkspaceProvider)?.id,
+        projectId: null,
+        assigneeId: null,
+        status: null,
+        priority: null,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -170,8 +174,8 @@ class _IssuesScreenState extends ConsumerState<IssuesScreen>
         padding: const EdgeInsets.all(16),
         children: List.generate(
             6,
-            (i) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+            (i) => const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
                   child: TSkeleton(height: 90),
                 )),
       );
@@ -180,7 +184,7 @@ class _IssuesScreenState extends ConsumerState<IssuesScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Iconsax.warning_2, size: 48, color: TColors.error),
+            const Icon(Iconsax.warning_2, size: 48, color: TColors.error),
             const SizedBox(height: 12),
             Text('Failed to load issues',
                 style: TextStyle(
@@ -260,7 +264,7 @@ class _IssueList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (issues.isEmpty) {
-      return EmptyState(
+      return const EmptyState(
         icon: Iconsax.warning_2,
         title: 'No issues found',
         subtitle: 'Issues you create will appear here.',

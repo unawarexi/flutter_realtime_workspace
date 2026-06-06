@@ -6,16 +6,29 @@ final issueRepositoryProvider = Provider<IssueRepository>((_) {
   return IssueRepository();
 });
 
+/// Filter key record — uses structural equality so Riverpod won't fire a new
+/// provider on every widget rebuild (unlike Map which uses reference equality).
+typedef IssueFilterKey = ({String? workspaceId, String? projectId, String? assigneeId, String? status, String? priority});
+
 /// Issues for a project.
-final issuesProvider = FutureProvider.autoDispose
-    .family<List<IssueModel>, Map<String, String?>>((ref, filters) {
-  return ref.watch(issueRepositoryProvider).getIssues(
-        projectId: filters['projectId'],
-        workspaceId: filters['workspaceId'],
-        assigneeId: filters['assigneeId'],
-        status: filters['status'],
-        priority: filters['priority'],
+final issuesProvider = FutureProvider.family<List<IssueModel>, IssueFilterKey>((ref, filters) {
+  ref.keepAlive();
+  return ref.read(issueRepositoryProvider).getIssues(
+        projectId: filters.projectId,
+        workspaceId: filters.workspaceId,
+        assigneeId: filters.assigneeId,
+        status: filters.status,
+        priority: filters.priority,
       );
+});
+
+/// Issues scoped to a single workspace — stable String? key avoids the Map
+/// reference-equality issue that caused a new provider (and API call)
+/// to be created on every widget rebuild.
+final workspaceIssuesProvider =
+    FutureProvider.family<List<IssueModel>, String?>((ref, workspaceId) {
+  ref.keepAlive();
+  return ref.read(issueRepositoryProvider).getIssues(workspaceId: workspaceId);
 });
 
 /// Issue detail.

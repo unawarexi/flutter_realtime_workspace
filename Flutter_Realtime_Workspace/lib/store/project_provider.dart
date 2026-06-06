@@ -6,11 +6,12 @@ final projectRepositoryProvider = Provider<ProjectRepository>((_) {
   return ProjectRepository();
 });
 
-/// All projects for a workspace.
-final projectsProvider = FutureProvider.autoDispose
-    .family<List<ProjectModel>, String?>((ref, workspaceId) {
+/// All projects for a workspace. keepAlive prevents re-fetch on every rebuild.
+final projectsProvider =
+    FutureProvider.family<List<ProjectModel>, String?>((ref, workspaceId) {
+  ref.keepAlive();
   return ref
-      .watch(projectRepositoryProvider)
+      .read(projectRepositoryProvider)
       .getProjects(workspaceId: workspaceId);
 });
 

@@ -166,7 +166,7 @@ class AIInsightsScreen extends ConsumerWidget {
                       hasBorder: true,
                       padding: EdgeInsets.all(TResponsive.sp(context, TSizes.md)),
                       child: Row(children: [
-                        Icon(Iconsax.lamp_on, size: 20, color: TColors.warning),
+                        const Icon(Iconsax.lamp_on, size: 20, color: TColors.warning),
                         const SizedBox(width: TSizes.sm),
                         Expanded(child: Text(r['text'] as String? ?? '', style: TextStyle(
                           fontSize: TResponsive.sp(context, 13),
@@ -211,7 +211,7 @@ class AIInsightsScreen extends ConsumerWidget {
         hasBorder: true,
         padding: EdgeInsets.all(TResponsive.sp(context, TSizes.md)),
         child: Row(children: [
-          Icon(Iconsax.lamp_on, size: 20, color: TColors.warning),
+          const Icon(Iconsax.lamp_on, size: 20, color: TColors.warning),
           const SizedBox(width: TSizes.sm),
           Expanded(child: Text(r, style: TextStyle(
             fontSize: TResponsive.sp(context, 13),

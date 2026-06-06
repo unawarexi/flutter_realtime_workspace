@@ -238,7 +238,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                             child: Center(
                               child: GestureDetector(
                                 onTap: () => context.go('/login'),
-                                child: Text(
+                                child: const Text(
                                   'Back to Sign In',
                                   style: TextStyle(
                                     fontSize: 13,

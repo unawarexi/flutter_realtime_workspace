@@ -146,7 +146,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 color: isDark ? TColors.darkElevated : TColors.lightElevated,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Iconsax.profile_circle, color: TColors.primary, size: 20),
+              child: const Icon(Iconsax.profile_circle, color: TColors.primary, size: 20),
             ),
           ),
         ],
@@ -289,10 +289,12 @@ class _AllTasksTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = THelperFunctions.isDarkMode(context);
-    final filters = <String, String?>{
-      'workspaceId': workspaceId.isEmpty ? null : workspaceId,
-      'status': statusFilter == 'all' ? null : statusFilter,
-    };
+    final filters = (
+      workspaceId: workspaceId.isEmpty ? null : workspaceId,
+      projectId: null,
+      assigneeId: null,
+      status: statusFilter == 'all' ? null : statusFilter,
+    );
     final tasksAsync = ref.watch(tasksProvider(filters));
 
     return tasksAsync.when(
@@ -383,11 +385,16 @@ class _KanbanTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = THelperFunctions.isDarkMode(context);
-    final filters = <String, String?>{'workspaceId': workspaceId.isEmpty ? null : workspaceId};
+    final filters = (
+      workspaceId: workspaceId.isEmpty ? null : workspaceId,
+      projectId: null,
+      assigneeId: null,
+      status: null,
+    );
     final tasksAsync = ref.watch(tasksProvider(filters));
 
     return tasksAsync.when(
-      loading: () => _KanbanSkeleton(),
+      loading: () => const _KanbanSkeleton(),
       error: (e, _) => _buildError(context, isDark, e.toString(),
           () => ref.invalidate(tasksProvider(filters))),
       data: (tasks) {
@@ -421,7 +428,7 @@ class _KanbanSkeleton extends StatelessWidget {
           (i) => Container(
             width: 280,
             margin: const EdgeInsets.only(right: 16),
-            child: TSkeleton(height: 400),
+            child: const TSkeleton(height: 400),
           ),
         ),
       );
@@ -466,8 +473,8 @@ class _StatusGroupHeader extends StatelessWidget {
 Widget _buildSkeletonList(bool isDark) => ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       itemCount: 6,
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+      itemBuilder: (_, i) => const Padding(
+        padding: EdgeInsets.only(bottom: 10),
         child: TSkeleton(height: 90),
       ),
     );
@@ -485,7 +492,7 @@ Widget _buildEmpty(
               height: 80,
               decoration: BoxDecoration(
                   color: TColors.primary.withOpacity(0.1), shape: BoxShape.circle),
-              child: Icon(Iconsax.task_square, size: 36, color: TColors.primary),
+              child: const Icon(Iconsax.task_square, size: 36, color: TColors.primary),
             ),
             const SizedBox(height: 16),
             Text(title,
@@ -514,7 +521,7 @@ Widget _buildError(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Iconsax.warning_2, size: 40, color: TColors.error),
+            const Icon(Iconsax.warning_2, size: 40, color: TColors.error),
             const SizedBox(height: 12),
             Text('Something went wrong',
                 style: TextStyle(

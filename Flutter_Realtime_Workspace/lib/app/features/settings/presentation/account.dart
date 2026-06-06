@@ -8,7 +8,6 @@ import 'package:flutter_realtime_workspace/app/features/authentication/presentat
 import 'package:flutter_realtime_workspace/store/user_provider.dart';
 import 'package:flutter_realtime_workspace/core/constants/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/widgets/update_account.dart';
 import 'package:flutter_realtime_workspace/app/features/settings/presentation/widgets/delete_account.dart';
@@ -319,7 +318,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, st) {
         // Show the screen with all fields as "Not available"
-        final fallback = 'Not available';
+        const fallback = 'Not available';
         return Scaffold(
           backgroundColor:
               isDarkMode ? TColors.backgroundDarkAlt : TColors.backgroundLight,

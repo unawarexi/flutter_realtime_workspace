@@ -184,7 +184,7 @@ class Authentication extends ConsumerWidget {
                               ),
                               GestureDetector(
                                 onTap: () => context.go('/signup'),
-                                child: Text(
+                                child: const Text(
                                   'Sign Up',
                                   style: TextStyle(
                                     fontSize: 12,

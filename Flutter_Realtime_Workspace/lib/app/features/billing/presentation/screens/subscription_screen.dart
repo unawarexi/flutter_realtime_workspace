@@ -46,7 +46,7 @@ class SubscriptionScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(color: TColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(TSizes.radiusFull)),
-                    child: Text('Popular', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: TColors.primary)),
+                    child: const Text('Popular', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: TColors.primary)),
                   ),
                 ],
               ]),

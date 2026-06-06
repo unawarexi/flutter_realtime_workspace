@@ -18,6 +18,16 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
 });
 
+/// Check if a user needs to complete the profile setup
+final needsProfileSetupProvider = Provider<bool>((ref) {
+  final user = ref.watch(currentUserProvider).valueOrNull;
+  if (user == null) return false;
+  // A user needs profile setup if profileCompletion is 0 OR they don't belong to any org/tenant yet
+  return user.profileCompletion == 0 || (user.orgId == null && user.tenantId == null);
+});
+
+// ─── Utility Providers ───────────────────────────────────────────────────────
+
 /// Stream of Firebase auth state changes.
 final authStateProvider = StreamProvider<User?>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges;

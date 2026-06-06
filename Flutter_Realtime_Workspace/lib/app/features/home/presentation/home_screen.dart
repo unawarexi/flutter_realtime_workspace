@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_realtime_workspace/core/constants/sizes.dart';
 import 'package:flutter_realtime_workspace/core/network/pull_refresh.dart';
 import 'package:flutter_realtime_workspace/core/utils/helpers/helper_functions.dart';
 import 'package:flutter_realtime_workspace/app/domain/usecases/home_usecase.dart';
@@ -13,13 +14,19 @@ import 'package:flutter_realtime_workspace/store/task_provider.dart';
 import 'package:flutter_realtime_workspace/store/workspace_provider.dart';
 
 // ── Extracted home widgets ───────────────────────────────────────
+import 'package:flutter_realtime_workspace/store/schedule_provider.dart';
+import 'package:flutter_realtime_workspace/store/user_provider.dart';
 import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_header.dart';
 import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_welcome.dart';
 import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_search_bar.dart';
 import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_quick_actions.dart';
 import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_recent_activity.dart';
 import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_workspace_tools.dart';
-
+import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_my_tasks.dart';
+import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_upcoming_schedule.dart';
+import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_projects_carousel.dart';
+import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_team_members.dart';
+import 'package:flutter_realtime_workspace/app/features/home/presentation/widgets/home_feature_grid.dart';
 // ── Decorative shapes / painters ────────────────────────────────
 import 'package:flutter_realtime_workspace/app/components/shapes/shapes.dart';
 
@@ -34,34 +41,52 @@ class Home extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = THelperFunctions.isDarkMode(context);
     final userState = ref.watch(currentUserProvider);
-    final isLoading = userState.isLoading;
+    final isLoadingUser = userState.isLoading;
     final hasError = userState.hasError;
-    final user = userState.valueOrNull;
+
     final activeWorkspace = ref.watch(activeWorkspaceProvider);
     final workspaceId = activeWorkspace?.id ??
-        ((user != null && user.workspaceIds.isNotEmpty)
-            ? user.workspaceIds.first
+        (ref.read(currentUserProvider).valueOrNull?.workspaceIds.isNotEmpty ==
+                true
+            ? ref.read(currentUserProvider).valueOrNull!.workspaceIds.first
             : null);
 
-    final projectsState = ref.watch(projectsProvider(workspaceId));
-    final tasksState = ref.watch(tasksProvider({
-      'workspaceId': workspaceId,
-      'projectId': null,
-      'assigneeId': null,
-      'status': null,
-    }));
-    final issuesState = ref.watch(issuesProvider({
-      'workspaceId': workspaceId,
-      'projectId': null,
-      'assigneeId': null,
-      'status': null,
-      'priority': null,
-    }));
-    final unreadCount = ref.watch(unreadNotificationCountProvider);
+    final userId = ref.read(currentUserProvider).valueOrNull?.id;
 
-    final projects = projectsState.valueOrNull ?? const [];
-    final tasks = tasksState.valueOrNull ?? const [];
-    final issues = issuesState.valueOrNull ?? const [];
+    final projectsAsync = ref.watch(projectsProvider(workspaceId));
+    final tasksAsync = ref.watch(workspaceTasksProvider(workspaceId));
+    final issuesAsync = ref.watch(workspaceIssuesProvider(workspaceId));
+
+    // New data providers for home screen enrichment
+    final myTasksAsync = userId != null
+        ? ref.watch(myTasksProvider(userId))
+        : const AsyncValue.loading();
+    final scheduleAsync = ref.watch(schedulesProvider({'workspaceId': workspaceId}));
+    final usersState = ref.watch(userProvider);
+
+    final projects = projectsAsync.valueOrNull ?? [];
+    final tasks = tasksAsync.valueOrNull ?? [];
+    final issues = issuesAsync.valueOrNull ?? [];
+
+    final myTasks = myTasksAsync.valueOrNull ?? [];
+    final scheduleItems = scheduleAsync.valueOrNull ?? [];
+    final rawTeamMembers = usersState.userInfo?['users'];
+    final teamMembers = <Map<String, dynamic>>[];
+    if (rawTeamMembers is List) {
+      for (final member in rawTeamMembers) {
+        if (member is Map) {
+          teamMembers.add(Map<String, dynamic>.from(member));
+        }
+      }
+    }
+
+    final isLoading = isLoadingUser ||
+        projectsAsync.isLoading ||
+        tasksAsync.isLoading ||
+        issuesAsync.isLoading;
+    final isScheduleLoading = scheduleAsync.isLoading;
+    final isTeamLoading = usersState.isLoading;
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
 
     final summaryText = HomeUseCase.summaryLine(
       projectCount: projects.length,
@@ -166,14 +191,56 @@ class Home extends ConsumerWidget {
                               const SizedBox(height: 18),
                               HomeRecentActivity(
                                 isDark: isDarkMode,
-                                items: activityItems,
-                                isLoading: projectsState.isLoading ||
-                                    tasksState.isLoading ||
-                                    issuesState.isLoading,
+                                items: HomeUseCase.recentActivity(
+                                  projects: projects,
+                                  tasks: tasks,
+                                  issues: issues,
+                                ),
+                                isLoading: isLoading,
                               ),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: TSizes.lg),
+
+                              // NEW: My Tasks Carousel
+                              HomeMyTasks(
+                                isDark: isDarkMode,
+                                tasks: myTasks,
+                                isLoading: myTasksAsync.isLoading,
+                              ),
+                              const SizedBox(height: TSizes.lg),
+
+                              // NEW: Upcoming Schedule
+                              HomeUpcomingSchedule(
+                                isDark: isDarkMode,
+                                schedules: scheduleItems,
+                                isLoading: isScheduleLoading,
+                              ),
+                              const SizedBox(height: TSizes.lg),
+
+                              // NEW: Projects Carousel
+                              HomeProjectsCarousel(
+                                isDark: isDarkMode,
+                                projects: projects,
+                                isLoading: projectsAsync.isLoading,
+                              ),
+                              const SizedBox(height: TSizes.lg),
+
                               HomeWorkspaceTools(isDark: isDarkMode),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: TSizes.lg),
+
+                              // NEW: Team Members
+                              HomeTeamMembers(
+                                isDark: isDarkMode,
+                                members:
+                                    teamMembers.cast<Map<String, dynamic>>(),
+                                isLoading: isTeamLoading,
+                              ),
+                              const SizedBox(height: TSizes.lg),
+
+                              // NEW: Feature Grid
+                              HomeFeatureGrid(isDark: isDarkMode),
+
+                              const SizedBox(
+                                  height: TSizes.xl * 2), // Bottom padding
                             ],
                           );
                         },
@@ -188,5 +255,4 @@ class Home extends ConsumerWidget {
       ),
     );
   }
-
 }

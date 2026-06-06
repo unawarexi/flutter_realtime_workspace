@@ -218,7 +218,7 @@ class TaskCard extends StatelessWidget {
                             task.checklist.length,
                         backgroundColor: border,
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(TColors.success),
+                            const AlwaysStoppedAnimation<Color>(TColors.success),
                         minHeight: 4,
                         borderRadius: BorderRadius.circular(2),
                       ),

@@ -93,7 +93,7 @@ class _State extends ConsumerState<IntegrationsScreen> {
                         Text(i.name, style: TextStyle(fontSize: TResponsive.sp(context, 14), fontWeight: FontWeight.w500, color: isDark ? TColors.textPrimaryDark : TColors.textPrimaryLight)),
                         Text(IntegrationUseCase.typeLabel(i.type), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: TResponsive.sp(context, 12), color: isDark ? TColors.textSecondaryDark : TColors.textSecondaryLight)),
                       ])),
-                      Icon(Icons.add_circle_outline, size: 20, color: TColors.primary),
+                      const Icon(Icons.add_circle_outline, size: 20, color: TColors.primary),
                     ]),
                   ),
                 )),

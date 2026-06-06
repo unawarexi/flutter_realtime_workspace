@@ -56,7 +56,7 @@ class AvatarPicker extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.photo_library_outlined,
+              leading: const Icon(Icons.photo_library_outlined,
                   color: TColors.primary),
               title: Text('Select New Photo',
                   style: TextStyle(
@@ -115,7 +115,7 @@ class AvatarPicker extends StatelessWidget {
                     : null,
               ),
               child: _image == null
-                  ? Icon(Icons.person_outline,
+                  ? const Icon(Icons.person_outline,
                       color: TColors.primary, size: TSizes.iconLg)
                   : null,
             ),
@@ -141,7 +141,7 @@ class AvatarPicker extends StatelessWidget {
                       hasImage ? _showOptions(context) : _pick(context),
                   child: Text(
                     hasImage ? 'Change or remove' : 'Tap to select',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: TColors.primary,
                       fontWeight: FontWeight.w500,

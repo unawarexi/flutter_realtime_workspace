@@ -33,7 +33,11 @@ class _State extends ConsumerState<CreateScheduleScreen> {
     final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (time == null || !mounted) return;
     final dt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-    setState(() { if (isStart) _startTime = dt; else _endTime = dt; });
+    setState(() { if (isStart) {
+      _startTime = dt;
+    } else {
+      _endTime = dt;
+    } });
   }
 
   Future<void> _submit() async {

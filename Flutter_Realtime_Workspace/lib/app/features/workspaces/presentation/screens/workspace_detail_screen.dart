@@ -23,9 +23,9 @@ class WorkspaceDetailScreen extends ConsumerWidget {
     final hPad = TResponsive.pagePadding(context);
 
     if (ws == null) {
-      return Scaffold(
-        appBar: const SAppBar(title: 'Workspace', showBack: true),
-        body: const Center(child: Text('No workspace selected')),
+      return const Scaffold(
+        appBar: SAppBar(title: 'Workspace', showBack: true),
+        body: Center(child: Text('No workspace selected')),
       );
     }
 
@@ -89,7 +89,7 @@ class WorkspaceDetailScreen extends ConsumerWidget {
             const SizedBox(height: TSizes.lg),
 
             // ── Settings ──
-            _SectionTitle(title: 'Settings'),
+            const _SectionTitle(title: 'Settings'),
             const SizedBox(height: TSizes.sm),
             _SettingsCard(workspace: ws),
             const SizedBox(height: TSizes.lg),

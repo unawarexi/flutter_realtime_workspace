@@ -43,7 +43,7 @@ class SDropdown extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(TSizes.radiusMd),
-          borderSide: BorderSide(color: TColors.primary, width: 1.5),
+          borderSide: const BorderSide(color: TColors.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           vertical: TSizes.inputPadding,

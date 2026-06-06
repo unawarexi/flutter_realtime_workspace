@@ -104,9 +104,9 @@ class _MyTasksScreenState extends ConsumerState<MyTasksScreen>
         child: Column(
           children: List.generate(
             5,
-            (i) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: const TSkeleton(height: 80),
+            (i) => const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: TSkeleton(height: 80),
             ),
           ),
         ),
@@ -116,7 +116,7 @@ class _MyTasksScreenState extends ConsumerState<MyTasksScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Iconsax.warning_2, size: 48, color: TColors.error),
+            const Icon(Iconsax.warning_2, size: 48, color: TColors.error),
             const SizedBox(height: 12),
             Text('Failed to load tasks',
                 style: TextStyle(

@@ -95,8 +95,8 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
           child: Column(
             children: List.generate(
                 5,
-                (i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                (i) => const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
                       child: TSkeleton(height: 60),
                     )),
           ),
@@ -111,7 +111,7 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Iconsax.warning_2, size: 48, color: TColors.error),
+              const Icon(Iconsax.warning_2, size: 48, color: TColors.error),
               const SizedBox(height: 12),
               Text('Failed to load issue',
                   style: TextStyle(
@@ -163,7 +163,7 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(issue.key!,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: TColors.primary)),
@@ -172,7 +172,7 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
           actions: [
             if (canEdit)
               IconButton(
-                icon: Icon(Iconsax.edit, color: TColors.primary, size: 20),
+                icon: const Icon(Iconsax.edit, color: TColors.primary, size: 20),
                 onPressed: () =>
                     context.push('/issues/${issue.id}/edit'),
               ),
@@ -369,7 +369,7 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
                             ),
                             child: Text(
                               li.relation.replaceAll('_', ' '),
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: TColors.warning),
@@ -466,7 +466,7 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               child:
-                  Text('Delete', style: TextStyle(color: TColors.error))),
+                  const Text('Delete', style: TextStyle(color: TColors.error))),
         ],
       ),
     );
@@ -543,7 +543,7 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
                           : TColors.textLight),
                 ),
                 trailing: issue.status == s
-                    ? Icon(Icons.check_circle, color: TColors.success)
+                    ? const Icon(Icons.check_circle, color: TColors.success)
                     : null,
                 onTap: () async {
                   Navigator.pop(context);

@@ -47,7 +47,7 @@ class SectionHeader extends StatelessWidget {
                   if (actionLabel != null)
                     Text(
                       actionLabel!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: TColors.primary,

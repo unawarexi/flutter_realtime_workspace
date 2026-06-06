@@ -14,7 +14,10 @@ class HomeQuickActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final actions = HomeUseCase.quickActions(ref);
+    var actions = HomeUseCase.quickActions(ref);
+    if (actions.isEmpty) {
+      actions = HomeUseCase.fallbackQuickActions();
+    }
 
     return TWidgetAnimations.slideUp(
       duration: const Duration(milliseconds: 440),
@@ -75,7 +78,8 @@ class _QuickActionCard extends StatelessWidget {
               color: action.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(TSizes.radiusSm + 1),
             ),
-            child: Icon(action.icon, color: action.color, size: TSizes.iconSm + 2),
+            child:
+                Icon(action.icon, color: action.color, size: TSizes.iconSm + 2),
           ),
           const Spacer(),
           Text(

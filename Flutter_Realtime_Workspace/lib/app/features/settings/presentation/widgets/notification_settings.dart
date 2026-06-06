@@ -186,7 +186,7 @@ class NotificationSettings extends ConsumerWidget {
         trailing: Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: primaryBlue,
+          activeThumbColor: primaryBlue,
         ),
       ),
     );
