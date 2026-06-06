@@ -20,7 +20,7 @@ export async function initWorkers() {
 
     // ── Notification Worker ──
     const { processNotification } = await import("./notification.worker.js");
-    consumeQueue("teamspot.email.send", processNotification);
+    consumeQueue("teamspot.email", processNotification);       // matches RabbitQueues.EMAIL
     consumeQueue("teamspot.push.notification", processNotification);
     log.info("Notification worker started");
 

@@ -12,30 +12,52 @@ import { render } from "../infrastructure/mailer/mail-render.js";
 const log = createLogger("NotificationWorker");
 const emailGenerator = new EmailContentGenerator();
 
+/** Resolve email address from userId when `to` is null/empty. */
+async function resolveEmailAddress(data) {
+  if (data.to) return data.to;
+  const userId = data.userId || data._meta?.userId;
+  if (!userId) return null;
+  try {
+    const User = (await import("../modules/users/models/user.model.js")).default;
+    const user = await User.findById(userId).select("email").lean();
+    return user?.email || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function processNotification(job) {
   const { data } = job;
 
   try {
     switch (data.channel) {
-      case "email":
+      case "email": {
+        // Resolve recipient email (some modules pass userId instead of to)
+        const recipient = await resolveEmailAddress(data);
+        if (!recipient) {
+          log.warn("Email skipped — no recipient address", { templateName: data.templateName });
+          break;
+        }
+
         let html = data.html;
         let subject = data.subject;
-        
-        // If templateName is provided, generate HTML using our centralized templates
+
+        // Generate HTML from named template when available
         if (data.templateName && typeof emailGenerator[data.templateName] === "function") {
           const templateData = emailGenerator[data.templateName](data.templateData || {});
           subject = templateData.EMAIL_TITLE || data.subject;
           html = render(templateData);
         }
 
-        await sendEmail({
-          to: data.to,
-          subject: subject,
-          html: html,
-          text: data.text,
-        });
-        log.info("Email sent via RabbitMQ job", { to: data.to, subject: subject });
+        if (!html) {
+          log.warn("Email skipped — no HTML content", { templateName: data.templateName });
+          break;
+        }
+
+        await sendEmail({ to: recipient, subject, html, text: data.text });
+        log.info("Email sent via RabbitMQ job", { to: recipient, subject });
         break;
+      }
 
       case "push":
         if (data.tokens && data.tokens.length > 1) {

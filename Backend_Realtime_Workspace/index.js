@@ -43,6 +43,9 @@ import { initLiveKit } from "./infrastructure/livekit/livekit.service.js";
 // Module Registry
 import { registerModules } from "./modules/module-registry.js";
 
+// Workers
+import { initWorkers } from "./workers/index.js";
+
 const log = createLogger("Server");
 
 // ============================================================================
@@ -172,6 +175,9 @@ async function startServer() {
     } catch (err) {
       log.warn("RabbitMQ connection failed — email queuing disabled", { error: err.message });
     }
+
+    // ── Background Workers ──
+    await initWorkers();
 
     // ── LiveKit ──
     initLiveKit();

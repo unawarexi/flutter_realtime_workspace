@@ -306,8 +306,9 @@ export const KafkaTopics = {
 // ============================================================================
 
 export const RabbitQueues = {
-  EMAIL:            "teamspot.email",
-  NOTIFICATION:     "teamspot.notification",
+  EMAIL:             "teamspot.email",
+  NOTIFICATION:      "teamspot.notification",
+  PUSH_NOTIFICATION: "teamspot.push.notification",
   AI_EMBEDDING:     "teamspot.ai.embedding",
   AI_RAG_INGEST:    "teamspot.ai.rag_ingest",
   AI_AGENT_TASK:    "teamspot.ai.agent_task",

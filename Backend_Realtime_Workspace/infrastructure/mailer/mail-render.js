@@ -48,12 +48,14 @@ function renderExamDetails(details = []) {
 
 function renderButtons(buttons = []) {
   if (!Array.isArray(buttons) || buttons.length === 0) return "";
+  const validButtons = buttons.filter((b) => b.url && b.url !== "undefined");
+  if (validButtons.length === 0) return "";
   return `
     <div class="button-container">
-      ${buttons
+      ${validButtons
         .map(
           (b) =>
-            `<a href="${b.url || "#"}" class="${b.primary ? "primary-button" : "secondary-button"}" style="margin-right:8px">${b.text}</a>`,
+            `<a href="${b.url}" class="${b.primary ? "primary-button" : "secondary-button"}" style="margin-right:8px">${b.text}</a>`,
         )
         .join("")}
     </div>
@@ -85,31 +87,25 @@ function renderAttachments(attachments = []) {
   `;
 }
 
-function renderFeatureCards(showFeatureCards = false) {
-  if (!showFeatureCards) return "";
-
+function renderFeatureCards(cards = []) {
+  if (!Array.isArray(cards) || cards.length === 0) return "";
   return `
     <div class="feature-cards">
-      <div class="feature-card">
-        <div class="feature-icon">🎥</div>
-        <div class="feature-title">HD Video</div>
-        <div class="feature-description">Crystal-clear video and audio for all your meetings.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">�</div>
-        <div class="feature-title">Real-time Chat</div>
-        <div class="feature-description">Collaborate with in-meeting chat, reactions, and screen sharing.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">�</div>
-        <div class="feature-title">Cloud Recording</div>
-        <div class="feature-description">Record meetings and access them anytime from the cloud.</div>
-      </div>
+      ${cards
+        .map(
+          (card) => `
+        <div class="feature-card">
+          <div class="feature-icon">${card.icon || ""}</div>
+          <div class="feature-title">${card.title || ""}</div>
+          <div class="feature-description">${card.description || ""}</div>
+        </div>`,
+        )
+        .join("")}
     </div>
   `;
 }
 
-// Read and cache template
+// Read and cache template (cache is module-scoped — cleared on nodemon restart)
 let cachedTemplate = null;
 function getTemplate() {
   if (cachedTemplate) return cachedTemplate;
@@ -121,7 +117,7 @@ export function render(templateData = {}) {
   let html = getTemplate();
 
   // Inject logo URL from environment variable
-  const logoUrl = process.env.TEAMSPOT_LOGO_URL || "https://via.placeholder.com/64x64.png?text=TeamSpot";
+  const logoUrl = process.env.TEAMSPOT_LOGO_URL || "";
   html = html.replace(/{{LOGO_URL}}/g, logoUrl);
 
   // Basic replacements
@@ -129,13 +125,20 @@ export function render(templateData = {}) {
   html = html.replace(/{{GREETING}}/g, templateData.GREETING || "");
   html = html.replace(/{{MAIN_CONTENT}}/g, templateData.MAIN_CONTENT || "");
   html = html.replace(
-    /{{ADDITIONAL_CONTENT}}/g,
-    templateData.ADDITIONAL_CONTENT || "",
-  );
-  html = html.replace(
     /{{UNSUBSCRIBE_LINK}}/g,
     templateData.UNSUBSCRIBE_LINK || "",
   );
+
+  // ADDITIONAL_CONTENT — handle as a conditional block before the catch-all wipes it
+  html = safeReplace(
+    html,
+    /{{#if ADDITIONAL_CONTENT}}[\s\S]*?{{\/if}}/g,
+    templateData.ADDITIONAL_CONTENT
+      ? `<div style="margin-top:20px">${templateData.ADDITIONAL_CONTENT}</div>`
+      : "",
+  );
+  // Fallback for plain {{ADDITIONAL_CONTENT}} variable in template
+  html = html.replace(/{{ADDITIONAL_CONTENT}}/g, templateData.ADDITIONAL_CONTENT || "");
 
   // CONTENT_SECTIONS block
   html = safeReplace(

@@ -89,11 +89,22 @@ export async function publishDelayed(queueName, payload, delayMs) {
   channel.sendToQueue(delayedQueue, message, { persistent: true });
 }
 
-export function consumeQueue(queueName, handler) {
+export async function consumeQueue(queueName, handler) {
   if (!channel) {
     log.warn("RabbitMQ not available — consumer not registered", { queueName });
     return;
   }
+
+  // Assert the queue so consuming a name not in QueueNames never throws a 404.
+  // If the queue already exists with the same params this is a safe no-op.
+  const dlx = "teamspot.dlx";
+  await channel.assertQueue(queueName, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": dlx,
+      "x-dead-letter-routing-key": "",
+    },
+  });
 
   channel.consume(queueName, async (msg) => {
     if (!msg) return;

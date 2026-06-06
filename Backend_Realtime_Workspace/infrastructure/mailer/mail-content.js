@@ -19,14 +19,11 @@ class EmailContentGenerator {
 
   // Welcome email for new users
   welcomeEmail(userData) {
+    const name = userData.recipientName || userData.fullName || 'there';
     return {
-      EMAIL_TITLE: "Welcome to TeamSpot - Let's Get Started! 🚀",
-      GREETING: `Welcome aboard, ${userData.fullName}! 🎉`,
-      MAIN_CONTENT: `
-                We're thrilled to have you join the TeamSpot family! Your workspace has been created and you're just moments away from experiencing seamless team collaboration like never before.
-                
-                <br><br>Your account is now active and ready to use. We've prepared everything you need to hit the ground running with your team.
-            `,
+      EMAIL_TITLE: "Welcome to TeamSpot 🚀",
+      GREETING: `Welcome aboard, ${name}! 🎉`,
+      MAIN_CONTENT: `Your TeamSpot account is now active. You're all set to start collaborating with your team.`,
       CONTENT_SECTIONS: [
         {
           title: '🚀 Quick Start Guide',
@@ -97,100 +94,98 @@ class EmailContentGenerator {
     };
   }
 
-  // Email verification
+  // Email verification (OTP-based — auth service sends {recipientName, verificationCode, expiresIn})
   emailVerification(userData) {
+    const name = userData.recipientName || userData.fullName || 'there';
+    const code = userData.verificationCode || '------';
+    const expiry = userData.expiresIn || '30 minutes';
     return {
       EMAIL_TITLE: 'Verify Your TeamSpot Account 📧',
-      GREETING: `Hi ${userData.fullName}!`,
-      MAIN_CONTENT: `
-                Thanks for signing up with TeamSpot! To complete your registration and secure your account, 
-                please verify your email address by clicking the button below.
-                
-                <br><br>This verification link will expire in 24 hours for security reasons.
-            `,
-      BUTTONS: [
+      GREETING: `Hi ${name}!`,
+      MAIN_CONTENT: `Thanks for signing up with TeamSpot. Enter the 6-digit code below to activate your account.`,
+      CONTENT_SECTIONS: [
         {
-          text: 'Verify Email Address',
-          url: userData.verificationUrl,
-          primary: true
+          title: '',
+          content: `
+            <div style="text-align:center;margin:32px 0;">
+              <p style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">Verification Code</p>
+              <div style="display:inline-block;font-size:40px;font-weight:800;letter-spacing:14px;background:#EFF6FF;padding:22px 44px;border-radius:12px;border:2px dashed #1e40af;color:#1e40af;">${code}</div>
+              <p style="color:#64748b;font-size:13px;margin-top:14px;">Expires in <strong>${expiry}</strong> &bull; Do not share this code with anyone</p>
+            </div>
+          `
         }
       ],
       ADDITIONAL_CONTENT: `
-                <div style="background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px; padding: 16px; margin-top: 20px;">
-                    <p style="color: #92400E; margin: 0; font-size: 14px;">
-                        <strong>Having trouble?</strong> Copy and paste this link into your browser: 
-                        <br><code style="background: #FDE68A; padding: 2px 4px; border-radius: 4px;">${userData.verificationUrl}</code>
-                    </p>
-                </div>
-            `,
-      UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(userData.userId, 'verification')
+        <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:14px 18px;border-radius:8px;">
+          <p style="color:#92400E;margin:0;font-size:13px;"><strong>Didn't sign up?</strong> You can safely ignore this email. Someone may have entered your email address by mistake.</p>
+        </div>
+      `,
+      UNSUBSCRIBE_LINK: ''
     };
   }
 
   // 2FA code email (for login or sensitive actions)
   twoFactorCodeEmail(userData) {
+    const name = userData.recipientName || userData.fullName || userData.userName || 'there';
+    const code = userData.verificationCode || '------';
+    const expiry = userData.expiryMinutes || 5;
     return {
-      EMAIL_TITLE: 'Verify Your TeamSpot Account',
-      GREETING: `Hi ${userData.fullName || userData.userName}!`,
-      MAIN_CONTENT: `
-        <p style="margin-bottom: 24px;">
-          Use the following verification code to complete your sign-in or sensitive action on TeamSpot.
-        </p>
-        <div style="text-align:center;margin:32px 0;">
-          <span style="display:inline-block;font-size:32px;font-weight:700;letter-spacing:8px;background:#F1F5F9;padding:18px 36px;border-radius:12px;border:2px dashed #1e40af;color:#1e40af;">
-            ${userData.verificationCode}
-          </span>
-        </div>
-        <p style="margin-bottom: 16px;">
-          <strong>This code will expire in ${userData.expiryMinutes || 5} minutes.</strong>
-        </p>
-        <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:16px 20px;margin:24px 0;border-radius:8px;">
-          <strong>Security Notice:</strong>
-          <ul style="margin:8px 0 0 20px;color:#92400E;">
-            <li>Never share this code with anyone</li>
-            <li>TeamSpot will never ask for this code via phone or email</li>
-            <li>If you didn't request this code, you can safely ignore this email</li>
-          </ul>
+      EMAIL_TITLE: 'Your TeamSpot 2FA Code',
+      GREETING: `Hi ${name}!`,
+      MAIN_CONTENT: `Use the code below to complete your sign-in. This code is valid for ${expiry} minutes.`,
+      CONTENT_SECTIONS: [
+        {
+          title: '',
+          content: `
+            <div style="text-align:center;margin:32px 0;">
+              <p style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">Authentication Code</p>
+              <div style="display:inline-block;font-size:40px;font-weight:800;letter-spacing:14px;background:#EFF6FF;padding:22px 44px;border-radius:12px;border:2px dashed #1e40af;color:#1e40af;">${code}</div>
+              <p style="color:#64748b;font-size:13px;margin-top:14px;">Expires in <strong>${expiry} minutes</strong></p>
+            </div>
+          `
+        }
+      ],
+      ADDITIONAL_CONTENT: `
+        <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:14px 18px;border-radius:8px;">
+          <p style="color:#92400E;margin:0;font-size:13px;">
+            <strong>Security notice:</strong> TeamSpot will never ask for this code by phone or email. If you didn't request this, please secure your account immediately.
+          </p>
         </div>
       `,
-      UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(userData.userId, '2fa')
+      UNSUBSCRIBE_LINK: ''
     };
   }
 
   // Password reset request
   passwordResetRequest(userData) {
+    const name = userData.fullName || userData.userName || 'there';
     return {
       EMAIL_TITLE: 'Reset Your TeamSpot Password',
-      GREETING: `Hi ${userData.fullName || userData.userName},`,
-      MAIN_CONTENT: `
-        <p>
-          We received a request to reset your password for your TeamSpot account. If you made this request, click the button below to create a new password.
-        </p>
-        <div class="button-container" style="text-align:center;margin:32px 0;">
-          <a href="${userData.resetUrl}" class="primary-button" style="background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 100%);color:#fff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:600;font-size:16px;">
-            Reset Password
-          </a>
-        </div>
-        <div style="margin-bottom:16px;">
-          If you didn't request a password reset, you can safely ignore this email. Your password won't be changed until you create a new one.
-        </div>
-        <div style="background:#FEF2F2;border:1px solid #F87171;border-radius:8px;padding:16px;margin-top:20px;">
-          <h4 style="color:#DC2626;margin-bottom:8px;">🚨 Security Notice</h4>
-          <p style="color:#DC2626;margin:0;font-size:14px;">
-            If you didn't request this password reset, please contact our security team immediately at
-            <a href="mailto:security@teamspot.com" style="color:#DC2626;">security@teamspot.com</a>
-          </p>
+      GREETING: `Hi ${name},`,
+      MAIN_CONTENT: `We received a request to reset the password for your TeamSpot account. Click the button below to create a new password. The link expires in 30 minutes.`,
+      BUTTONS: [
+        {
+          text: 'Reset Password',
+          url: userData.resetUrl,
+          primary: true
+        }
+      ],
+      ADDITIONAL_CONTENT: `
+        <div style="background:#FEF2F2;border:1px solid #F87171;border-radius:8px;padding:16px;">
+          <h4 style="color:#DC2626;margin:0 0 8px 0;">🚨 Security Notice</h4>
+          <p style="color:#DC2626;margin:0;font-size:14px;">If you didn't request this reset, please <a href="mailto:security@teamspot.com" style="color:#DC2626;">contact our security team</a> immediately. Your password won't change until you use the link above.</p>
         </div>
       `,
-      UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(userData.userId, 'security')
+      UNSUBSCRIBE_LINK: ''
     };
   }
 
   // Password changed confirmation
   passwordChangedConfirmation(userData) {
+    const name = userData.recipientName || userData.fullName || userData.userName || 'there';
     return {
       EMAIL_TITLE: 'Your TeamSpot Password Was Changed',
-      GREETING: `Hi ${userData.fullName || userData.userName},`,
+      GREETING: `Hi ${name},`,
       MAIN_CONTENT: `
         <p>
           This email confirms that your TeamSpot account password was successfully changed on ${userData.changeTime || new Date().toLocaleString()}.
@@ -1257,6 +1252,196 @@ class EmailContentGenerator {
         }
       ],
       UNSUBSCRIBE_LINK: this.generateUnsubscribeLink(digestData.recipientId, 'weekly-digest')
+    };
+  }
+
+  // =====================================
+  // AUTH SERVICE ALIASES
+  // Maps the template names used by auth.service.js to the correct template
+  // methods with data-shape adaptation so callers don't need updating.
+  // =====================================
+
+  // auth.service → queueEmail("welcome", { recipientName })
+  welcome(data) {
+    return this.welcomeEmail({ fullName: data.recipientName || 'there', userId: data.userId || '' });
+  }
+
+  // auth.service → queueEmail("forgotPassword", { recipientName, resetUrl, resetToken, expiresIn })
+  forgotPassword(data) {
+    return this.passwordResetRequest({ fullName: data.recipientName, resetUrl: data.resetUrl, userId: data.userId || '' });
+  }
+
+  // auth.service → queueEmail("passwordChanged", { recipientName })
+  passwordChanged(data) {
+    return this.passwordChangedConfirmation({
+      fullName: data.recipientName,
+      changeTime: data.changeTime || new Date().toLocaleString(),
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      location: data.location,
+      userId: data.userId || '',
+    });
+  }
+
+  // auth.service → queueEmail("twoFACode", { recipientName, code, expiresIn, method })
+  twoFACode(data) {
+    return this.twoFactorCodeEmail({
+      recipientName: data.recipientName,
+      verificationCode: data.code,
+      expiresIn: data.expiresIn,
+      expiryMinutes: data.expiresIn ? parseInt(data.expiresIn) : 5,
+      userId: data.userId || '',
+    });
+  }
+
+  // =====================================
+  // MODULE TEMPLATE ALIASES
+  // Maps templateName values used by non-auth modules to template methods.
+  // =====================================
+
+  // meetings/meeting.service.js → "meetingInvite"
+  meetingInvite(data) {
+    const dateStr = data.meetingDate ? new Date(data.meetingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'TBD';
+    const timeStr = data.meetingTime ? new Date(data.meetingTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'TBD';
+    return this.meetingInvitation({
+      attendeeName: data.recipientName,
+      meetingTitle: data.meetingTitle,
+      meetingDate: dateStr,
+      meetingTime: timeStr,
+      duration: data.duration || '1 hour',
+      timezone: data.timezone || 'UTC',
+      organizerName: data.organizerName,
+      meetingType: data.meetingLink ? 'Video Conference' : 'In-Person',
+      joinUrl: data.meetingLink || `${this.baseUrl}/meetings`,
+      detailsUrl: data.meetingLink || `${this.baseUrl}/meetings`,
+      attendeeId: '',
+    });
+  }
+
+  // meetings/meeting.service.js → "meetingCancelled"
+  meetingCancelled(data) {
+    return this.meetingCanceled({
+      attendeeName: data.recipientName,
+      meetingTitle: data.meetingTitle,
+      organizerName: data.organizerName || 'The organizer',
+      originalDateTime: data.meetingDate ? new Date(data.meetingDate).toLocaleString() : 'N/A',
+      cancellationReason: data.reason,
+      attendeeId: '',
+    });
+  }
+
+  // workspaces/workspace.service.js → "workspaceInvite"
+  workspaceInvite(data) {
+    return {
+      EMAIL_TITLE: `You've Been Added to "${data.workspaceName}"`,
+      GREETING: `Welcome to the workspace!`,
+      MAIN_CONTENT: `You've been added to the <strong>${data.workspaceName}</strong> workspace with the role of <strong>${data.role || 'Member'}</strong>. Start collaborating with your team right away.`,
+      BUTTONS: [
+        { text: 'Open Workspace', url: `${this.baseUrl}/workspaces`, primary: true }
+      ],
+      UNSUBSCRIBE_LINK: '',
+    };
+  }
+
+  // tasks/task.service.js → "taskAssigned"
+  taskAssigned(data) {
+    return this.taskAssignment({
+      assigneeName: data.recipientName || 'Team member',
+      taskTitle: data.taskTitle,
+      projectName: data.projectId || 'No project',
+      dueDate: data.dueDate ? new Date(data.dueDate).toLocaleDateString() : 'No deadline set',
+      priority: data.priority || 'Medium',
+      assignerName: data.assignedByName || 'A team member',
+      taskId: data.taskKey || '',
+      assigneeId: '',
+    });
+  }
+
+  // organizations/organization.service.js → "organizationWelcome"
+  organizationWelcome(data) {
+    return {
+      EMAIL_TITLE: `Your Organization "${data.orgName}" is Ready 🏢`,
+      GREETING: `Your organization is live!`,
+      MAIN_CONTENT: `Your organization <strong>${data.orgName}</strong> has been set up on TeamSpot. You can now invite members and start collaborating.`,
+      CONTENT_SECTIONS: [
+        {
+          title: '🏢 Organization Details',
+          content: `<ul style="margin-left:20px;color:#475569;">
+            <li><strong>Name:</strong> ${data.orgName}</li>
+            ${data.slug ? `<li><strong>URL slug:</strong> ${data.slug}</li>` : ''}
+          </ul>`,
+        }
+      ],
+      BUTTONS: [
+        { text: 'Go to Organization', url: `${this.baseUrl}/organizations/${data.slug || ''}`, primary: true }
+      ],
+      UNSUBSCRIBE_LINK: '',
+    };
+  }
+
+  // organizations/organization.service.js → "organizationInvite"
+  organizationInvite(data) {
+    return {
+      EMAIL_TITLE: `You're Invited to Join "${data.orgName}" on TeamSpot`,
+      GREETING: `You've been invited!`,
+      MAIN_CONTENT: `You have been invited to join the <strong>${data.orgName}</strong> organization on TeamSpot as a <strong>${data.role || 'Member'}</strong>.`,
+      BUTTONS: [
+        { text: 'Accept Invitation', url: data.inviteLink, primary: true }
+      ],
+      ADDITIONAL_CONTENT: `
+        <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:14px 18px;">
+          <p style="color:#166534;margin:0;font-size:13px;">This invitation link expires in 7 days. If you weren't expecting this invite, you can safely ignore it.</p>
+        </div>
+      `,
+      UNSUBSCRIBE_LINK: '',
+    };
+  }
+
+  // schedules/schedule.service.js → "scheduleInvite"
+  scheduleInvite(data) {
+    const start = data.startTime ? new Date(data.startTime) : null;
+    const end = data.endTime ? new Date(data.endTime) : null;
+    return {
+      EMAIL_TITLE: `Schedule Invite: ${data.eventTitle}`,
+      GREETING: `You've been invited to an event!`,
+      MAIN_CONTENT: `You have been added to <strong>${data.eventTitle}</strong>. Check the details below.`,
+      CONTENT_SECTIONS: [
+        {
+          title: '📅 Event Details',
+          content: `<ul style="margin-left:20px;color:#475569;">
+            <li><strong>Event:</strong> ${data.eventTitle}</li>
+            ${start ? `<li><strong>Start:</strong> ${start.toLocaleString()}</li>` : ''}
+            ${end ? `<li><strong>End:</strong> ${end.toLocaleString()}</li>` : ''}
+            ${data.location ? `<li><strong>Location:</strong> ${data.location}</li>` : ''}
+            ${data.description ? `<li><strong>Notes:</strong> ${data.description}</li>` : ''}
+          </ul>`,
+        }
+      ],
+      BUTTONS: [
+        { text: 'View Schedule', url: `${this.baseUrl}/schedule`, primary: true }
+      ],
+      UNSUBSCRIBE_LINK: '',
+    };
+  }
+
+  // schedules/schedule.service.js → "scheduleEventCancelled"
+  scheduleEventCancelled(data) {
+    const start = data.startTime ? new Date(data.startTime) : null;
+    return {
+      EMAIL_TITLE: `Event Cancelled: ${data.eventTitle}`,
+      GREETING: `Event update`,
+      MAIN_CONTENT: `The event <strong>${data.eventTitle}</strong> has been cancelled.`,
+      CONTENT_SECTIONS: [
+        {
+          title: '❌ Cancellation Details',
+          content: `<ul style="margin-left:20px;color:#475569;">
+            <li><strong>Event:</strong> ${data.eventTitle}</li>
+            ${start ? `<li><strong>Was scheduled for:</strong> ${start.toLocaleString()}</li>` : ''}
+            ${data.reason ? `<li><strong>Reason:</strong> ${data.reason}</li>` : ''}
+          </ul>`,
+        }
+      ],
+      UNSUBSCRIBE_LINK: '',
     };
   }
 

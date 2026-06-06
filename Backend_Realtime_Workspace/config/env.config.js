@@ -126,6 +126,7 @@ export const env = {
   SMTP_PASS: getEnvString("SMTP_PASS", ""),
   SMTP_FROM: getEnvString("SMTP_FROM", "noreply@teamspot.app"),
   SMTP_SECURE: getEnvBoolean("SMTP_SECURE", false),
+  TEAMSPOT_LOGO_URL: getEnvString("TEAMSPOT_LOGO_URL", ""),
 
   // --------------------------------------------------------------------------
   // Stripe (Billing)
