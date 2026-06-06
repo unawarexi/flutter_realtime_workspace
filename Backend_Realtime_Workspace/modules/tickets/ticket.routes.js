@@ -3,7 +3,7 @@
 // ============================================================================
 
 import express from 'express';
-import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { authenticate } from '../../middlewares/auth.middleware.js';
 import { tenantMiddleware } from '../../core/auth/tenant.middleware.js';
 import { asyncHandler } from "../../core/base/base.controller.js";
 import { validate } from "../../middlewares/validate.middleware.js";
@@ -17,7 +17,7 @@ import {
 
 const router = express.Router();
 
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 router.use(tenantMiddleware);
 
 // Ticket CRUD

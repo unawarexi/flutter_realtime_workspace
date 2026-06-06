@@ -3,7 +3,7 @@
 // ============================================================================
 
 import express from 'express';
-import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { authenticate } from '../../middlewares/auth.middleware.js';
 import { asyncHandler } from "../../core/base/base.controller.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { upload } from '../../infrastructure/storage/cloudinary.service.js';
@@ -14,7 +14,7 @@ import { updateUserSchema } from "./user.validation.js";
 const router = express.Router();
 
 // Require auth for all user routes
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 
 router.get('/me', asyncHandler(userController.getMyProfile));
 

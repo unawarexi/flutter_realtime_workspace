@@ -3,7 +3,7 @@
 // ============================================================================
 
 import express from 'express';
-import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { authenticate } from '../../middlewares/auth.middleware.js';
 import { tenantMiddleware } from '../../core/auth/tenant.middleware.js';
 import { requireRole } from "../../core/auth/permission.middleware.js";
 import { asyncHandler } from "../../core/base/base.controller.js";
@@ -15,7 +15,7 @@ import { getAuditLogsSchema } from "./audit.validation.js";
 
 const router = express.Router();
 
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 router.use(tenantMiddleware);
 router.use(requireRole(Roles.ORG_OWNER, Roles.ORG_ADMIN, Roles.SUPER_ADMIN));
 

@@ -21,23 +21,24 @@ class UserService extends BaseService {
     });
   }
 
-  async getMyProfile(firebaseUid) {
-    const user = await this.repository.findOne({ firebaseUid });
+  async getMyProfile(userId) {
+    // Look up by MongoDB _id (userId is req.user.uid which is now _id.toString())
+    const user = await this.repository.findById(userId);
     if (!user) {
       throw new AppError(HttpStatus.NOT_FOUND, "User profile not found", "E3004");
     }
     return user;
   }
 
-  async updateMyProfile(firebaseUid, updates) {
-    const user = await this.getMyProfile(firebaseUid);
+  async updateMyProfile(userId, updates) {
+    const user = await this.getMyProfile(userId);
     const updated = await this.updateById(user._id, updates);
     this.emit("user.profile_updated", { userId: user._id });
     return updated;
   }
 
-  async uploadProfilePicture(firebaseUid, fileBuffer) {
-    const user = await this.getMyProfile(firebaseUid);
+  async uploadProfilePicture(userId, fileBuffer) {
+    const user = await this.getMyProfile(userId);
     
     const result = await uploadBuffer(fileBuffer, {
       folder: "teamspot/profiles",
@@ -49,17 +50,17 @@ class UserService extends BaseService {
     return updated;
   }
 
-  async deleteMyProfile(firebaseUid) {
-    const user = await this.getMyProfile(firebaseUid);
+  async deleteMyProfile(userId) {
+    const user = await this.getMyProfile(userId);
     // Soft delete
     await this.updateById(user._id, { deletedAt: new Date(), status: "deactivated" });
     this.emit("user.deleted", { userId: user._id });
     return true;
   }
 
-  async regenerateInviteCode(firebaseUid) {
+  async regenerateInviteCode(userId) {
     const { assignReferralCode } = await import('../organizations/referral.service.js');
-    const user = await this.getMyProfile(firebaseUid);
+    const user = await this.getMyProfile(userId);
     await assignReferralCode(user, { ignorePermissions: true });
     return { inviteCode: user.inviteCode, inviteCodeExpiry: user.inviteCodeExpiry };
   }

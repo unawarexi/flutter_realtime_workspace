@@ -4,14 +4,14 @@
 // ============================================================================
 
 import express from "express";
-import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
 import { generateRoomToken, createRoom, getRooms, removeRoom, getParticipants, kickParticipant } from "./video.controller.js";
 import { initiateCall, acceptCall, endCall, rejectCall, getCallHistory } from "./voip-call.controller.js";
 import { sendMessage, getMessages, deleteMessage, searchMessages } from "./chat.controller.js";
 
 const router = express.Router();
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 router.use(tenantMiddleware);
 
 // --------------------------------------------------------------------------

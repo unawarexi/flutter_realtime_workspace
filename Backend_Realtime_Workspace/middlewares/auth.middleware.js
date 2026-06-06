@@ -67,7 +67,10 @@ export async function authenticate(req, res, next) {
       });
     }
 
-    req.user = user;
+    // Attach user and add uid shim (controllers use req.user.uid which used to be
+    // the Firebase UID from firebaseAuthMiddleware; now it maps to the MongoDB _id
+    // string so existing controller code works without modification).
+    req.user = { ...user, uid: user._id.toString() };
     // Expose decoded JWT claims (sessionId, role, tenantId) for downstream use
     req.tokenClaims = decoded;
 
@@ -149,7 +152,7 @@ export async function optionalAuth(req, res, next) {
 
     const user = await User.findById(decoded.sub).lean();
     if (user && user.status === "active") {
-      req.user = user;
+      req.user = { ...user, uid: user._id.toString() };
       req.tokenClaims = decoded;
     }
   } catch {

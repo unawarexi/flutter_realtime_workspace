@@ -1,5 +1,5 @@
 import express from "express";
-import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 import { tenantMiddleware } from "../../core/auth/tenant.middleware.js";
 import {
   createEvent, listEvents, getEvent, updateEvent, cancelEvent,
@@ -8,7 +8,7 @@ import {
 
 const router = express.Router();
 
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 router.use(tenantMiddleware);
 
 // Calendar view (must come before /:id to avoid conflicts)

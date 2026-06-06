@@ -1,5 +1,5 @@
 import express from 'express';
-import { firebaseAuthMiddleware } from '../../core/auth/firebase-auth.middleware.js';
+import { authenticate } from '../../middlewares/auth.middleware.js';
 import { tenantMiddleware } from '../../core/auth/tenant.middleware.js';
 import { validate } from "../../middlewares/validate.middleware.js";
 import {
@@ -11,7 +11,7 @@ import { createWhiteboardSchema } from "./whiteboard.validation.js";
 
 const router = express.Router();
 
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 router.use(tenantMiddleware);
 
 router.post("/", validate(createWhiteboardSchema), createWhiteboard);

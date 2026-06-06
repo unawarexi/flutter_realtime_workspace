@@ -3,7 +3,7 @@
 // ============================================================================
 
 import express from "express";
-import { firebaseAuthMiddleware } from "../../core/auth/firebase-auth.middleware.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../core/auth/permission.middleware.js";
 import { asyncHandler } from "../../core/base/base.controller.js";
 import { validate } from "../../middlewares/validate.middleware.js";
@@ -18,7 +18,7 @@ import {
 
 const router = express.Router();
 
-router.use(firebaseAuthMiddleware);
+router.use(authenticate);
 // Admin routes are super-admin only, cross-tenant
 router.use(requireRole(Roles.SUPER_ADMIN));
 
