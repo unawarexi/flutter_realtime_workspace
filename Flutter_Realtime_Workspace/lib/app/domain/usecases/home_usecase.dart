@@ -165,6 +165,39 @@ class HomeUseCase {
     return actions.take(8).toList();
   }
 
+  static List<HomeQuickAction> fallbackQuickActions() {
+    return [
+      const HomeQuickAction(
+        icon: Icons.search_outlined,
+        title: 'Search',
+        subtitle: 'Find anything quickly',
+        color: Color(0xFF6366F1),
+        route: '/search',
+      ),
+      const HomeQuickAction(
+        icon: Icons.auto_awesome_outlined,
+        title: 'AI Assistant',
+        subtitle: 'Ask TeamSpot AI',
+        color: Color(0xFF8B5CF6),
+        route: '/ai',
+      ),
+      const HomeQuickAction(
+        icon: Icons.notifications_none_outlined,
+        title: 'Updates',
+        subtitle: 'Check notifications',
+        color: Color(0xFFF59E0B),
+        route: '/notifications',
+      ),
+      const HomeQuickAction(
+        icon: Icons.settings_outlined,
+        title: 'Settings',
+        subtitle: 'Manage preferences',
+        color: Color(0xFF64748B),
+        route: '/settings',
+      ),
+    ];
+  }
+
   // ─── Workspace tool definitions ────────────────────────────────────────────
 
   static List<HomeWorkspaceTool> workspaceTools(WidgetRef ref) {

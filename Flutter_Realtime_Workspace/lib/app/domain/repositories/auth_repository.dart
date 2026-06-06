@@ -130,7 +130,12 @@ class AuthRepository {
   UserModel? getCachedUser() {
     final cached = HiveService.read<Map>(HiveService.user, 'current_user');
     if (cached != null) {
-      return UserModel.fromJson(Map<String, dynamic>.from(cached));
+      final map = cached is Map<String, dynamic>
+          ? cached
+          : cached.map<String, dynamic>(
+              (key, value) => MapEntry(key.toString(), value),
+            );
+      return UserModel.fromJson(map);
     }
     return null;
   }

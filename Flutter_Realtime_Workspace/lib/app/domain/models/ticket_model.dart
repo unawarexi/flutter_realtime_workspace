@@ -205,7 +205,7 @@ class TicketModel {
         tags: List<String>.from(json['tags'] ?? []),
         reporter: json['reporter'] != null
             ? UserInfo.fromJson(json['reporter'] as Map<String, dynamic>)
-            : UserInfo(id: ''),
+            : const UserInfo(id: ''),
         assignee: json['assignee'] != null
             ? UserInfo.fromJson(json['assignee'] as Map<String, dynamic>)
             : null,

@@ -186,7 +186,7 @@ class DocumentModel {
         type: json['type'] ?? 'other',
         file: json['file'] != null
             ? DocumentFile.fromJson(json['file'])
-            : DocumentFile(url: '', filename: '', mimeType: ''),
+            : const DocumentFile(url: '', filename: '', mimeType: ''),
         parsedContent: json['parsedContent'],
         metadata: json['metadata'] != null
             ? DocumentMetadata.fromJson(json['metadata'])

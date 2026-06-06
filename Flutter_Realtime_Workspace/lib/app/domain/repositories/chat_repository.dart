@@ -13,7 +13,10 @@ class ChatRepository {
   Future<List<ChatRoom>> getRooms() async {
     final res = await _api.get(ApiEndpoints.communicationRooms);
     final list = res.data['data'] as List? ?? [];
-    return list.map((e) => ChatRoom.fromJson(e)).toList();
+    return list
+        .map((e) => ChatRoom.fromJson(
+            Map<String, dynamic>.from(e as Map<dynamic, dynamic>)))
+        .toList();
   }
 
   Future<ChatRoom> createRoom(Map<String, dynamic> body) async {

@@ -4,8 +4,17 @@ class UserWorkingHours {
 
   const UserWorkingHours({this.start, this.end});
 
-  factory UserWorkingHours.fromJson(Map<String, dynamic> json) =>
-      UserWorkingHours(start: json['start'], end: json['end']);
+  factory UserWorkingHours.fromJson(Map json) {
+    final safeJson = json is Map<String, dynamic>
+        ? json
+        : json.map<String, dynamic>(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+    return UserWorkingHours(
+      start: safeJson['start'],
+      end: safeJson['end'],
+    );
+  }
 
   Map<String, dynamic> toJson() => {'start': start, 'end': end};
 }
@@ -18,13 +27,19 @@ class UserSocialLinks {
 
   const UserSocialLinks({this.linkedIn, this.github, this.twitter, this.website});
 
-  factory UserSocialLinks.fromJson(Map<String, dynamic> json) =>
-      UserSocialLinks(
-        linkedIn: json['linkedIn'],
-        github: json['github'],
-        twitter: json['twitter'],
-        website: json['website'],
-      );
+  factory UserSocialLinks.fromJson(Map json) {
+    final safeJson = json is Map<String, dynamic>
+        ? json
+        : json.map<String, dynamic>(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+    return UserSocialLinks(
+      linkedIn: safeJson['linkedIn'],
+      github: safeJson['github'],
+      twitter: safeJson['twitter'],
+      website: safeJson['website'],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'linkedIn': linkedIn,
@@ -105,50 +120,78 @@ class UserModel {
     required this.updatedAt,
   });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['_id'] ?? json['id'] ?? '',
-        firebaseUid: json['firebaseUid'] ?? '',
-        email: json['email'] ?? '',
-        fullName: json['fullName'] ?? '',
-        displayName: json['displayName'],
-        profilePicture: json['profilePicture'] ?? json['avatar'],
-        bio: json['bio'],
-        phoneNumber: json['phoneNumber'],
-        isOnline: json['isOnline'] ?? false,
-        lastSeenAt: json['lastSeenAt'] != null
-            ? DateTime.tryParse(json['lastSeenAt'])
-            : null,
-        lastLoginAt: json['lastLoginAt'] != null
-            ? DateTime.tryParse(json['lastLoginAt'])
-            : null,
-        permissionsLevel: json['permissionsLevel'] ?? json['role'] ?? 'member',
-        tenantId: json['tenantId'],
-        orgId: json['orgId'] is Map ? json['orgId']['_id'] : json['orgId'],
-        workspaceIds: List<String>.from(json['workspaceIds'] ?? []),
-        roleTitle: json['roleTitle'],
-        department: json['department'],
-        workType: json['workType'],
-        timezone: json['timezone'],
-        workingHours: json['workingHours'] != null
-            ? UserWorkingHours.fromJson(json['workingHours'])
-            : null,
-        companyName: json['companyName'],
-        companyWebsite: json['companyWebsite'],
-        industry: json['industry'],
-        teamSize: json['teamSize'],
-        officeLocation: json['officeLocation'],
-        interestsSkills: List<String>.from(json['interestsSkills'] ?? []),
-        socialLinks: json['socialLinks'] != null
-            ? UserSocialLinks.fromJson(json['socialLinks'])
-            : null,
-        profileCompletion: json['profileCompletion'] ?? 0,
-        totpEnabled: json['totpEnabled'] ?? false,
-        createdAt:
-            DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-        updatedAt:
-            DateTime.tryParse(json['updatedAt'] ?? json['createdAt'] ?? '') ??
-                DateTime.now(),
-      );
+  factory UserModel.fromJson(Map json) {
+    final safeJson = json is Map<String, dynamic>
+        ? json
+        : json.map<String, dynamic>(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+
+    final workspaceIds = (safeJson['workspaceIds'] as List?)
+            ?.map((item) => item?.toString() ?? '')
+            .where((item) => item.isNotEmpty)
+            .toList() ??
+        [];
+
+    final interestsSkills = (safeJson['interestsSkills'] as List?)
+            ?.map((item) => item?.toString() ?? '')
+            .where((item) => item.isNotEmpty)
+            .toList() ??
+        [];
+
+    return UserModel(
+      id: safeJson['_id'] ?? safeJson['id'] ?? '',
+      firebaseUid: safeJson['firebaseUid'] ?? '',
+      email: safeJson['email'] ?? '',
+      fullName: safeJson['fullName'] ?? '',
+      displayName: safeJson['displayName'] as String?,
+      profilePicture: safeJson['profilePicture'] ?? safeJson['avatar'] as String?,
+      bio: safeJson['bio'] as String?,
+      phoneNumber: safeJson['phoneNumber'] as String?,
+      isOnline: safeJson['isOnline'] as bool? ?? false,
+      lastSeenAt: safeJson['lastSeenAt'] != null
+          ? DateTime.tryParse(safeJson['lastSeenAt'].toString())
+          : null,
+      lastLoginAt: safeJson['lastLoginAt'] != null
+          ? DateTime.tryParse(safeJson['lastLoginAt'].toString())
+          : null,
+      permissionsLevel:
+          (safeJson['permissionsLevel'] ?? safeJson['role'] ?? 'member')
+              .toString(),
+      tenantId: safeJson['tenantId'] is Map
+          ? safeJson['tenantId']['_id'] ?? safeJson['tenantId']
+          : safeJson['tenantId'] as String?,
+      orgId: safeJson['orgId'] is Map
+          ? safeJson['orgId']['_id'] ?? safeJson['orgId']
+          : safeJson['orgId'] as String?,
+      workspaceIds: workspaceIds,
+      roleTitle: safeJson['roleTitle'] as String?,
+      department: safeJson['department'] as String?,
+      workType: safeJson['workType'] as String?,
+      timezone: safeJson['timezone'] as String?,
+      workingHours: safeJson['workingHours'] != null
+          ? UserWorkingHours.fromJson(safeJson['workingHours'])
+          : null,
+      companyName: safeJson['companyName'] as String?,
+      companyWebsite: safeJson['companyWebsite'] as String?,
+      industry: safeJson['industry'] as String?,
+      teamSize: safeJson['teamSize'] as String?,
+      officeLocation: safeJson['officeLocation'] as String?,
+      interestsSkills: interestsSkills,
+      socialLinks: safeJson['socialLinks'] != null
+          ? UserSocialLinks.fromJson(safeJson['socialLinks'])
+          : null,
+      profileCompletion: (safeJson['profileCompletion'] is int)
+          ? safeJson['profileCompletion'] as int
+          : int.tryParse(safeJson['profileCompletion']?.toString() ?? '') ?? 0,
+      totpEnabled: safeJson['totpEnabled'] as bool? ?? false,
+      createdAt: DateTime.tryParse(safeJson['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt: DateTime.tryParse(
+              safeJson['updatedAt']?.toString() ?? safeJson['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         '_id': id,

@@ -101,7 +101,7 @@ class AuditLogModel {
         category: json['category'] ?? 'system',
         actor: json['actor'] != null
             ? AuditActor.fromJson(json['actor'] as Map<String, dynamic>)
-            : AuditActor(userId: ''),
+            : const AuditActor(userId: ''),
         target: json['target'] != null
             ? AuditTarget.fromJson(json['target'] as Map<String, dynamic>)
             : null,
